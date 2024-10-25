@@ -17,11 +17,11 @@ export interface Cart extends Document {
 }
 
 const CartSchema = new mongoose.Schema({
-    retailer_id: { type: String, unique: true, required: true }, //add ref
-    user_id: { type: String,unique: true, ref: 'User', required: true },    
+    retailer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true }, 
+    customer_id: { type: mongoose.Schema.Types.ObjectId ,unique: true, ref: 'User', required: true },    
     items: [
         {
-            tiffin_id: { type: String, ref: 'Tiffin', required: true }, // Reference to the tiffin added to the cart
+            tiffin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tiffin', required: true }, 
             quantity: { type: Number, required: true, min: 1 },         
             price: { type: Number, required: true },
         }

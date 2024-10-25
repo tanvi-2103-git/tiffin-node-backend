@@ -12,7 +12,7 @@ export interface Order extends Document {
     //add more if kuch yaad aya
 }
 
-const orderSchema = new mongoose.Schema({
+const OrderSchema = new mongoose.Schema({
     cart_id: { type: String, unique: true, required: true }, // add ref
     payment_mode:{type: String, enum: ['CoD','UPI'],required: true },
     payment_date: { type: Date, required: true },
@@ -23,4 +23,4 @@ const orderSchema = new mongoose.Schema({
     
 })
 
-export const OrderModel = mongoose.model('Order', orderSchema);
+export const OrderModel = mongoose.model('Order', OrderSchema);

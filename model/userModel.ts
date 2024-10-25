@@ -1,5 +1,10 @@
 import mongoose, { Document } from 'mongoose';
-
+export interface Approval{
+    approval_status: 'pending'| 'approved' | 'rejected';
+    organization_id: string;
+    organization_loc:string;
+    admin_id:string;
+}
 
 export interface User extends Document {
 
@@ -14,16 +19,16 @@ export interface User extends Document {
     role_specific_details:{
         retailer: {
            gst_no:string;  
-           organization_ids?: string[];          
+           approval: Approval[];         
         }
         employee:{
-            employee_id:string;
+            employee_code:string;
             organization_id:string;
 
         }
         subadmin:{
             organization_id:string;
-
+            approval_status:'pending'| 'approved' | 'rejected';
         }
         superadmin:{
 
@@ -31,6 +36,13 @@ export interface User extends Document {
     }
  
 }
+
+const ApprovalSchema = new mongoose.Schema({
+    approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: true },
+    organization_id: { type: String, required: true },
+    organization_loc: { type: String, required: true },
+    admin_id: { type: String, required: true },
+  });
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true },
@@ -44,15 +56,19 @@ const UserSchema = new mongoose.Schema({
     role_specific_details:{
         retailer: {
            gst_no:{ type: String,  required: function(user: User) { return user.role !== 'Retailer'; }  },  
-           organization_ids: { type: [String], required: function(user: User) { return user.role !== 'Retailer'; } },          
+           organization_ids: { type: [String], required: function(user: User) { return user.role !== 'Retailer'; } }, 
+           approval:{ type: [ApprovalSchema], required: function(user: User) { return user.role !== 'Retailer'; } },       
         },
         employee:{
-            employee_id:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
+            employee_code:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
             organization_id:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
 
         },
         subadmin:{
             organization_id:{ type: String, required: function(user: User) { return user.role !== 'Admin'; }   },
+            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: function(user: User) { return user.role !== 'Admin'; }  },
+        
+
 
         },
         superadmin:{
