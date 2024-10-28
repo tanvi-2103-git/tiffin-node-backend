@@ -10,47 +10,47 @@ import { UserModel } from "../model/userModel";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
+export class AuthController{
 
-// export const login = 
-// async (req: Request, res: Response) => {
-     
-//     // const user: User | null = await User.findOne({ email: req.body.email });
-//     const emailId= req.body.email;
-//     const user = await getUserByEmailService(emailId);
+public  getUserByEmail = async function(email:string){
+  return await UserModel.findOne({ email: email });
   
-//     const { email, password } = req.body;
-//      if (user) {
-//        const matchPassword = await bcrypt.compare(password, user.password);
-//        console.log("password", password);
-//        console.log("user.password", user.password);
+} 
+
+
+public login = 
+async (req: Request, res: Response) => {
+    const emailId= req.body.email;
+    const user = await this.getUserByEmail(emailId);
+  
+    const { email, password } = req.body;
+     if (user) {
+       const matchPassword = await bcrypt.compare(password, user.password);
+      
        
-//        console.log("matchPassword",matchPassword);
-       
-//       if (email === user.email && matchPassword) {
-//         // Generate JWT token
-//         // const token = generateToken({ id: user._id, username: user.username });
-//         const token = jwt.sign({ id: user._id, password: user.password }, 'your-secret-key-here', {
-//           expiresIn: '2h',
-//         });
-//         res.json({
-//           statuscode: 200,
-//           success: true,
-//           message: "Authentication successful!",
-//           token: token,
-//           _id: user._id
-//         });
-//       } else {
-//         res.status(401).json({
-//           success: false,
-//           message: "Invalid username or password",
-//         });
-//       }
-//     }
-//   }
+      if (email === user.email && matchPassword) {
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY!, {
+          expiresIn: '2h',
+        });
+        res.json({
+          statuscode: 200,
+          success: true,
+          message: "Authentication successful!",
+          token: token,
+          _id: user._id
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Invalid username or password",
+        });
+      }
+    }
+  }
 
 
 
-export const register = async (req: Request, res: Response) => {
+  public register = async (req: Request, res: Response) => {
   try {
     const {
       username,
@@ -125,7 +125,7 @@ export const register = async (req: Request, res: Response) => {
     res.status(400).json({ error: "User registration failed" });
   }
 };
-
+}
 
 
 

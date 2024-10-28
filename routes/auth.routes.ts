@@ -1,7 +1,10 @@
 import express from "express";
 
 import cors from "cors";
-import { register } from "../controllers/auth.controller";
+
+import {AuthController} from "../controllers/auth.controller";
 export const authRoutes = express();
 authRoutes.use(cors());
-authRoutes.post("/register", register);
+const  authController = new AuthController();
+authRoutes.post("/register", authController.register);
+authRoutes.post("/login", authController.login);
