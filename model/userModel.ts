@@ -50,22 +50,40 @@ const UserSchema = new mongoose.Schema({
     role: { type: String, enum: ['Employee', 'Retailer', 'Admin','SuperAdmin'], required: true },
     role_specific_details:{
         retailer: {
-           gst_no:{ type: String,  required: false },  
+           gst_no:{ type: String,  required: function (user:User) {
+            return user.role == "Retailer";
+          }
+        } ,  
            approval:{ type: [{
-            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: false },
+            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: false},
             organization_id: { type: String, required: false },
             organization_loc: { type: String, required: false },
             admin_id: { type: String, required: false },
-          }], required: false},       
+          }], required: function (user:User) {
+            return user.role == "Retailer";
+          }},       
         },
         employee:{
-            employee_code:{ type: String, required: false },
-            organization_id:{ type: String, required: false},
+            employee_code:{ type: String,  required: function (user:User) {
+                return user.role == "Employee";
+              } },
+            organization_id:{ type: String, required: function (user:User) {
+                return user.role == "Employee";
+              }},
 
         },
         subadmin:{
-            organization_id:{ type: String, required: false  },
-            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required:  false  },
+            organization_id:{ type: String, required: function (user:User) {
+                return user.role == "Admin";
+              }  },
+            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'],default:function (user:User) {
+                if( user.role == "Admin"){
+                    return 'pending';
+                }
+              }
+                ,required: function (user:User) {
+                    return user.role == "Admin";
+                  }},
         
 
 
