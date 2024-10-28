@@ -13,7 +13,6 @@ export interface Cart extends Document {
     total_amount: number;                                   
     created_at: Date;
     isActice: boolean;     
-
 }
 
 const CartSchema = new mongoose.Schema({

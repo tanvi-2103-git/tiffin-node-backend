@@ -13,7 +13,7 @@ export interface Organization extends Document {
     org_location : Location[]; 
     org_created_at : Date;
     org_updated_at : Date;
-    isActice: boolean;
+    isActive: boolean;
 
 }
 

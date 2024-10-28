@@ -56,12 +56,11 @@ const UserSchema = new mongoose.Schema({
     role_specific_details:{
         retailer: {
            gst_no:{ type: String,  required: function(user: User) { return user.role !== 'Retailer'; }  },  
-           organization_ids: { type: [String], required: function(user: User) { return user.role !== 'Retailer'; } }, 
            approval:{ type: [ApprovalSchema], required: function(user: User) { return user.role !== 'Retailer'; } },       
         },
         employee:{
             employee_code:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
-            organization_id:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
+            organization_id:{ type: String, required: function(user: User) { return user.role !== 'Employee'; },ref:'organization' },
 
         },
         subadmin:{
