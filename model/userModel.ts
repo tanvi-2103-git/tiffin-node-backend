@@ -37,12 +37,7 @@ export interface User extends Document {
  
 }
 
-const ApprovalSchema = new mongoose.Schema({
-    approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: true },
-    organization_id: { type: String, required: true },
-    organization_loc: { type: String, required: true },
-    admin_id: { type: String, required: true },
-  });
+
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true },

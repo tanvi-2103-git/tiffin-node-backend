@@ -5,6 +5,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from 'dotenv';
 import { authRoutes } from "./routes/auth.routes";
+import { adminRoutes } from "./routes/admin.routes";
 
 app.use(express.json());
 app.use(cors());
@@ -18,3 +19,4 @@ app.listen(process.env.PORT, () => console.log("Application sever started"));
 app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
