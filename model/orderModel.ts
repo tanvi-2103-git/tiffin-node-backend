@@ -8,7 +8,7 @@ export interface Order extends Document {
     delivery_status: string;
     order_created_at: Date
     order_updated_at:Date,
-    isActice: Boolean,
+    isActive: Boolean,
     //add more if kuch yaad aya
 }
 
@@ -19,7 +19,7 @@ const OrderSchema = new mongoose.Schema({
     delivery_status: { type: String, enum: ['pending','commpleted', 'rejected'],required: true},
     org_created_at: { type: Date, required: true },
     org_updated_at: { type: Date, required: true },
-    isActice: { type: Boolean, required: true },
+    isActive: { type: Boolean, required: true },
     
 })
 
