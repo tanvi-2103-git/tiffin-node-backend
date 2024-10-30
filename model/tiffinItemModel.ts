@@ -22,7 +22,7 @@ export interface TiffinItem extends Document {
     tiffin_name: { type: String, required: true },
     tiffin_available_quantity: { type: Number, required: true },
     tiffin_description: { type: String}, 
-    retailer_id: { type: Number, required: true , ref:'User'},
+    retailer_id: { type: String, required: true , ref:'User'},
     tiffin_type: { type: String, enum: ['veg','non-veg'],required: true},
     tiffin_price: { type: Number, required: true },
     tiffin_rating: { type: Number, required: true },

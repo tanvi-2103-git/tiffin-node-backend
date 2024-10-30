@@ -17,13 +17,16 @@
 
 
 import express from 'express';
-import { OrganizationController } from '../controllers/organization.controller';
+import { OrganizationController } from '../controllers/SuperAdmin/organization.controller';
 
 const router = express.Router();
 const organizationRoutes = new OrganizationController();
 
-router.get('/', organizationRoutes.getAllOrganizations);
-router.get('/:id', organizationRoutes.getOrganizationById);
-router.put('/:id', organizationRoutes.updateOrganization);
+router.post('/add', organizationRoutes.addOrganization);
+router.get('/getall', organizationRoutes.getAllOrganizations);
+router.get('/get/:id', organizationRoutes.getOrganizationById);
+router.put('/update/:id', organizationRoutes.updateOrganization);
+router.delete('/delete/:id', organizationRoutes.deleteOrganization);
+
 
 export default router;

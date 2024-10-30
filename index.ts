@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import organizationRoutes from "./routes/organization.routes";
+import retailerRoutes from"./routes/retailer.routes"
 
 app.use(express.json());
 app.use(cors());
@@ -24,3 +25,5 @@ app.use("/api/admin", adminRoutes);
 
 // Use the organization routes
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/retailers', retailerRoutes );
+

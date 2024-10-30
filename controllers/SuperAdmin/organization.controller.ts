@@ -1,19 +1,19 @@
 
 import { Request, Response } from "express";
-import { Organization, OrganizationModel } from "../model/organizationModel";
+import { Organization, OrganizationModel } from "../../model/organizationModel";
 
-interface Params {
-    id: string; // Assuming you are using "id" as the parameter name
-}
+// interface Params {
+//     id: string; // Assuming you are using "id" as the parameter name
+// }
 
 export  class OrganizationController {
    public addOrganization= async function(req: Request, res: Response) {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
-      res.status(201).json(newOrganization);
+       res.status(201).json(newOrganization);
     } catch (error) {
-      res.status(500).json({ message: "Error creating organization", error });
+       res.status(500).json({ message: "Error creating organization", error });
     }
   }
 
@@ -43,11 +43,6 @@ export  class OrganizationController {
         res.status(500).json({ message: 'Error fetching organization', error });
     }
     }
-
-    public getById =async  function(req: Request, res: Response) {
-    const { id } = req.params
-    return id
-}
 
 // async getOrganizationById(req: Request<{ id: string }>, res: Response) {
 //     const { id } = req.params;
