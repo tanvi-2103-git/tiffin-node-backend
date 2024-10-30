@@ -8,6 +8,8 @@ import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import organizationRoutes from "./routes/organization.routes";
 import { superAdminRoutes } from "./routes/superAdmin.routes";
+import  RetailerRoutes from "./routes/retailer.routes"
+import TiffinItemRoutes from "./routes/tiffinItem.routes"
 
 app.use(express.json());
 app.use(cors());
@@ -27,3 +29,5 @@ app.use("/api/admin", adminRoutes);
 
 // Use the organization routes
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/retailers', RetailerRoutes); // Crud controller left- to do
+app.use('/api/tiffinItems', TiffinItemRoutes);

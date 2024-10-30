@@ -1,6 +1,7 @@
 
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
+import { User, UserModel } from "../../model/userModel";
 
 // interface Params {
 //     id: string; // Assuming you are using "id" as the parameter name
@@ -11,7 +12,7 @@ export  class OrganizationController {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
-       res.status(201).json(newOrganization);
+       res.status(201).json({statuscode:201,data:newOrganization});
     } catch (error) {
        res.status(500).json({ message: "Error creating organization", error });
     }
@@ -21,10 +22,10 @@ export  class OrganizationController {
   public getAllOrganizations= async function(req: Request, res: Response){
     try{
         const organizations = await OrganizationModel.find();
-        res.status(200).json(organizations);
+        res.status(200).json(({statuscode:200,data:organizations}));
 
     } catch(error){
-        res.status(500).json({ message: 'Error fetching organizations', error });
+        res.status(500).json({ statuscode: 500, message: 'Error fetching organizations', error });
     }
   }
 
@@ -36,38 +37,25 @@ export  class OrganizationController {
     try {
         const organization = await OrganizationModel.findById(id);
         if (!organization) {
-             res.status(404).json({ message: 'Organization not found' });
+             res.status(404).json({ statuscode: 404, message: 'Organization not found' });
         }
-        res.status(200).json(organization);
+        res.status(200).json({data:organization, statuscode:200 });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching organization', error });
+        res.status(500).json({ statuscode: 500, message: 'Error fetching organization', error });
     }
     }
-
-// async getOrganizationById(req: Request<{ id: string }>, res: Response) {
-//     const { id } = req.params;
-//     try {
-//         const organization = await OrganizationModel.findById(id);
-//         if (!organization) {
-//             return res.status(404).json({ message: 'Organization not found' });
-//         }
-//         res.status(200).json(organization);
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error fetching organization', error });
-//     }
-// }
 
   //delete org (By id)
   public deleteOrganization= async  function(req: Request<{ id: string }>, res: Response):Promise<void> {
     const { id } = req.params;
     try {
-        const deletedOrganization = await OrganizationModel.findByIdAndDelete(id);
-        if (!deletedOrganization) {
-             res.status(404).json({ message: 'Organization not found' });
+        const deletedOrg = await OrganizationModel.findByIdAndDelete(id);
+        if (!deletedOrg) {
+             res.status(404).json({statuscode: 404, message: 'Organization not found' });
         }
-        res.status(200).json({ message: 'Organization deleted successfully' });
+        res.status(200).json({ statuscode: 200, message: 'Organization deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting organization', error });
+        res.status(500).json({ statuscode: 500, message: 'Error deleting organization', error });
     }
 }
 
@@ -82,13 +70,30 @@ public updateOrganization=async  function(req: Request<{ id: string }>, res: Res
 
         // Check if the update was successful
         if (result.modifiedCount === 0) {
-             res.status(404).json({ message: 'Organization not found or no changes made' });
+             res.status(404).json({ statuscode: 404, message: 'Organization not found or no changes made' });
         }
 
-        res.status(200).json({ message: 'Organization updated successfully' });
+        res.status(200).json({statuscode: 200, message: 'Organization updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Error updating organization', error });
+        res.status(500).json({statuscode: 500, message: 'Error updating organization', error });
     }
+}
+
+// to do -> create an api which get all the retailers which are approved by one organization
+
+public getOrgsOfRetailer = async  function(req: Request<{ id: string }>, res: Response):Promise<void> {
+    const org_id = req.body;
+
+    try{
+        const retailers = await UserModel.aggregate([{
+            $match: {
+              "approval": "org_id"
+            }
+          }])
+    }catch(error){
+
+    }
+
 }
 
 
