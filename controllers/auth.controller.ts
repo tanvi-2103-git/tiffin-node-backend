@@ -20,6 +20,7 @@ public  getUserByEmail = async function(email:string){
 
 public login = 
 async (req: Request, res: Response) => {
+  try {
     const emailId= req.body.email;
     const user = await this.getUserByEmail(emailId);
   
@@ -41,10 +42,14 @@ async (req: Request, res: Response) => {
         });
       } else {
         res.status(401).json({
+          statuscode:401,
           success: false,
           message: "Invalid username or password",
         });
       }
+    } } catch (error) {
+      console.error(error);
+      res.status(400).json({statuscode:400, error: "User Login failed" });
     }
   }
 
@@ -65,10 +70,9 @@ async (req: Request, res: Response) => {
       
     } = req.body;
 
-    // Hash the password
+
     const hash = await bcrypt.hash(password, 10);
 
-    // Prepare role-specific details based on the user's role
     let role_specific_details = {};
 
     if (role === 'Retailer') {
@@ -92,10 +96,10 @@ async (req: Request, res: Response) => {
         },
       };
     } else if (role === 'SuperAdmin') {
-      role_specific_details = {}; // Empty object for SuperAdmin, assuming no specific fields.
+      role_specific_details = {}; 
     }
 
-    // Create new user document
+  
     const user = new UserModel({
       username,
       email,
@@ -106,23 +110,23 @@ async (req: Request, res: Response) => {
       role_specific_details,
     });
 
-    // Save the user to the database
+ 
     const userData = await user.save();
 
-    // Generate JWT token
+
     const token = jwt.sign({ id: userData._id, role: userData.role }, process.env.SECRET_KEY! , {
       expiresIn: '2h',
     });
 
-    // Respond with success
     res.status(201).json({
+      statuscode:201,
       message: "User registered successfully",
       token,
       _id: userData._id,
     });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: "User registration failed" });
+    res.status(400).json({statuscode:400, error: "User registration failed" });
   }
 };
 }

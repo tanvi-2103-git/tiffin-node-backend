@@ -31,7 +31,7 @@ router.delete('/delete/:id', organizationRoutes.deleteOrganization);
 
 
 router.post('/add',RoleBaseValidation('SuperAdmin'), organizationRoutes.addOrganization);
-router.get('/getall',RoleBaseValidation('SuperAdmin'), organizationRoutes.getAllOrganizations);
+router.get('/getall', organizationRoutes.getAllOrganizations);
 router.get('/get/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.getOrganizationById);
 router.put('/update/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.updateOrganization);
 router.delete('/delete/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.deleteOrganization);
