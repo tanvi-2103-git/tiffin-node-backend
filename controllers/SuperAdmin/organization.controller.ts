@@ -18,7 +18,7 @@ export  class OrganizationController {
     }
   }
 
-  //get all organization
+  //get all organization -> to do -> getall need to be corrected, add filter where only isActive: true orgs get displayed
   public getAllOrganizations= async function(req: Request, res: Response){
     try{
         const organizations = await OrganizationModel.find();

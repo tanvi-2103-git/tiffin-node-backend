@@ -7,9 +7,10 @@ import dotenv from 'dotenv';
 import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import organizationRoutes from "./routes/organization.routes";
-import { superAdminRoutes } from "./routes/superAdmin.routes";
+// import { superAdminRoutes } from "./routes/superAdmin.routes";
 import  RetailerRoutes from "./routes/retailer.routes"
 import TiffinItemRoutes from "./routes/tiffinItem.routes"
+import ApprovalRoutes from "./routes/approval.routes"
 
 app.use(express.json());
 app.use(cors());
@@ -31,3 +32,4 @@ app.use("/api/admin", adminRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/retailers', RetailerRoutes); // Crud controller left- to do
 app.use('/api/tiffinItems', TiffinItemRoutes);
+app.use('/api/approvals', ApprovalRoutes);

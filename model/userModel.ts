@@ -26,7 +26,7 @@ export interface User extends Document {
             organization_id:string;
 
         }
-        subadmin:{
+        admin:{
             organization_id:string;
             approval_status:'pending'| 'approved' | 'rejected';
         }

@@ -82,7 +82,7 @@ export class AdminController {
             $elemMatch: {
               approval_status: "pending",
               organization_id:
-                user.role_specific_details.subadmin.organization_id,
+                user.role_specific_details.admin.organization_id,
             },
           },
         }).exec();
@@ -106,7 +106,7 @@ export class AdminController {
       if (
         !user ||
         !user.role_specific_details ||
-        !user.role_specific_details.subadmin
+        !user.role_specific_details.admin
       ) {
          res
           .status(403)
@@ -118,7 +118,7 @@ export class AdminController {
 
       
       const organization_id =
-        user?.role_specific_details.subadmin.organization_id;
+        user?.role_specific_details.admin.organization_id;
         console.log("organization_id",organization_id);
       // Step 1: Find the retailer with a pending approval status for the subadmin's organization
       // const retailer = await UserModel.findById(retailer_id)

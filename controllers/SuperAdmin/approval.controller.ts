@@ -10,13 +10,15 @@ export class ApprovalController{
 
     public getAllApprovalRequests = async function(req: Request, res: Response){
         try{
-            const approvalRequests = await UserModel.find({approval_status:"pending"})
+            const approvalRequests = await UserModel.find({role:"Admin", "role_specific_details.admin.approval_status":"pending"})
+            //{role:"Admin","role_specific_details.subadmin.approval_status":"pending"
             res.status(200).json(approvalRequests)
         }catch(error){
             res.status(500).json({message: 'Error fetching Approval Requests', error});
         }
     }
 
+    // gets the status by id can be anything 'pending', "rejected"
     public getApprovalRequestById = async function(req: Request, res : Response):Promise<void> {
         const {id} = req.params;
         try{
