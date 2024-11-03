@@ -7,7 +7,9 @@ export interface Permission {
 
 export interface Role extends Document {
    role_name : string;
-   role_permission: Permission;  
+   role_permission: string[];  
+   role_specific_details: any      
+
 }
 
 const PermissionSchema = new mongoose.Schema({
@@ -18,7 +20,8 @@ const PermissionSchema = new mongoose.Schema({
 
 const RoleSchema = new mongoose.Schema({
     role_name : { type: String, required: true }, 
-    role_permission:  { type: PermissionSchema, required: true },        
+    role_permission:  { type: [String], required: true },  
+    role_specific_details: {type:[] ,require:true}      
 });
 
-export const RoleModel = mongoose.model<Role>('Cart', RoleSchema);
+export const RoleModel = mongoose.model<Role>('Role', RoleSchema);

@@ -20,6 +20,6 @@ export const validateToken =async (req: Request, res: Response, next: NextFuncti
  
     next();}
   } catch (err) {
-    res.status(401).send('Please authenticate');
+    res.status(401).send(`Please authenticate ${err}`);
   }
  };

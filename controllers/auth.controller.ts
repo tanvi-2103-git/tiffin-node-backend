@@ -7,9 +7,16 @@ import cors from "cors";
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken';
 import { UserModel } from "../model/userModel";
+import { RoleModel } from "../model/roleModel";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
+
+
+interface RoleSpecificDetail {
+  [key: string]: string | boolean | number; // Adjust this type as per your needs
+}
+
 export class AuthController{
 
 public  getUserByEmail = async function(email:string){
@@ -30,7 +37,7 @@ async (req: Request, res: Response) => {
       
        
       if (email === user.email && matchPassword) {
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY!, {
+        const token = jwt.sign({ id: user._id, role: user.role_id }, process.env.SECRET_KEY!, {
           expiresIn: '2h',
         });
         res.json({
@@ -38,7 +45,8 @@ async (req: Request, res: Response) => {
           success: true,
           message: "Authentication successful!",
           token: token,
-          _id: user._id
+          _id: user._id,
+          
         });
       } else {
         res.status(401).json({
@@ -55,7 +63,7 @@ async (req: Request, res: Response) => {
 
 
 
-  public register = async (req: Request, res: Response) => {
+public register = async (req: Request, res: Response) => {
   try {
     const {
       username,
@@ -63,72 +71,145 @@ async (req: Request, res: Response) => {
       email,
       contact_number,
       address,
-      role,
-      gst_no,
-      employee_code,
-      organization_id,
-      
+      role_id,  // Expecting the role_id instead of role name
+      role_specific_details: inputRoleSpecificDetails,
     } = req.body;
 
-
+    // Hash the password
     const hash = await bcrypt.hash(password, 10);
 
-    let role_specific_details = {};
+    // Retrieve the role document based on role_id
+    const roleDoc = await RoleModel.findById(role_id);
+    if (!roleDoc) {
+       res.status(400).json({ statuscode: 400, error: "Invalid role ID provided" });
+    }else{
 
-    if (role === 'Retailer') {
-      role_specific_details = {
-        retailer: {
-          gst_no
-        },
-      };
-    } else if (role === 'Employee') {
-      role_specific_details = {
-        employee: {
-          employee_code,
-          organization_id,
-        },
-      };
-    } else if (role === 'Admin') {
-      role_specific_details = {
-        subadmin: {
-          organization_id,
-         
-        },
-      };
-    } else if (role === 'SuperAdmin') {
-      role_specific_details = {}; 
+    // Validate and build role_specific_details based on Role document
+    let role_specific_details : RoleSpecificDetail= {};
+    const roleTemplate = roleDoc.role_specific_details; // expected structure from Role
+
+    // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
+    for (const field of roleTemplate) {
+      const fieldName = field.name;
+      // if (!(fieldName in inputRoleSpecificDetails)) {
+      //    res.status(400).json({
+      //     statuscode: 400,
+      //     error: `Missing required role-specific field: ${fieldName}`,
+      //   });
+      // }
+      // Set the field in role_specific_details to ensure it matches Role structure
+      role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
+      console.log(role_specific_details[fieldName]);
+      
     }
 
-  
+    // Create the user document
     const user = new UserModel({
       username,
       email,
       password: hash,
       contact_number,
       address,
-      role,
+      role_id: roleDoc._id,
       role_specific_details,
     });
 
- 
+    // Save the user
     const userData = await user.save();
 
-
-    const token = jwt.sign({ id: userData._id, role: userData.role }, process.env.SECRET_KEY! , {
+    // Generate JWT token
+    const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY!, {
       expiresIn: '2h',
     });
 
+    // Respond with success
     res.status(201).json({
-      statuscode:201,
+      statuscode: 201,
       message: "User registered successfully",
       token,
       _id: userData._id,
-    });
+    });}
   } catch (error) {
     console.error(error);
-    res.status(400).json({statuscode:400, error: "User registration failed" });
+    res.status(400).json({ statuscode: 400, error: `User registration failed ${error}` });
   }
 };
+
+
+//   public register = async (req: Request, res: Response) => {
+//   try {
+//     const {
+//       username,
+//       password,
+//       email,
+//       contact_number,
+//       address,
+//       role,
+//       gst_no,
+//       employee_code,
+//       organization_id,
+      
+//     } = req.body;
+
+
+//     const hash = await bcrypt.hash(password, 10);
+
+//     let role_specific_details = {};
+
+//     if (role === 'Retailer') {
+//       role_specific_details = {
+//         retailer: {
+//           gst_no
+//         },
+//       };
+//     } else if (role === 'Employee') {
+//       role_specific_details = {
+//         employee: {
+//           employee_code,
+//           organization_id,
+//         },
+//       };
+//     } else if (role === 'Admin') {
+//       role_specific_details = {
+//         subadmin: {
+//           organization_id,
+         
+//         },
+//       };
+//     } else if (role === 'SuperAdmin') {
+//       role_specific_details = {}; 
+//     }
+
+  
+//     const user = new UserModel({
+//       username,
+//       email,
+//       password: hash,
+//       contact_number,
+//       address,
+//       role,
+//       role_specific_details,
+//     });
+
+ 
+//     const userData = await user.save();
+
+
+//     const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY! , {
+//       expiresIn: '2h',
+//     });
+
+//     res.status(201).json({
+//       statuscode:201,
+//       message: "User registered successfully",
+//       token,
+//       _id: userData._id,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({statuscode:400, error: "User registration failed" });
+//   }
+// };
 }
 
 
