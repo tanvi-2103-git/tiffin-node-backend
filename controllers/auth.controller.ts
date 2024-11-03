@@ -71,14 +71,13 @@ public register = async (req: Request, res: Response) => {
       email,
       contact_number,
       address,
-      role_id,  // Expecting the role_id instead of role name
+      role_id,  
       role_specific_details: inputRoleSpecificDetails,
     } = req.body;
 
-    // Hash the password
+   
     const hash = await bcrypt.hash(password, 10);
 
-    // Retrieve the role document based on role_id
     const roleDoc = await RoleModel.findById(role_id);
     if (!roleDoc) {
        res.status(400).json({ statuscode: 400, error: "Invalid role ID provided" });
