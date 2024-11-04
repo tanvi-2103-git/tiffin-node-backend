@@ -5,7 +5,7 @@ import { User, UserModel } from "../../model/userModel";
 // interface Params {
 //     id: string; // Assuming you are using "id" as the parameter name
 // }
-
+//ananya
 export class OrganizationController {
   public addOrganization = async (req: Request, res: Response) => {
     try {
