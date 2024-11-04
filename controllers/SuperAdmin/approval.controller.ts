@@ -7,10 +7,10 @@ export class ApprovalController {
     // ideally speaking we dont need to add a separate function for adding the request as, when a admin registers, their aproval status is by default pending.
   };
 
-  public getAllPendingAdminApprovalRequests = async function (
+  public getAllPendingAdminApprovalRequests = async  (
     req: Request,
     res: Response
-  ) {
+  )=> {
     try {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
@@ -28,7 +28,7 @@ export class ApprovalController {
     }
   };
 
-  public getAllApprovedAdmin = async function (req: Request, res: Response) {
+  public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
     try {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
@@ -46,7 +46,7 @@ export class ApprovalController {
     }
   };
 
-  public getAllRejectedAdmin = async function (req: Request, res: Response) {
+  public getAllRejectedAdmin = async  (req: Request, res: Response)=> {
     try {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
@@ -64,10 +64,10 @@ export class ApprovalController {
     }
   };
 
-  public getApprovalRequestById = async function (
+  public getApprovalRequestById = async  (
     req: Request,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> =>{
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
@@ -83,10 +83,10 @@ export class ApprovalController {
     }
   };
 
-  public approveAdminRequest = async function (
+  public approveAdminRequest = async  (
     req: Request,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> =>{
     try {
       const user = await getUserFromToken(req);
       console.log(user, "user");
@@ -134,10 +134,10 @@ export class ApprovalController {
     }
   };
 
-  public rejectApprovalRequest = async function (
+  public rejectApprovalRequest = async  (
     req: Request,
     res: Response
-  ): Promise<void> {
+  ): Promise<void>=> {
     try {
       const user = await getUserFromToken(req);
       console.log(user, "user");
