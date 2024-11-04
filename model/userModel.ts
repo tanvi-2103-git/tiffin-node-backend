@@ -14,35 +14,13 @@ export interface User extends Document {
     contact_number: string;
     address: string;
     created_at: Date;
-    uppdated_at: Date; 
-    role: 'Employee' | 'Retailer' | 'Admin' | 'SuperAdmin';
-    role_specific_details:{
-        retailer: {
-           gst_no:string;  
-           approval: Approval[];         
-        }
-        employee:{
-            employee_code:string;
-            organization_id:string;
-
-        }
-        subadmin:{
-            organization_id:string;
-            approval_status:'pending'| 'approved' | 'rejected';
-        }
-        superadmin:{
-
-        }
-    }
+    updated_at: Date; 
+    role_id: string;
+    role_specific_details:any;
  
 }
 
-const ApprovalSchema = new mongoose.Schema({
-    approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: true },
-    organization_id: { type: String, required: true },
-    organization_loc: { type: String, required: true },
-    admin_id: { type: String, required: true },
-  });
+
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true },
@@ -51,30 +29,52 @@ const UserSchema = new mongoose.Schema({
     contact_number: { type: String, required: true },
     address: { type: String, required: true },
     created_at:{ type: Date, default: Date.now },
-    uppdated_at: { type: Date, default: Date.now },
-    role: { type: String, enum: ['Employee', 'Retailer', 'Admin','SuperAdmin'], required: true },
-    role_specific_details:{
-        retailer: {
-           gst_no:{ type: String,  required: function(user: User) { return user.role !== 'Retailer'; }  },  
-           organization_ids: { type: [String], required: function(user: User) { return user.role !== 'Retailer'; } }, 
-           approval:{ type: [ApprovalSchema], required: function(user: User) { return user.role !== 'Retailer'; } },       
-        },
-        employee:{
-            employee_code:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
-            organization_id:{ type: String, required: function(user: User) { return user.role !== 'Employee'; }  },
+    updated_at: { type: Date, default: Date.now },
+    role_id: { type: String,  required: true },
+    role_specific_details:{}
+    //     retailer: {
+    //        gst_no:{ type: String,  required: function (user:User) {
+    //         return user.role == "Retailer";
+    //       }
+    //     } ,  
+    //        approval:{ type: [{
+    //         approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: false},
+    //         organization_id: { type: String, required: false },
+    //         organization_loc: { type: String, required: false },
+    //         admin_id: { type: String, required: false },
+    //       }], required: function (user:User) {
+    //         return user.role == "Retailer";
+    //       }},       
+    //     },
+    //     employee:{
+    //         employee_code:{ type: String,  required: function (user:User) {
+    //             return user.role == "Employee";
+    //           } },
+    //         organization_id:{ type: String, required: function (user:User) {
+    //             return user.role == "Employee";
+    //           }},
 
-        },
-        subadmin:{
-            organization_id:{ type: String, required: function(user: User) { return user.role !== 'Admin'; }   },
-            approval_status: { type: String, enum: ['pending', 'approved', 'rejected'], required: function(user: User) { return user.role !== 'Admin'; }  },
+    //     },
+    //     subadmin:{
+    //         organization_id:{ type: String, required: function (user:User) {
+    //             return user.role == "Admin";
+    //           }  },
+    //         approval_status: { type: String, enum: ['pending', 'approved', 'rejected'],default:function (user:User) {
+    //             if( user.role == "Admin"){
+    //                 return 'pending';
+    //             }
+    //           }
+    //             ,required: function (user:User) {
+    //                 return user.role == "Admin";
+    //               }},
         
 
 
-        },
-        superadmin:{
+    //     },
+    //     superadmin:{
 
-        }
-    }
+    //     }
+    // }
 });
 
 export const UserModel = mongoose.model<User>('User', UserSchema);

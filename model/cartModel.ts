@@ -12,8 +12,7 @@ export interface Cart extends Document {
     items: CartItem[];               
     total_amount: number;                                   
     created_at: Date;
-    isActice: boolean;     
-
+    isActive: boolean;     
 }
 
 const CartSchema = new mongoose.Schema({
@@ -29,7 +28,7 @@ const CartSchema = new mongoose.Schema({
 
     total_amount: { type: Number, default: 0 },                      
     created_at: { type: Date, default: Date.now },
-    isActice: { type: Boolean, required: true }                   
+    isActive: { type: Boolean, required: true }                   
 });
 
 export const CartModel = mongoose.model<Cart>('Cart', CartSchema);
