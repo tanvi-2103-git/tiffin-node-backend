@@ -7,7 +7,7 @@ export class TiffinItemController {
     try {
       const tiffinItemData: TiffinItem = req.body;
       const newTiffinItem = await TiffinItemModel.create(tiffinItemData);
-      res.status(201).json(newTiffinItem);
+      res.status(201).json({ message: "Added Tiffin Item", newTiffinItem });
     } catch (error) {
       res.status(500).json({ message: "Error creating Tiffin Item", error });
     }
