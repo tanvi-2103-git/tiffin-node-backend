@@ -1,10 +1,8 @@
 import express from "express";
 
-import { SuperAdminController } from "../controllers/superAdmin.controller";
 import { RoleBaseValidation } from "../middleware/RoleBaseValidation";
 import { ApprovalController } from "../controllers/SuperAdmin/approval.controller";
 export const superAdminRoutes = express();
-const  superAdminController = new SuperAdminController();
 const  approval = new ApprovalController()
 // superAdminRoutes.get("/pendingApproval",RoleBaseValidation('SuperAdmin'), superAdminController.pendingApproval);
 // 'approve_admin_request',
