@@ -33,4 +33,4 @@ export interface TiffinItem extends Document {
     
 });
 
-export const TiffinItemModel = mongoose.model('TiffinItem', TiffinItemSchema);
+export const TiffinItemModel = mongoose.model<TiffinItem>('TiffinItem', TiffinItemSchema);

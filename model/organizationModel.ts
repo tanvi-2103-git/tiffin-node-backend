@@ -32,8 +32,5 @@ const OrganizationSchema = new mongoose.Schema({
 
 })
 
-export const OrganizationModel = mongoose.model('Organization', OrganizationSchema);
+export const OrganizationModel = mongoose.model<Organization>('Organization', OrganizationSchema);
 
-// const userModel = model<User & Document>('User', userSchema);
-
-// export default userModel;
