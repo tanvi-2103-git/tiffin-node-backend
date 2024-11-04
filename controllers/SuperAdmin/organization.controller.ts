@@ -7,7 +7,7 @@ import { User, UserModel } from "../../model/userModel";
 // }
 
 export class OrganizationController {
-  public addOrganization = async function (req: Request, res: Response) {
+  public addOrganization = async (req: Request, res: Response) => {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
@@ -18,27 +18,25 @@ export class OrganizationController {
   };
 
   //get all organization
-  public getAllOrganizations = async function (req: Request, res: Response) {
+  public getAllOrganizations = async (req: Request, res: Response) => {
     try {
       const organizations = await OrganizationModel.find();
       res.status(200).json({ statuscode: 200, data: organizations });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organizations",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching organizations",
+        error,
+      });
     }
   };
 
   //getting a specific org
   //as of now not required, but banake rakha hai (;
-  public getOrganizationById = async function (
+  public getOrganizationById = async (
     req: Request,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const { id } = req.params;
     try {
       const organization = await OrganizationModel.findById(id);
@@ -49,13 +47,11 @@ export class OrganizationController {
       }
       res.status(200).json({ data: organization, statuscode: 200 });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching organization",
+        error,
+      });
     }
   };
 
@@ -72,28 +68,24 @@ export class OrganizationController {
           .status(404)
           .json({ statuscode: 404, message: "Organization not found" });
       }
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization deleted successfully",
-        });
+      res.status(200).json({
+        statuscode: 200,
+        message: "Organization deleted successfully",
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error deleting organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error deleting organization",
+        error,
+      });
     }
   };
 
   // Update org
-  public updateOrganization = async function (
+  public updateOrganization = async (
     req: Request<{ id: string }>,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const { _id, ...organization } = req.body;
     try {
       // Update the organization
@@ -101,37 +93,31 @@ export class OrganizationController {
 
       // Check if the update was successful
       if (result.modifiedCount === 0) {
-        res
-          .status(404)
-          .json({
-            statuscode: 404,
-            message: "Organization not found or no changes made",
-          });
+        res.status(404).json({
+          statuscode: 404,
+          message: "Organization not found or no changes made",
+        });
       }
 
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization updated successfully",
-        });
+      res.status(200).json({
+        statuscode: 200,
+        message: "Organization updated successfully",
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error updating organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error updating organization",
+        error,
+      });
     }
   };
 
   // to do -> create an api which get all the retailers which are approved by one organization
 
-  public getOrgsOfRetailer = async function (
+  public getOrgsOfRetailer = async (
     req: Request<{ id: string }>,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const org_id = req.body;
 
     try {
