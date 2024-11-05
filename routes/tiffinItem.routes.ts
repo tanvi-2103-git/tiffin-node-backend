@@ -3,7 +3,7 @@ import { TiffinItemController } from '../controllers/tiifinItem.controller';
 import { validateToken } from '../middleware/validateToken';
 import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
 
-const retailerRoutes = express.Router();
+const TiffinItemRoutes = express.Router();
 const tiffinItemController = new TiffinItemController();
 
 // "add_tiffin",
@@ -13,10 +13,11 @@ const tiffinItemController = new TiffinItemController();
 // get_all_tiffins,
 // get_tiffin_by_id
 
-retailerRoutes.post('/add',validateToken,RoleBaseValidation('add_tiffin'), tiffinItemController.addTiffinItem);
-retailerRoutes.get('/getall',validateToken,RoleBaseValidation('get_all_tiffins'), tiffinItemController.getAllTiffinItems);
-retailerRoutes.get('/get/:id',validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
-retailerRoutes.delete('/delete/:id',validateToken,RoleBaseValidation('delete_tiffin'), tiffinItemController.deleteTiffinItem);
-retailerRoutes.put('/update/:id',validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinItem);
+TiffinItemRoutes.post('/addtiffin',validateToken,RoleBaseValidation('add_tiffin'), tiffinItemController.addTiffinItem);
+TiffinItemRoutes.get('/getalltiffin',validateToken,RoleBaseValidation('get_all_tiffins'), tiffinItemController.getAllTiffinItems);
+TiffinItemRoutes.get('/gettiffinbyid/:tiffinid',validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
+TiffinItemRoutes.delete('/deletetiffin/:tiffinid',validateToken,RoleBaseValidation('delete_tiffin'), tiffinItemController.deleteTiffinItem);
+TiffinItemRoutes.put('/updatetiffin/:tiffinid',validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinItem);
+TiffinItemRoutes.put('/updatetiffin/quantityavailability/:tiffinid',validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinQuantityAvailability);
 
-export default retailerRoutes;
+export default TiffinItemRoutes;

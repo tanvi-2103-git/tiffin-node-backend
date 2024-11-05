@@ -29,9 +29,9 @@ export class TiffinItemController {
     req: Request,
     res: Response
   ): Promise<void> => {
-    console.log(req.params.id);
+    console.log(req.params.tiffinid);
 
-    const _id = new ObjectId(req.params.id);
+    const _id = new ObjectId(req.params.tiffinid);
     try {
       const TiffinItem = await TiffinItemModel.findOne(_id);
       // console.log(TiffinItem);
@@ -51,9 +51,9 @@ export class TiffinItemController {
     req: Request,
     res: Response
   ): Promise<void> => {
-    const { id } = req.params;
+    const { tiffinid } = req.params;
     try {
-      const deleteTiffin = await TiffinItemModel.findByIdAndDelete(id);
+      const deleteTiffin = await TiffinItemModel.findByIdAndDelete(tiffinid);
       if (!deleteTiffin) {
         res.status(404).json({ message: "Tiffin Item not found" });
       }
@@ -68,10 +68,10 @@ export class TiffinItemController {
     res: Response
   ): Promise<void> => {
     try {
-      const { id } = req.params;
+      const { tiffinid } = req.params;
       const tiffinItemData: TiffinItem = req.body;
       const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
-        id,
+        tiffinid,
         tiffinItemData,
         {
           new: true,
@@ -84,6 +84,36 @@ export class TiffinItemController {
         return;
       }
 
+      res.status(200).json({ message: "Tiffin Item updated successfully" , updatedTiffinItem});
+    } catch (error) {
+      res.status(500).json({ message: "Error updating Tiffin Item", error });
+    }
+  };
+
+  public updateTiffinQuantityAvailability = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const tiffin_id = req.params.tiffinid;
+      console.log("tiffin_id",tiffin_id);
+      
+      const {tiffin_available_quantity,tiffin_isavailable} = req.body;
+      const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
+        {_id:tiffin_id},
+        {tiffin_available_quantity:tiffin_available_quantity,tiffin_isavailable:tiffin_isavailable},
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      // if (!updatedTiffinItem) {
+      //   res.status(404).json({ message: "Tiffin Item not found" });
+      //   return;
+      // }
+      console.log(updatedTiffinItem);
+      
       res.status(200).json({ message: "Tiffin Item updated successfully" , updatedTiffinItem});
     } catch (error) {
       res.status(500).json({ message: "Error updating Tiffin Item", error });

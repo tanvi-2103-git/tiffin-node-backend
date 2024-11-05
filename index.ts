@@ -35,10 +35,10 @@ app.use("/api/admin", adminRoutes);
 
 
 //superadmin routes
-app.use('/api/role',roleRoutes);
+app.use('/api/superadmin/role',roleRoutes);
 app.use('/api/superadmin',superAdminRoutes);
-app.use('/api/organizations', organizationRoutes); 
+app.use('/api/superadmin/organizations', organizationRoutes); 
 
 //retailer routes
 app.use('/api/retailers', retailerRoutes); // Crud controller left- to do
-app.use('/api/tiffinItems', TiffinItemRoutes);
+app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
