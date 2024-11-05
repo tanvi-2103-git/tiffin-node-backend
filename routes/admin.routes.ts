@@ -21,4 +21,3 @@ adminRoutes.put("/approveRetailer/:retailer_id",validateToken,RoleBaseValidation
 adminRoutes.put("/rejectRetailer/:retailer_id",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.rejectRetailer);
 
 //retailer request
-adminRoutes.put("/addRequest/:organization_id",validateToken,RoleBaseValidation('add_request'), adminController.addRequest);

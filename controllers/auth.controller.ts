@@ -8,6 +8,7 @@ import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken';
 import { UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
+
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();

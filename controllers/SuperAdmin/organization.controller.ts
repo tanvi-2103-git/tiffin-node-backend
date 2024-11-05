@@ -1,3 +1,4 @@
+
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
 import { User, UserModel } from "../../model/userModel";
@@ -5,9 +6,9 @@ import { User, UserModel } from "../../model/userModel";
 // interface Params {
 //     id: string; // Assuming you are using "id" as the parameter name
 // }
-
+//ananya
 export class OrganizationController {
-  public addOrganization = async function (req: Request, res: Response) {
+  public addOrganization = async (req: Request, res: Response) => {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
@@ -18,7 +19,7 @@ export class OrganizationController {
   };
 
   //get all organization
-  public getAllOrganizations = async function (req: Request, res: Response) {
+  public getAllOrganizations = async (req: Request, res: Response) =>{
     try {
       const organizations = await OrganizationModel.find();
       res.status(200).json({ statuscode: 200, data: organizations });
@@ -35,10 +36,10 @@ export class OrganizationController {
 
   //getting a specific org
   //as of now not required, but banake rakha hai (;
-  public getOrganizationById = async function (
+  public getOrganizationById = async (
     req: Request,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const { id } = req.params;
     try {
       const organization = await OrganizationModel.findById(id);
@@ -60,10 +61,10 @@ export class OrganizationController {
   };
 
   //delete org (By id)
-  public deleteOrganization = async function (
+  public deleteOrganization = async(
     req: Request<{ id: string }>,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const { id } = req.params;
     try {
       const deletedOrg = await OrganizationModel.findByIdAndDelete(id);
@@ -90,11 +91,13 @@ export class OrganizationController {
   };
 
   // Update org
-  public updateOrganization = async function (
+  public updateOrganization = async (
     req: Request<{ id: string }>,
     res: Response
-  ): Promise<void> {
-    const { _id, ...organization } = req.body;
+  ): Promise<void> => {
+    // const { _id, ...organization } = req.body;
+    const _id = req.params.id;
+    const {...organization } = req.body;
     try {
       // Update the organization
       const result = await OrganizationModel.updateOne({ _id }, organization);
@@ -128,10 +131,10 @@ export class OrganizationController {
 
   // to do -> create an api which get all the retailers which are approved by one organization
 
-  public getOrgsOfRetailer = async function (
+  public getOrgsOfRetailer = async (
     req: Request<{ id: string }>,
     res: Response
-  ): Promise<void> {
+  ): Promise<void> => {
     const org_id = req.body;
 
     try {
@@ -145,3 +148,4 @@ export class OrganizationController {
     } catch (error) {}
   };
 }
+

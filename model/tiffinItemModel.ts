@@ -27,10 +27,12 @@ export interface TiffinItem extends Document {
     tiffin_price: { type: Number, required: true },
     tiffin_rating: { type: Number, required: true },
     tiffin_isavailable: { type: Boolean, required: true },
-    tiffin_created_at:{ type: Date, required: true },
-    tiffin_updated_at:{ type: Date, required: true },
+    tiffin_created_at:{ type: Date, required: true, default:Date.now },
+    tiffin_updated_at:{ type: Date, required: true,default:Date.now  },
+    // tiffin_created_at:{ type: Date, required: true, default : Date.now },
+    // tiffin_updated_at:{ type: Date, required: true, default : Date.now },
 
     
 });
 
-export const TiffinItemModel = mongoose.model('TiffinItem', TiffinItemSchema);
+export const TiffinItemModel = mongoose.model<TiffinItem>('TiffinItem', TiffinItemSchema);
