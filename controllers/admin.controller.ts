@@ -273,6 +273,72 @@ export class AdminController {
     }
   };
 
+
+  public makeRetailerTrendy = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      console.log(user, "user");
+
+      if (
+        !user ||
+        !user.role_specific_details ||
+        user.role_specific_details.approval_status != "approved"
+      ) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const retailer_id = req.params.retailer_id;
+        console.log("retailer_id", retailer_id);
+
+        const organization_id = user?.role_specific_details.organization_id;
+        console.log("organization_id", organization_id);
+        const retailer = await UserModel.findOne({
+          _id: retailer_id,
+          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+
+          "role_specific_details.approval": {
+            $elemMatch: {
+              // approval_status: "pending",
+              organization_id: organization_id,
+            },
+          },
+        }).exec();
+        console.log("retailer", retailer);
+        // res.json(retailer)
+        if (!retailer) {
+          res.status(404).json({
+            statuscode: 404,
+            message:
+              "Retailer not found or no pending approval for this organization.",
+          });
+        }
+
+        const result = await UserModel.updateOne(
+          { _id: retailer_id },
+          {
+            $set: {
+              "role_specific_details.approval.$[elem].istrendy":
+                true,
+            },
+          },
+          {
+            arrayFilters: [{ "elem.organization_id": organization_id }],
+          }
+        );
+        console.log(result);
+
+        res.status(200).json({ statuscode: 403, data: result });
+      }
+    } catch (error) {
+      console.error("Error approving retailer:", error);
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `Internal server error: ${error}` });
+    }
+  };
+
   // public rejectRetailer = async (req: Request, res: Response) => {
   //   try {
   //     const user = await getUserFromToken(req);

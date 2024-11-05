@@ -46,6 +46,7 @@ async (req: Request, res: Response) => {
           message: "Authentication successful!",
           token: token,
           _id: user._id,
+          role_id: user.role_id
           
         });
       } else {
@@ -55,11 +56,19 @@ async (req: Request, res: Response) => {
           message: "Invalid username or password",
         });
       }
-    } } catch (error) {
+    }else{
+      res.status(404).json({
+        statuscode:404,
+        success: false,
+        message: "User not found",
+      });
+    }
+   } catch (error) {
       console.error(error);
       res.status(400).json({statuscode:400, error: "User Login failed" });
     }
   }
+
 
 
 
@@ -90,6 +99,7 @@ public register = async (req: Request, res: Response) => {
     // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
     for (const field of roleTemplate) {
       const fieldName = field.name;
+
       // if (!(fieldName in inputRoleSpecificDetails)) {
       //    res.status(400).json({
       //     statuscode: 400,
