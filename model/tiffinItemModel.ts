@@ -29,6 +29,8 @@ export interface TiffinItem extends Document {
     tiffin_isavailable: { type: Boolean, required: true },
     tiffin_created_at:{ type: Date, required: true, default:Date.now },
     tiffin_updated_at:{ type: Date, required: true,default:Date.now  },
+    // tiffin_created_at:{ type: Date, required: true, default : Date.now },
+    // tiffin_updated_at:{ type: Date, required: true, default : Date.now },
 
     
 });

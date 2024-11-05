@@ -1,3 +1,4 @@
+
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
 import { User, UserModel } from "../../model/userModel";
@@ -94,7 +95,9 @@ export class OrganizationController {
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
-    const { _id, ...organization } = req.body;
+    // const { _id, ...organization } = req.body;
+    const _id = req.params.id;
+    const {...organization } = req.body;
     try {
       // Update the organization
       const result = await OrganizationModel.updateOne({ _id }, organization);
@@ -145,3 +148,4 @@ export class OrganizationController {
     } catch (error) {}
   };
 }
+

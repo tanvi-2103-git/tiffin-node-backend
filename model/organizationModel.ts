@@ -26,8 +26,8 @@ const OrganizationSchema = new mongoose.Schema({
         loc_email: { type: String, required: true},
         admin_id: { type: String, required: true},                               
     }], required: true},
-    org_created_at: { type: Date, required: true },
-    org_updated_at: { type: Date, required: true },
+    org_created_at: { type: Date, required: true,default:Date.now },
+    org_updated_at: { type: Date, required: true,default: Date.now},
     isActive: { type: Boolean, required: true },
 
 })

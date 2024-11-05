@@ -19,20 +19,21 @@
 import express from 'express';
 import { OrganizationController } from '../controllers/SuperAdmin/organization.controller';
 import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
+import { validateOrganization } from '../validators/organizationVaildator'
 const router = express.Router();
 const organizationRoutes = new OrganizationController();
 
-router.post('/addOrganization', organizationRoutes.addOrganization);
+// router.post('/addOrganization', organizationRoutes.addOrganization);
+// router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
+// router.get('/getOrganization/:id', organizationRoutes.getOrganizationById);
+// router.put('/updateOrganization/:id', organizationRoutes.updateOrganization);
+// router.delete('/deleteOrganization/:id', organizationRoutes.deleteOrganization);
+
+
+
+router.post('/addOrganization',validateOrganization,RoleBaseValidation('add_organization'), organizationRoutes.addOrganization);
 router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
-router.get('/getOrganization/:id', organizationRoutes.getOrganizationById);
-router.put('/updateOrganization/:id', organizationRoutes.updateOrganization);
-router.delete('/deleteOrganization/:id', organizationRoutes.deleteOrganization);
-
-
-
-router.post('/addOrganization',RoleBaseValidation('SuperAdmin'), organizationRoutes.addOrganization);
-router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
-router.get('/getOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.getOrganizationById);
-router.put('/updateOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.updateOrganization);
-router.delete('/deleteOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.deleteOrganization);
+router.get('/getOrganization/:id',RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
+router.put('/updateOrganization/:id',validateOrganization,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
+router.delete('/deleteOrganization/:id',RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 export default router;
