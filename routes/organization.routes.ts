@@ -22,17 +22,10 @@ import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
 const router = express.Router();
 const organizationRoutes = new OrganizationController();
 
-router.post('/addOrganization', organizationRoutes.addOrganization);
+
+router.post('/addOrganization',RoleBaseValidation('add_organization'), organizationRoutes.addOrganization);
 router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
-router.get('/getOrganization/:id', organizationRoutes.getOrganizationById);
-router.put('/updateOrganization/:id', organizationRoutes.updateOrganization);
-router.delete('/deleteOrganization/:id', organizationRoutes.deleteOrganization);
-
-
-
-router.post('/addOrganization',RoleBaseValidation('SuperAdmin'), organizationRoutes.addOrganization);
-router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
-router.get('/getOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.getOrganizationById);
+router.get('/getOrganization/:id',RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
 router.put('/updateOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.updateOrganization);
 router.delete('/deleteOrganization/:id',RoleBaseValidation('SuperAdmin'), organizationRoutes.deleteOrganization);
 export default router;
