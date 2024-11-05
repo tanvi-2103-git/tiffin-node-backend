@@ -8,3 +8,5 @@ export const authRoutes = express();
 const  authController = new AuthController();
 authRoutes.post("/register", authController.register);
 authRoutes.post("/login", authController.login);
+authRoutes.post("/forgotpassword", authController.forgotPassword);
+authRoutes.post("/resetpassword", authController.resetPassword);
