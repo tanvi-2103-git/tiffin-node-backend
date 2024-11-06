@@ -7,7 +7,7 @@ import nodemailer from "nodemailer";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { UserModel } from "../model/userModel";
+import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
 export const userRoutes = express();
@@ -383,6 +383,38 @@ public register = async (req: Request, res: Response) => {
         .json({ success: false, message: "Failed to reset password" });
     }
   };
+
+
+getUserByToken =  async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.split(" ")[1];
+  
+      if (!token) {
+        res.json("No token provided")
+        res.status(404).json({statuscode:404, message:`No token provided`})
+
+      }else{
+  
+      const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+        id: string;
+        role: string;
+      };
+      const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as User;
+  
+      if (!user) {
+        
+        res.status(404).json({statuscode:404, message:`User not found`})
+
+        
+      }
+      res.status(200).json({statuscode:200,data:user})
+      }
+    } catch (error) {
+      res.status(500).json({statuscode:500, message:` ${error}`})
+     
+    }
+  };
+
 
   // public resetPassword = async (req: Request, res: Response) => {
   //   try {

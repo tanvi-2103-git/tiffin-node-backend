@@ -8,6 +8,7 @@ import { getUserFromToken } from "../controllers/admin.controller";
 export const authRoutes = express();
 
 const  authController = new AuthController();
+authRoutes.post("/getuserbytoken", authController.getUserByToken);
 authRoutes.post("/register", authController.register);
 authRoutes.post("/login", authController.login);
 authRoutes.post("/forgotpassword", authController.forgotPassword);
