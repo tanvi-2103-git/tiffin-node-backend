@@ -239,27 +239,18 @@ public register = async (req: Request, res: Response) => {
        res.status(400).json({ statuscode: 400, error: "Invalid role ID provided" });
     }else{
 
-    // Validate and build role_specific_details based on Role document
     let role_specific_details : RoleSpecificDetail= {};
-    const roleTemplate = roleDoc.role_specific_details; // expected structure from Role
+    const roleTemplate = roleDoc.role_specific_details;
 
-    // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
     for (const field of roleTemplate) {
       const fieldName = field.name;
 
-      // if (!(fieldName in inputRoleSpecificDetails)) {
-      //    res.status(400).json({
-      //     statuscode: 400,
-      //     error: `Missing required role-specific field: ${fieldName}`,
-      //   });
-      // }
-      // Set the field in role_specific_details to ensure it matches Role structure
+    
       role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
       console.log(role_specific_details[fieldName]);
       
     }
 
-    // Create the user document
     const user = new UserModel({
       username,
       email,
@@ -270,20 +261,18 @@ public register = async (req: Request, res: Response) => {
       role_specific_details,
     });
 
-    // Save the user
     const userData = await user.save();
 
-    // Generate JWT token
     const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY!, {
       expiresIn: '2h',
     });
 
-    // Respond with success
     res.status(201).json({
       statuscode: 201,
       message: "User registered successfully",
       token,
       _id: userData._id,
+      role_id:userData.role_id
     });}
   } catch (error) {
     console.error(error);

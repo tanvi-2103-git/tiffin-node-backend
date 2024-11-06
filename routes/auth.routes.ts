@@ -4,6 +4,7 @@ import { validateLoginUser } from "../validators/authValidator";
 
 
 import {AuthController} from "../controllers/auth.controller";
+import { getUserFromToken } from "../controllers/admin.controller";
 export const authRoutes = express();
 
 const  authController = new AuthController();
