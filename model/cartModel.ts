@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 
 export interface CartItem {
     tiffin_id: string;  //add ref            
@@ -28,7 +28,7 @@ const CartSchema = new mongoose.Schema({
 
     total_amount: { type: Number, default: 0 },                      
     created_at: { type: Date, default: Date.now },
-    isActive: { type: Boolean, required: true }                   
+    isActive: { type: Boolean, required: true, default: true }                   
 });
 
 export const CartModel = mongoose.model<Cart>('Cart', CartSchema);
