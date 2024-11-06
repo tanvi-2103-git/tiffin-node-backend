@@ -15,7 +15,8 @@ const tiffinItemController = new TiffinItemController();
 // get_tiffin_by_id
 
 TiffinItemRoutes.post('/addtiffin',validateTiffinItem,validateToken,RoleBaseValidation('add_tiffin'), tiffinItemController.addTiffinItem);
-TiffinItemRoutes.get('/getalltiffin',validateToken,RoleBaseValidation('get_all_tiffins'), tiffinItemController.getAllTiffinItems);
+// TiffinItemRoutes.get('/getalltiffin',validateToken,RoleBaseValidation('get_all_tiffins'), tiffinItemController.getAllTiffinItems);
+TiffinItemRoutes.get('/getalltiffin',tiffinItemController.getAllTiffinItems);
 TiffinItemRoutes.get('/gettiffinbyid/:tiffinid',validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
 TiffinItemRoutes.delete('/deletetiffin/:tiffinid',validateToken,RoleBaseValidation('delete_tiffin'), tiffinItemController.deleteTiffinItem);
 TiffinItemRoutes.put('/updatetiffin/:tiffinid',validateTiffinItem,validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinItem);

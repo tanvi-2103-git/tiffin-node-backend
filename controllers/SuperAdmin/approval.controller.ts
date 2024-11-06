@@ -7,16 +7,35 @@ export class ApprovalController {
     // ideally speaking we dont need to add a separate function for adding the request as, when a admin registers, their aproval status is by default pending.
   };
 
+
   public getAllPendingAdminApprovalRequests = async  (
     req: Request,
     res: Response
   )=> {
     try {
+     const page = parseInt(req.query.page as string) || 1; 
+     const limit = parseInt(req.query.limit as string) || 1;
+
+     const skip = (page - 1) * limit;
+
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "pending",
-      }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+      }).skip(skip).limit(limit).exec();
+      
+      const totalItems = await UserModel.countDocuments();
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      res.status(200).json({ 
+        statuscode: 200, 
+        data: approvalRequests,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+       });
     } catch (error) {
       res
         .status(500)
@@ -28,13 +47,32 @@ export class ApprovalController {
     }
   };
 
+
   public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 1;
+
+      const skip = (page - 1) * limit;
+
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "approved",
-      }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+      }).skip(skip).limit(limit).exec();
+     
+      const totalItems = await UserModel.countDocuments();
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      res.status(200).json({ 
+        statuscode: 200,
+         data: approvalRequests,
+         pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+        });
     } catch (error) {
       res
         .status(500)
@@ -48,11 +86,29 @@ export class ApprovalController {
 
   public getAllRejectedAdmin = async  (req: Request, res: Response)=> {
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 1;
+
+      const skip = (page - 1) * limit;
+
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "rejected",
-      }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+      }).skip(skip).limit(limit).exec();
+
+      const totalItems = await UserModel.countDocuments();
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      res.status(200).json({ 
+        statuscode: 200, 
+        data: approvalRequests,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+       });
     } catch (error) {
       res
         .status(500)

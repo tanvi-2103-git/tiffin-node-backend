@@ -17,8 +17,8 @@ export const validateTiffinItem = (req: Request, res: Response, next: NextFuncti
         tiffin_price: Joi.number().positive().required(), 
         tiffin_rating: Joi.number().min(0).max(5).required(), 
         tiffin_isavailable: Joi.boolean().required(), 
-        tiffin_created_at: Joi.date().required(), 
-        tiffin_updated_at: Joi.date().required(), 
+        // tiffin_created_at: Joi.date().required(), 
+        // tiffin_updated_at: Joi.date().required(), 
     }).unknown();
 
     const { error } = schema.validate(req.body);

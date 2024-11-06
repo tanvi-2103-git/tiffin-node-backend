@@ -14,17 +14,54 @@ export class TiffinItemController {
     }
   };
 
-  public getAllTiffinItems = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
-    try {
-      const tiffinItems = await TiffinItemModel.find();
-      res.status(200).json(tiffinItems);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching Tiffin Items", error });
-    }
-  };
+  // public getAllTiffinItems = async (
+  //   req: Request,
+  //   res: Response
+  // ): Promise<void> => {
+  //   try {
+  //     const tiffinItems = await TiffinItemModel.find();
+  //     res.status(200).json(tiffinItems);
+  //   } catch (error) {
+  //     res.status(500).json({ message: "Error fetching Tiffin Items", error });
+  //   }
+  // };
+
+
+
+public getAllTiffinItems = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+   
+    const page = parseInt(req.query.page as string) || 1; 
+    const limit = parseInt(req.query.limit as string) || 4; 
+
+   
+    const skip = (page - 1) * limit;
+
+    
+    const tiffinItems = await TiffinItemModel.find()
+      .skip(skip) 
+      .limit(limit); 
+
+    
+    const totalItems = await TiffinItemModel.countDocuments();
+    
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: tiffinItems,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Tiffin Items", error });
+  }
+};
 
   public getTiffinItemById = async (
     req: Request,
@@ -47,6 +84,9 @@ export class TiffinItemController {
       res.status(500).json({ message: "Error fetching Tiffin Item", error });
     }
   };
+
+
+
 
   public deleteTiffinItem = async (
     req: Request,

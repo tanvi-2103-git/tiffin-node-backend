@@ -19,10 +19,45 @@ export class OrganizationController {
   };
 
   //get all organization
-  public getAllOrganizations = async (req: Request, res: Response) =>{
+  // public getAllOrganizations = async (req: Request, res: Response) =>{
+  //   try {
+  //     const organizations = await OrganizationModel.find();
+  //     res.status(200).json({ statuscode: 200, data: organizations });
+  //   } catch (error) {
+  //     res
+  //       .status(500)
+  //       .json({
+  //         statuscode: 500,
+  //         message: "Error fetching organizations",
+  //         error,
+  //       });
+  //   }
+  // };
+
+   public getAllOrganizations = async (req: Request, res: Response) =>{
     try {
-      const organizations = await OrganizationModel.find();
-      res.status(200).json({ statuscode: 200, data: organizations });
+    const page = parseInt(req.query.page as string) || 1; 
+    const limit = parseInt(req.query.limit as string) || 1;
+
+    const skip = (page - 1) * limit;
+
+      const organizations = await OrganizationModel.find()
+      .skip(skip)
+      .limit(limit);
+
+      const totalItems = await OrganizationModel.countDocuments();
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      res.status(200).json({ 
+        statuscode: 200, 
+        data: organizations,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
     } catch (error) {
       res
         .status(500)
@@ -33,6 +68,8 @@ export class OrganizationController {
         });
     }
   };
+
+  
 
   //getting a specific org
   //as of now not required, but banake rakha hai (;
