@@ -1,8 +1,8 @@
 import express from "express";
+import { validateToken } from "../../middleware/validateToken";
+import { RoleBaseValidation } from "../../middleware/RoleBaseValidation";
+import { EmployeeController } from "../../controllers/Employee/employee.controller";
 
-import { RoleBaseValidation } from "../middleware/RoleBaseValidation";
-import { validateToken } from "../middleware/validateToken";
-import { EmployeeController } from "../controllers/Employee/employee.controller";
 export const employeeRoutes = express();
 
 const  employeeController = new EmployeeController();
