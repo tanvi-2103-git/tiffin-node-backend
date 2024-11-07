@@ -4,6 +4,8 @@ const app = express();
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from 'dotenv';
+import { Request, Response } from "express";
+
 import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import organizationRoutes from "./routes/organization.routes";
@@ -14,11 +16,13 @@ import { roleRoutes } from "./routes/role.routes";
 import retailerRoutes from "./routes/retailer.routes";
 import { employeeRoutes } from "./routes/employee/employee.routes";
 import { cartRoutes } from "./routes/employee/cart.routes";
+import {upload, uploadToCloudinary } from './config/cloudinaryConfig'; //the file path where you had written this functions in earlier
 
 app.use(express.json());
 app.use(cors());
 dotenv.config();
-
+// app.use(express.json());
+    // app.use(express.urlencoded({extended:true}));
 
 //port
 app.listen(process.env.PORT, () => console.log("Application sever started"));
@@ -49,3 +53,8 @@ app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/employees/cart', cartRoutes);
 
+ const imageUploadRouter = express();
+
+
+
+app.use('/api',TiffinItemRoutes);
