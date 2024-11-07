@@ -19,7 +19,9 @@
 import express from 'express';
 import { OrganizationController } from '../controllers/SuperAdmin/organization.controller';
 import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
-import { validateOrganization } from '../validators/organizationVaildator'
+import { validateOrganization } from '../validators/organizationVaildator';
+import { validateGetRequest } from '../validators/getRequestValidator';
+
 const router = express.Router();
 const organizationRoutes = new OrganizationController();
 
@@ -32,8 +34,8 @@ const organizationRoutes = new OrganizationController();
 
 
 router.post('/addOrganization',validateOrganization,RoleBaseValidation('add_organization'), organizationRoutes.addOrganization);
-router.get('/getallOrganization', organizationRoutes.getAllOrganizations);
-router.get('/getOrganization/:id',RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
+router.get('/getallOrganization', validateGetRequest({isPagination: true}),organizationRoutes.getAllOrganizations);
+router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRequired:true}),RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
 router.put('/updateOrganization/:id',validateOrganization,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
 router.delete('/deleteOrganization/:id',RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 export default router;

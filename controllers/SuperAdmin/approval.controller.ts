@@ -34,7 +34,7 @@ export class ApprovalController {
           role_specific_details: {
             organization_id: admin.role_specific_details.organization_id,
             organization_name:org_name?.org_name,
-            approval_status: "pending"
+            approval_status: admin.role_specific_details.approval_status
           }
         };
         // console.log(newadmin);
@@ -79,7 +79,7 @@ export class ApprovalController {
           role_specific_details: {
             organization_id: admin.role_specific_details.organization_id,
             organization_name:org_name?.org_name,
-            approval_status: "pending"
+            approval_status: admin.role_specific_details.approval_status
           }
         };
         // console.log(newadmin);
@@ -120,7 +120,7 @@ export class ApprovalController {
           role_specific_details: {
             organization_id: admin.role_specific_details.organization_id,
             organization_name:org_name?.org_name,
-            approval_status: "pending"
+            approval_status: admin.role_specific_details.approval_status
           }
         };
         // console.log(newadmin);
