@@ -8,12 +8,12 @@ import sharp from 'sharp';
 
 
 dotenv.config();
-//  console.log(process.env.CLOUDINARY_NAME);
+ console.log("CLOUDINARY_NAME",process.env.CLOUDINARY_NAME);
  
 cloudinary.config({
- cloud_name: "dvtyyjpeo", 
- api_key: "397833874667347", 
- api_secret: "QKJaYSiCRE0Kify12JUN9pn1zgQ",
+ cloud_name: process.env.CLOUDINARY_NAME, 
+ api_key:  process.env.CLOUDINARY_API_KEY, 
+ api_secret:  process.env.CLOUDINARY_API_SECRET,
 });
 
 interface CloudinaryFile extends Express.Multer.File {
