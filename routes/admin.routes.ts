@@ -19,5 +19,6 @@ adminRoutes.get("/getrejectedRetailers",validateToken,RoleBaseValidation("get_re
 
 adminRoutes.put("/approveRetailer/:retailer_id",validateToken,RoleBaseValidation("approve_retailer_request"), adminController.approveRetailer);
 adminRoutes.put("/rejectRetailer/:retailer_id",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.rejectRetailer);
+adminRoutes.put("/makeretailertrendy/:retailer_id",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.makeRetailerTrendy);
 
 //retailer request

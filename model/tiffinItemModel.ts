@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 export interface TiffinItem extends Document {
+   
 
     tiffin_image_url: string; 
     tiffin_name: string;

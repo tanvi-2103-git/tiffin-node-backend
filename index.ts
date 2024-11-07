@@ -12,6 +12,8 @@ import  RetailerRoutes from "./routes/retailer.routes"
 import TiffinItemRoutes from "./routes/tiffinItem.routes"
 import { roleRoutes } from "./routes/role.routes";
 import retailerRoutes from "./routes/retailer.routes";
+import { employeeRoutes } from "./routes/employee/employee.routes";
+import { cartRoutes } from "./routes/employee/cart.routes";
 
 app.use(express.json());
 app.use(cors());
@@ -40,5 +42,10 @@ app.use('/api/superadmin',superAdminRoutes);
 app.use('/api/superadmin/organizations', organizationRoutes); 
 
 //retailer routes
-app.use('/api/retailers', retailerRoutes); // Crud controller left- to do
+app.use('/api/retailers', retailerRoutes); 
 app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
+
+//employee routes
+app.use('/api/employees', employeeRoutes);
+app.use('/api/employees/cart', cartRoutes);
+

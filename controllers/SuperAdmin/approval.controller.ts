@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
+import { OrganizationModel } from "../../model/organizationModel";
 
 export class ApprovalController {
   public addApprovalRequest = async function (req: Request, res: Response) {
@@ -16,7 +17,34 @@ export class ApprovalController {
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "pending",
       }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+      
+      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
+        const org_id = admin.role_specific_details.organization_id
+        
+        const org_name = await OrganizationModel.findById(org_id).exec();
+        // console.log(org_name);
+        
+        const newadmin ={
+          _id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          contact_number: admin.contact_number,
+          address: admin.address,
+          role_id: admin.role_id,
+          role_specific_details: {
+            organization_id: admin.role_specific_details.organization_id,
+            organization_name:org_name?.org_name,
+            approval_status: "pending"
+          }
+        };
+        // console.log(newadmin);
+        
+        return newadmin;
+      }))
+      console.log(newdata);
+      
+
+      res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
       res
         .status(500)
@@ -34,7 +62,31 @@ export class ApprovalController {
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "approved",
       }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+
+      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
+        const org_id = admin.role_specific_details.organization_id
+        
+        const org_name = await OrganizationModel.findById(org_id).exec();
+        // console.log(org_name);
+        
+        const newadmin ={
+          _id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          contact_number: admin.contact_number,
+          address: admin.address,
+          role_id: admin.role_id,
+          role_specific_details: {
+            organization_id: admin.role_specific_details.organization_id,
+            organization_name:org_name?.org_name,
+            approval_status: "pending"
+          }
+        };
+        // console.log(newadmin);
+        
+        return newadmin;
+      }))
+      res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
       res
         .status(500)
@@ -52,7 +104,31 @@ export class ApprovalController {
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "rejected",
       }).exec();
-      res.status(200).json({ statuscode: 200, data: approvalRequests });
+      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
+        const org_id = admin.role_specific_details.organization_id
+        
+        const org_name = await OrganizationModel.findById(org_id).exec();
+        // console.log(org_name);
+        
+        const newadmin ={
+          _id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          contact_number: admin.contact_number,
+          address: admin.address,
+          role_id: admin.role_id,
+          role_specific_details: {
+            organization_id: admin.role_specific_details.organization_id,
+            organization_name:org_name?.org_name,
+            approval_status: "pending"
+          }
+        };
+        // console.log(newadmin);
+        
+        return newadmin;
+      }))
+      
+      res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
       res
         .status(500)
