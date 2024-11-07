@@ -3,6 +3,7 @@ import { TiffinItemController } from '../controllers/tiifinItem.controller';
 import { validateToken } from '../middleware/validateToken';
 import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
 import {validateTiffinItem} from '../validators/tiffinItemValidator';
+import { validateGetRequest } from '../validators/getRequestValidator';
 
 const TiffinItemRoutes = express.Router();
 const tiffinItemController = new TiffinItemController();

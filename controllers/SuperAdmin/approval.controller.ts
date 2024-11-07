@@ -14,7 +14,7 @@ export class ApprovalController {
   )=> {
     try {
      const page = parseInt(req.query.page as string) || 1; 
-     const limit = parseInt(req.query.limit as string) || 1;
+     const limit = parseInt(req.query.limit as string) || 10;
 
      if(page < 1 || limit < 1){
       res.status(400).json({ message: "Page and limit must be positive integers" });
@@ -62,7 +62,7 @@ export class ApprovalController {
   public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
     try {
       const page = parseInt(req.query.page as string) || 1; 
-      const limit = parseInt(req.query.limit as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
       
 
       if(page < 1 || limit < 1){
@@ -110,7 +110,7 @@ export class ApprovalController {
   public getAllRejectedAdmin = async  (req: Request, res: Response)=> {
     try {
       const page = parseInt(req.query.page as string) || 1; 
-      const limit = parseInt(req.query.limit as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
 
       const skip = (page - 1) * limit;
 
