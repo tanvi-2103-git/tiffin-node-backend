@@ -33,11 +33,12 @@ export const validateGetRequest = (options: { isPagination?: boolean, isIdRequir
             });
             return;
         }
-
+          
+            req.query = value.query;
+ 
+            next();
         
-        req.query = value.query;
 
-        
-        next();
+       
     };
 };
