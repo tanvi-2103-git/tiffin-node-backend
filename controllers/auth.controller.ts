@@ -7,7 +7,7 @@ import nodemailer from "nodemailer";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { UserModel } from "../model/userModel";
+import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
 export const userRoutes = express();
@@ -23,122 +23,263 @@ export class AuthController {
     return await UserModel.findOne({ email: email });
   };
 
-  public login = async (req: Request, res: Response) => {
-    try {
-      const emailId = req.body.email;
-      const user = await this.getUserByEmail(emailId);
-      console.log(user);
+//   public login = async (req: Request, res: Response) => {
+//     try {
+//       const emailId = req.body.email;
+//       const user = await this.getUserByEmail(emailId);
+//       console.log(user);
 
-      const { email, password } = req.body;
-      if (user) {
-        const matchPassword = await bcrypt.compare(password, user.password);
+//       const { email, password } = req.body;
+//       if (user) {
+//         const matchPassword = await bcrypt.compare(password, user.password);
 
-        if (email === user.email && matchPassword) {
-          const token = jwt.sign(
-            { id: user._id, role: user.role_id },
-            process.env.SECRET_KEY!,
-            {
-              expiresIn: "2h",
-            }
-          );
-          res.json({
-            statuscode: 200,
-            success: true,
-            message: "Authentication successful!",
-            token: token,
-            _id: user._id,
-          });
-        } else {
-          res.status(401).json({
-            statuscode: 401,
-            success: false,
-            message: "Invalid username or password",
-          });
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      res.status(400).json({ statuscode: 400, error: "User Login failed" });
-    }
-  };
+//         if (email === user.email && matchPassword) {
+//           const token = jwt.sign(
+//             { id: user._id, role: user.role_id },
+//             process.env.SECRET_KEY!,
+//             {
+//               expiresIn: "2h",
+//             }
+//           );
+//           res.json({
+//             statuscode: 200,
+//             success: true,
+//             message: "Authentication successful!",
+//             token: token,
+//             _id: user._id,
+//           });
+//         } else {
+//           res.status(401).json({
+//             statuscode: 401,
+//             success: false,
+//             message: "Invalid username or password",
+//           });
+//         }
+//       }
+//     } catch (error) {
+//       console.error(error);
+//       res.status(400).json({ statuscode: 400, error: "User Login failed" });
+//     }
+//   };
 
-  public register = async (req: Request, res: Response) => {
-    try {
-      const {
-        username,
-        password,
-        email,
-        contact_number,
-        address,
-        role_id,
-        role_specific_details: inputRoleSpecificDetails,
-      } = req.body;
+//   public register = async (req: Request, res: Response) => {
+//     try {
+//       const {
+//         username,
+//         password,
+//         email,
+//         contact_number,
+//         address,
+//         role_id,
+//         role_specific_details: inputRoleSpecificDetails,
+//       } = req.body;
 
-      const hash = await bcrypt.hash(password, 10);
+//       const hash = await bcrypt.hash(password, 10);
 
-      const roleDoc = await RoleModel.findById(role_id);
-      if (!roleDoc) {
-        res
-          .status(400)
-          .json({ statuscode: 400, error: "Invalid role ID provided" });
+//       const roleDoc = await RoleModel.findById(role_id);
+//       if (!roleDoc) {
+//         res
+//           .status(400)
+//           .json({ statuscode: 400, error: "Invalid role ID provided" });
+// public login = 
+// async (req: Request, res: Response) => {
+//   try {
+//     const emailId= req.body.email;
+//     const user = await this.getUserByEmail(emailId);
+  
+//     const { email, password } = req.body;
+//      if (user) {
+//        const matchPassword = await bcrypt.compare(password, user.password);
+      
+       
+//       if (email === user.email && matchPassword) {
+//         const token = jwt.sign({ id: user._id, role: user.role_id }, process.env.SECRET_KEY!, {
+//           expiresIn: '2h',
+//         });
+//         res.json({
+//           statuscode: 200,
+//           success: true,
+//           message: "Authentication successful!",
+//           token: token,
+//           _id: user._id,
+//           role_id: user.role_id
+          
+//         });
+//       } else {
+//         // Validate and build role_specific_details based on Role document
+//         let role_specific_details: RoleSpecificDetail = {};
+//         const roleTemplate = roleDoc.role_specific_details; // expected structure from Role
+
+//         // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
+//         for (const field of roleTemplate) {
+//           const fieldName = field.name;
+//           // if (!(fieldName in inputRoleSpecificDetails)) {
+//           //    res.status(400).json({
+//           //     statuscode: 400,
+//           //     error: `Missing required role-specific field: ${fieldName}`,
+//           //   });
+//           // }
+//           // Set the field in role_specific_details to ensure it matches Role structure
+//           role_specific_details[fieldName] =
+//             inputRoleSpecificDetails[fieldName];
+//           console.log(role_specific_details[fieldName]);
+//         }
+
+//         // Create the user document
+//         const user = new UserModel({
+//           username,
+//           email,
+//           password: hash,
+//           contact_number,
+//           address,
+//           role_id: roleDoc._id,
+//           role_specific_details,
+//         });
+
+//         // Save the user
+//         const userData = await user.save();
+
+//         // Generate JWT token
+//         const token = jwt.sign(
+//           { id: userData._id, role: userData.role_id },
+//           process.env.SECRET_KEY!,
+//           {
+//             expiresIn: "2h",
+//           }
+//         );
+
+//         // Respond with success
+//         res.status(201).json({
+//           statuscode: 201,
+//           message: "User registered successfully",
+//           token,
+//           _id: userData._id,
+//         });
+//       }
+//     }else{
+//       res.status(404).json({
+//         statuscode:404,
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+//    } catch (error) {
+//       console.error(error);
+//       res
+//         .status(400)
+//         .json({ statuscode: 400, error: `User registration failed ${error}` });
+//     }
+//   };
+
+
+public login = 
+async (req: Request, res: Response) => {
+  try {
+    const emailId= req.body.email;
+    const user = await this.getUserByEmail(emailId);
+  
+    const { email, password } = req.body;
+     if (user) {
+       const matchPassword = await bcrypt.compare(password, user.password);
+      
+       
+      if (email === user.email && matchPassword) {
+        const token = jwt.sign({ id: user._id, role: user.role_id }, process.env.SECRET_KEY!, {
+          expiresIn: '2h',
+        });
+        res.json({
+          statuscode: 200,
+          success: true,
+          message: "Authentication successful!",
+          token: token,
+          _id: user._id,
+          role_id: user.role_id
+          
+        });
       } else {
-        // Validate and build role_specific_details based on Role document
-        let role_specific_details: RoleSpecificDetail = {};
-        const roleTemplate = roleDoc.role_specific_details; // expected structure from Role
-
-        // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
-        for (const field of roleTemplate) {
-          const fieldName = field.name;
-          // if (!(fieldName in inputRoleSpecificDetails)) {
-          //    res.status(400).json({
-          //     statuscode: 400,
-          //     error: `Missing required role-specific field: ${fieldName}`,
-          //   });
-          // }
-          // Set the field in role_specific_details to ensure it matches Role structure
-          role_specific_details[fieldName] =
-            inputRoleSpecificDetails[fieldName];
-          console.log(role_specific_details[fieldName]);
-        }
-
-        // Create the user document
-        const user = new UserModel({
-          username,
-          email,
-          password: hash,
-          contact_number,
-          address,
-          role_id: roleDoc._id,
-          role_specific_details,
-        });
-
-        // Save the user
-        const userData = await user.save();
-
-        // Generate JWT token
-        const token = jwt.sign(
-          { id: userData._id, role: userData.role_id },
-          process.env.SECRET_KEY!,
-          {
-            expiresIn: "2h",
-          }
-        );
-
-        // Respond with success
-        res.status(201).json({
-          statuscode: 201,
-          message: "User registered successfully",
-          token,
-          _id: userData._id,
+        res.status(401).json({
+          statuscode:401,
+          success: false,
+          message: "Invalid username or password",
         });
       }
-    } catch (error) {
-      console.error(error);
-      res
-        .status(400)
-        .json({ statuscode: 400, error: `User registration failed ${error}` });
+    }else{
+      res.status(404).json({
+        statuscode:404,
+        success: false,
+        message: "User not found",
+      });
     }
-  };
+   } catch (error) {
+      console.error(error);
+      res.status(400).json({statuscode:400, error: "User Login failed" });
+    }
+  }
+
+
+
+
+public register = async (req: Request, res: Response) => {
+  try {
+    const {
+      username,
+      password,
+      email,
+      contact_number,
+      address,
+      role_id,  
+      role_specific_details: inputRoleSpecificDetails,
+    } = req.body;
+
+   
+    const hash = await bcrypt.hash(password, 10);
+
+    const roleDoc = await RoleModel.findById(role_id);
+    if (!roleDoc) {
+       res.status(400).json({ statuscode: 400, error: "Invalid role ID provided" });
+    }else{
+
+    let role_specific_details : RoleSpecificDetail= {};
+    const roleTemplate = roleDoc.role_specific_details;
+
+    for (const field of roleTemplate) {
+      const fieldName = field.name;
+
+    
+      role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
+      console.log(role_specific_details[fieldName]);
+      
+    }
+
+    const user = new UserModel({
+      username,
+      email,
+      password: hash,
+      contact_number,
+      address,
+      role_id: roleDoc._id,
+      role_specific_details,
+    });
+
+    const userData = await user.save();
+
+    const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY!, {
+      expiresIn: '2h',
+    });
+
+    res.status(201).json({
+      statuscode: 201,
+      message: "User registered successfully",
+      token,
+      _id: userData._id,
+      role_id:userData.role_id
+    });}
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ statuscode: 400, error: `User registration failed ${error}` });
+  }
+};
+
 
   public forgotPassword = async (req: Request, res: Response) => {
     // todo:
@@ -242,6 +383,38 @@ export class AuthController {
         .json({ success: false, message: "Failed to reset password" });
     }
   };
+
+
+getUserByToken =  async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.split(" ")[1];
+  
+      if (!token) {
+        res.json("No token provided")
+        res.status(404).json({statuscode:404, message:`No token provided`})
+
+      }else{
+  
+      const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+        id: string;
+        role: string;
+      };
+      const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as User;
+  
+      if (!user) {
+        
+        res.status(404).json({statuscode:404, message:`User not found`})
+
+        
+      }
+      res.status(200).json({statuscode:200,data:user})
+      }
+    } catch (error) {
+      res.status(500).json({statuscode:500, message:` ${error}`})
+     
+    }
+  };
+
 
   // public resetPassword = async (req: Request, res: Response) => {
   //   try {

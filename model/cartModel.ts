@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 
 export interface CartItem {
     tiffin_id: string;  //add ref            
@@ -16,8 +16,8 @@ export interface Cart extends Document {
 }
 
 const CartSchema = new mongoose.Schema({
-    retailer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true }, 
-    customer_id: { type: mongoose.Schema.Types.ObjectId ,unique: true, ref: 'User', required: true },    
+    retailer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  required: true }, 
+    customer_id: { type: mongoose.Schema.Types.ObjectId , ref: 'User', required: true },    
     items: [
         {
             tiffin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tiffin', required: true }, 
@@ -28,7 +28,7 @@ const CartSchema = new mongoose.Schema({
 
     total_amount: { type: Number, default: 0 },                      
     created_at: { type: Date, default: Date.now },
-    isActive: { type: Boolean, required: true }                   
+    isActive: { type: Boolean, required: true, default: true }                   
 });
 
 export const CartModel = mongoose.model<Cart>('Cart', CartSchema);
