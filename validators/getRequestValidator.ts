@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 
 export const validateGetRequest = (options: { isPagination?: boolean, isIdRequired?: boolean }) => {
     return (req: Request, res: Response, next: NextFunction): void => {
+
         const schema = Joi.object({
-            
             params: Joi.object({
                 id: options.isIdRequired
                     ? Joi.string().regex(/^[a-fA-F0-9]{24}$/).required()  
