@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
+import { OrganizationModel } from "../../model/organizationModel";
 
 export class ApprovalController {
   public addApprovalRequest = async function (req: Request, res: Response) {
@@ -27,26 +28,8 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "pending",
-      }).skip(skip).limit(limit).exec();
-      
-      // const totalItems = await UserModel.countDocuments();
-
-      const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "pending",
-      });
-
-      const totalPages = Math.ceil(totalItems / limit);
-
-      res.status(200).json({ 
-        statuscode: 200, 
-        data: approvalRequests,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-       });
+      }).exec();
+      res.status(200).json({ statuscode: 200, data: approvalRequests });
     } catch (error) {
       res
         .status(500)
@@ -76,26 +59,8 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "approved",
-      }).skip(skip).limit(limit).exec();
-     
-      // const totalItems = await UserModel.countDocuments();
-
-      const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "approved",
-      });
-
-      const totalPages = Math.ceil(totalItems / limit);
-
-      res.status(200).json({ 
-        statuscode: 200,
-         data: approvalRequests,
-         pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-        });
+      }).exec();
+      res.status(200).json({ statuscode: 200, data: approvalRequests });
     } catch (error) {
       res
         .status(500)
@@ -123,25 +88,8 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "rejected",
-      }).skip(skip).limit(limit).exec();
-
-      // const totalItems = await UserModel.countDocuments();
-      const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "rejected",
-      });
-
-      const totalPages = Math.ceil(totalItems / limit);
-
-      res.status(200).json({ 
-        statuscode: 200, 
-        data: approvalRequests,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-       });
+      }).exec();
+      res.status(200).json({ statuscode: 200, data: approvalRequests });
     } catch (error) {
       res
         .status(500)

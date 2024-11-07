@@ -7,7 +7,7 @@ import { TiffinItemModel } from "../../model/tiffinItemModel";
 export class EmployeeController {
 
    
-    public getAllTrendyRetailers = async function (req: Request, res: Response) {
+    public getAllTrendyRetailers = async  (req: Request, res: Response)=> {
         try {
             const user = await getUserFromToken(req);
             console.log(user, "user");
@@ -69,7 +69,7 @@ export class EmployeeController {
         }
     };
     
-    public getAllRetailersofOrg = async function (req: Request, res: Response) {
+    public getAllRetailersofOrg = async  (req: Request, res: Response) =>{
         try {
             const user = await getUserFromToken(req);
             console.log(user, "user");
@@ -131,7 +131,7 @@ export class EmployeeController {
 
 
    
-    public getAllTiffinofOrg = async function (req: Request, res: Response) {
+    public getAllTiffinofOrg = async  (req: Request, res: Response) =>{
         try {
             const user = await getUserFromToken(req);
             console.log(user, "user");
@@ -177,7 +177,7 @@ export class EmployeeController {
     
 
     
-    public getAllTiffinsByRetailer = async function (req: Request, res: Response) {
+    public getAllTiffinsByRetailer = async  (req: Request, res: Response) =>{
         try {
             const retailerId = req.params.retailerid;
             const user = await getUserFromToken(req);
@@ -231,7 +231,7 @@ export class EmployeeController {
 
 
 
-    public getTiffinofOrgById = async function (req: Request, res: Response) {
+    public getTiffinofOrgById = async  (req: Request, res: Response)=> {
         try {
             const tifinId = req.params.tifinid
             const user = await getUserFromToken(req);
