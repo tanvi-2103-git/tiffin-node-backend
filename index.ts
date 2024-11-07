@@ -12,7 +12,7 @@ import  RetailerRoutes from "./routes/retailer.routes"
 import TiffinItemRoutes from "./routes/tiffinItem.routes"
 import { roleRoutes } from "./routes/role.routes";
 import retailerRoutes from "./routes/retailer.routes";
-import { employeeRoutes } from "./routes/employee/employee.routes";
+import { employeeRoutes } from "./routes/employee.routes";
 import { cartRoutes } from "./routes/employee/cart.routes";
 
 app.use(express.json());
