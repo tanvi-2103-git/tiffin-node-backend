@@ -37,7 +37,13 @@ export class OrganizationController {
    public getAllOrganizations = async (req: Request, res: Response) =>{
     try {
     const page = parseInt(req.query.page as string) || 1; 
-    const limit = parseInt(req.query.limit as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4;
+
+    if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
+     }
 
     const skip = (page - 1) * limit;
 

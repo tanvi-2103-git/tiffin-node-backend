@@ -16,6 +16,12 @@ export class ApprovalController {
      const page = parseInt(req.query.page as string) || 1; 
      const limit = parseInt(req.query.limit as string) || 1;
 
+     if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
+     }
+
      const skip = (page - 1) * limit;
 
       const approvalRequests = await UserModel.find({
@@ -23,7 +29,12 @@ export class ApprovalController {
         "role_specific_details.approval_status": "pending",
       }).skip(skip).limit(limit).exec();
       
-      const totalItems = await UserModel.countDocuments();
+      // const totalItems = await UserModel.countDocuments();
+
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "pending",
+      });
 
       const totalPages = Math.ceil(totalItems / limit);
 
@@ -52,6 +63,13 @@ export class ApprovalController {
     try {
       const page = parseInt(req.query.page as string) || 1; 
       const limit = parseInt(req.query.limit as string) || 1;
+      
+
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
 
       const skip = (page - 1) * limit;
 
@@ -60,7 +78,12 @@ export class ApprovalController {
         "role_specific_details.approval_status": "approved",
       }).skip(skip).limit(limit).exec();
      
-      const totalItems = await UserModel.countDocuments();
+      // const totalItems = await UserModel.countDocuments();
+
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "approved",
+      });
 
       const totalPages = Math.ceil(totalItems / limit);
 
@@ -91,12 +114,22 @@ export class ApprovalController {
 
       const skip = (page - 1) * limit;
 
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
+
       const approvalRequests = await UserModel.find({
         role_id: "672775e4f2a1e38ef52c63c6", //admin
         "role_specific_details.approval_status": "rejected",
       }).skip(skip).limit(limit).exec();
 
-      const totalItems = await UserModel.countDocuments();
+      // const totalItems = await UserModel.countDocuments();
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "rejected",
+      });
 
       const totalPages = Math.ceil(totalItems / limit);
 
