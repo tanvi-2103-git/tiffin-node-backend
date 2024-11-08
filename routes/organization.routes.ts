@@ -21,6 +21,7 @@ import { OrganizationController } from '../controllers/SuperAdmin/organization.c
 import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
 import { validateOrganization } from '../validators/organizationVaildator';
 import { validateGetRequest } from '../validators/getRequestValidator';
+import { upload, uploadToCloudinary } from "../config/cloudinaryConfig";
 
 const router = express.Router();
 const organizationRoutes = new OrganizationController();
@@ -39,3 +40,6 @@ router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRe
 router.put('/updateOrganization/:id',validateOrganization,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
 router.delete('/deleteOrganization/:id',RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 export default router;
+
+router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image"), organizationRoutes.uploadOrganizationImage)
+// add: validateToken,RoleBaseValidation("update_tiffin")

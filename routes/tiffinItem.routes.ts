@@ -58,6 +58,6 @@ TiffinItemRoutes.put(
   tiffinItemController.updateTiffinQuantityAvailability
 );
 
-TiffinItemRoutes.post("/upload/:tifinid",validateToken,RoleBaseValidation("update_tiffin"), upload.single('recfile'),  uploadToCloudinary, tiffinItemController.uploadImage)
+TiffinItemRoutes.post("/upload/:tifinid",validateToken,RoleBaseValidation("update_tiffin"), upload.single('recfile'),  uploadToCloudinary("tiffin_image"), tiffinItemController.uploadImage)
 
 export default TiffinItemRoutes;

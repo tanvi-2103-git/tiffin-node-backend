@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
 import { User, UserModel } from "../../model/userModel";
@@ -19,18 +18,16 @@ export class OrganizationController {
   };
 
   //get all organization
-  public getAllOrganizations = async (req: Request, res: Response) =>{
+  public getAllOrganizations = async (req: Request, res: Response) => {
     try {
       const organizations = await OrganizationModel.find();
       res.status(200).json({ statuscode: 200, data: organizations });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organizations",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching organizations",
+        error,
+      });
     }
   };
 
@@ -50,18 +47,16 @@ export class OrganizationController {
       }
       res.status(200).json({ data: organization, statuscode: 200 });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching organization",
+        error,
+      });
     }
   };
 
   //delete org (By id)
-  public deleteOrganization = async(
+  public deleteOrganization = async (
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
@@ -73,20 +68,16 @@ export class OrganizationController {
           .status(404)
           .json({ statuscode: 404, message: "Organization not found" });
       }
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization deleted successfully",
-        });
+      res.status(200).json({
+        statuscode: 200,
+        message: "Organization deleted successfully",
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error deleting organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error deleting organization",
+        error,
+      });
     }
   };
 
@@ -97,35 +88,29 @@ export class OrganizationController {
   ): Promise<void> => {
     // const { _id, ...organization } = req.body;
     const _id = req.params.id;
-    const {...organization } = req.body;
+    const { ...organization } = req.body;
     try {
       // Update the organization
       const result = await OrganizationModel.updateOne({ _id }, organization);
 
       // Check if the update was successful
       if (result.modifiedCount === 0) {
-        res
-          .status(404)
-          .json({
-            statuscode: 404,
-            message: "Organization not found or no changes made",
-          });
+        res.status(404).json({
+          statuscode: 404,
+          message: "Organization not found or no changes made",
+        });
       }
 
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization updated successfully",
-        });
+      res.status(200).json({
+        statuscode: 200,
+        message: "Organization updated successfully",
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error updating organization",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error updating organization",
+        error,
+      });
     }
   };
 
@@ -147,5 +132,37 @@ export class OrganizationController {
       ]);
     } catch (error) {}
   };
-}
 
+  public uploadOrganizationImage = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const org_id = req.params.orgid;
+      const cloudinaryUrl = req.body.cloudinaryUrl;
+      console.log("cloudinaryUrl:", cloudinaryUrl);
+
+      if (!cloudinaryUrl) {
+        console.error("No Cloudinary URLs found.");
+        res.status(500).send("Internal Server Error");
+      } else {
+        const org = await OrganizationModel.findByIdAndUpdate(
+          org_id,
+          { org_image_url: cloudinaryUrl },
+          { new: true, runValidators: true }
+        );
+
+        if (org) {
+          res.status(200).json({
+            statuscode: 200,
+            data: org,
+          });
+        } else {
+          res.status(404).json({ statuscode: 404, message: "org not found" });
+        }
+      }
+    } catch (error) {
+      res.status(500).json({ error });
+    }
+  };
+}
