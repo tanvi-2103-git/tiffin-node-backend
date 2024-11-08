@@ -14,10 +14,12 @@ const tiffinItemController = new TiffinItemController();
 // "add_request",
 // get_all_tiffins,
 // get_tiffin_by_id
+// TiffinItemRoutes.get('/gettiffinbyid/:id', validateGetRequest({ isPagination: false, isIdRequired: true, idType: 'default' }), validateToken, RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
 
 TiffinItemRoutes.post('/addtiffin',validateTiffinItem,validateToken,RoleBaseValidation('add_tiffin'), tiffinItemController.addTiffinItem);
 TiffinItemRoutes.get('/getalltiffin',validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_all_tiffins'), tiffinItemController.getAllTiffinItems);
-TiffinItemRoutes.get('/gettiffinbyid/:tiffinid',validateGetRequest({isPagination:false,isIdRequired:true}),validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
+ TiffinItemRoutes.get('/gettiffinbyid/:tiffinid',validateGetRequest({isPagination:false,isIdRequired:true,idType: 'tiffinid'}),validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
+//TiffinItemRoutes.get('/gettiffinbyid/:tiffinid',validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
 TiffinItemRoutes.delete('/deletetiffin/:tiffinid',validateToken,RoleBaseValidation('delete_tiffin'), tiffinItemController.deleteTiffinItem);
 TiffinItemRoutes.put('/updatetiffin/:tiffinid',validateTiffinItem,validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinItem);
 TiffinItemRoutes.put('/updatetiffin/quantityavailability/:tiffinid',validateTiffinItem,validateToken,RoleBaseValidation('update_tiffin'), tiffinItemController.updateTiffinQuantityAvailability);
