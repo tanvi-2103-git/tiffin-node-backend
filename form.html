@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Form</title>
+</head>
+<body>
+    <h1>Organization Registration</h1>
+    <form id="organizationForm" method="POST" action="http://localhost:5000/api/superadmin/organizations/addOrganization" enctype="multipart/form-data">
+        <!-- Organization Name -->
+        <label for="org_name">Organization Name:</label>
+        <input type="text" id="org_name" name="org_name" required><br><br>
+
+        <!-- Organization Image -->
+        <label for="org_image_url">Organization Image:</label>
+        <input type="file" id="org_image_url" name="org_image_url" accept="image/*" required><br><br>
+
+        <!-- Organization Location (JSON Input) -->
+        <label for="org_location">Organization Location (JSON):</label>
+        <textarea id="org_location" name="org_location" required>
+        [
+            {
+                "loc": "Rabale",
+                "address": "Sigma It Park",
+                "loc_contact": 9769906622,
+                "loc_email": "hcl.org@gmail.com"
+            }
+        ]
+        </textarea><br><br>
+
+        <!-- Active Status -->
+        <label for="isActive">Is Active:</label>
+        <select id="isActive" name="isActive" required>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select><br><br>
+
+        <!-- Submit Button -->
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        // Optional: Add JavaScript to handle form submission or validation if needed
+        document.getElementById('organizationForm').onsubmit = function(e) {
+            e.preventDefault(); // Prevent default form submission to handle it manually
+            
+            var formData = new FormData(this); // Create FormData object from the form
+            fetch(this.action, {
+                method: this.method,
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Organization added successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            });
+        };
+    </script>
+</body>
+</html>

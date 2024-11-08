@@ -30,10 +30,11 @@ export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, 
     console.log(folder);
     
     if (!file) {
-      next(new Error('No files provided'));
-      return;
-    }
-    let cloudinaryUrl: string = '';
+      // next(new Error('No files provided'));
+      // return;
+      res.send({message: "No files provided"})
+    }else{
+      let cloudinaryUrl: string = '';
     
       const resizedBuffer: Buffer = await sharp(file.buffer)
         .resize({ width: 800, height: 600 })
@@ -55,8 +56,6 @@ export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, 
             cloudinaryUrl=result.secure_url;
             console.log("cloudinaryUrl",cloudinaryUrl);
             
-            
-              // All files processed now get your images here
               req.body.cloudinaryUrl = cloudinaryUrl;
               next();
             
@@ -64,7 +63,7 @@ export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, 
         }
       );
       uploadStream.end(resizedBuffer);
-    
+    }
   } catch (error) {
     console.error('Error in uploadToCloudinary service:', error);
     next(error);

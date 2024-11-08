@@ -8,6 +8,7 @@ export interface Approval{
 
 export interface User extends Document {
 
+    user_image: string;
     username: string;
     password: string;
     email: string;
@@ -25,6 +26,7 @@ export interface User extends Document {
 
 
 const UserSchema = new mongoose.Schema({
+    user_image: {type: String},
     username: { type: String, required: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
