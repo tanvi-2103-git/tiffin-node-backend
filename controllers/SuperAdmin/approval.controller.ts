@@ -2,148 +2,98 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { OrganizationModel } from "../../model/organizationModel";
+import { ADMIN_ID } from "../../utils/constants";
 
 export class ApprovalController {
-  public addApprovalRequest = async function (req: Request, res: Response) {
-    // ideally speaking we dont need to add a separate function for adding the request as, when a admin registers, their aproval status is by default pending.
-  };
-
-  public getAllPendingAdminApprovalRequests = async  (
+  public getAllPendingAdminApprovalRequests = async (
     req: Request,
     res: Response
-  )=> {
+  ) => {
     try {
       const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
+        role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "pending",
       }).exec();
-      
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
+
+      const newdata = await this.addOrganizationName(approvalRequests);
+
       console.log(newdata);
-      
 
       res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching Approval Requests",
+        error,
+      });
     }
   };
 
-  public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
+  public getAllApprovedAdmin = async (req: Request, res: Response) => {
     try {
       const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
+        role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "approved",
       }).exec();
 
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
+      const newdata = await this.addOrganizationName(approvalRequests);
+
       res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching Approval Requests",
+        error,
+      });
     }
   };
 
-  public getAllRejectedAdmin = async  (req: Request, res: Response)=> {
+  public getAllRejectedAdmin = async (req: Request, res: Response) => {
     try {
       const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
+        role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "rejected",
       }).exec();
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
-      
+      const newdata = await this.addOrganizationName(approvalRequests);
+
       res.status(200).json({ statuscode: 200, data: newdata });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching Approval Requests",
+        error,
+      });
     }
   };
 
-  public getApprovalRequestById = async  (
+  public getAllAdminRequest = async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status;
+      let admins;
+      if (status == "pending") {
+        admins = await this.getAllPendingAdminApprovalRequests(req, res);
+        res.status(200).json(admins);
+      } else if (status == "rejected") {
+        admins = await this.getAllRejectedAdmin(req, res);
+        res.status(200).json(admins);
+      } else if (status == "approved") {
+        admins = await this.getAllApprovedAdmin(req, res);
+        res.status(200).json(admins);
+      } else {
+        admins = await UserModel.find({ role_id: ADMIN_ID });
+        const newdata = await this.addOrganizationName(admins);//to display org name in res 
+
+        res.status(200).json(newdata);
+      }
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  };
+
+  public getApprovalRequestById = async (
     req: Request,
     res: Response
-  ): Promise<void> =>{
+  ): Promise<void> => {
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
@@ -159,10 +109,10 @@ export class ApprovalController {
     }
   };
 
-  public approveAdminRequest = async  (
+  public approveAdminRequest = async (
     req: Request,
     res: Response
-  ): Promise<void> =>{
+  ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
       console.log(user, "user");
@@ -182,38 +132,32 @@ export class ApprovalController {
         console.log(result);
 
         if (result.modifiedCount === 0) {
-          res
-            .status(404)
-            .json({
-              statuscode: 404,
-              message: "Approval request not found or already updated.",
-            });
+          res.status(404).json({
+            statuscode: 404,
+            message: "Approval request not found or already updated.",
+          });
         } else {
-          res
-            .status(200)
-            .json({
-              statuscode: 200,
-              message: "Approval request aprrove successfully.",
-              data: result,
-            });
+          res.status(200).json({
+            statuscode: 200,
+            message: "Approval request aprrove successfully.",
+            data: result,
+          });
         }
       }
     } catch (error) {
       console.error("Error rejecting approval request:", error);
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "An error occurred while rejecting the request.",
-          error,
-        });
+      res.status(500).json({
+        statuscode: 500,
+        message: "An error occurred while rejecting the request.",
+        error,
+      });
     }
   };
 
-  public rejectApprovalRequest = async  (
+  public rejectApprovalRequest = async (
     req: Request,
     res: Response
-  ): Promise<void>=> {
+  ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
       console.log(user, "user");
@@ -233,28 +177,51 @@ export class ApprovalController {
         console.log(result);
 
         if (result.modifiedCount === 0) {
-          res
-            .status(404)
-            .json({
-              message: "Approval request not found or already updated.",
-            });
+          res.status(404).json({
+            message: "Approval request not found or already updated.",
+          });
         } else {
-          res
-            .status(200)
-            .json({
-              message: "Approval request rejected successfully.",
-              data: result,
-            });
+          res.status(200).json({
+            message: "Approval request rejected successfully.",
+            data: result,
+          });
         }
       }
     } catch (error) {
       console.error("Error rejecting approval request:", error);
-      res
-        .status(500)
-        .json({
-          message: "An error occurred while rejecting the request.",
-          error,
-        });
+      res.status(500).json({
+        message: "An error occurred while rejecting the request.",
+        error,
+      });
     }
+  };
+
+  public addOrganizationName = async (admins: User[]) => {
+    const newdata = await Promise.all(
+      admins.map(async (admin) => {
+        const org_id = admin.role_specific_details.organization_id;
+
+        const org_name = await OrganizationModel.findById(org_id).exec();
+        // console.log(org_name);
+
+        const newadmin = {
+          _id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          contact_number: admin.contact_number,
+          address: admin.address,
+          role_id: admin.role_id,
+          role_specific_details: {
+            organization_id: admin.role_specific_details.organization_id,
+            organization_name: org_name?.org_name,
+            approval_status: admin.role_specific_details.approval_status,
+          },
+        };
+        // console.log(newadmin);
+
+        return newadmin;
+      })
+    );
+    return newdata;
   };
 }
