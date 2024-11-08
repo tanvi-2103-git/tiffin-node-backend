@@ -155,6 +155,39 @@ public getAllTiffinItems = async (
       res.status(500).json({ message: "Error updating Tiffin Item", error });
     }
   };
+   
+  public uploadImage = async (req: Request, res: Response):Promise<void> => {
+    try {
+        const tifinId = req.params.tifinid
+        const cloudinaryUrl = req.body.cloudinaryUrl;
+        console.log(cloudinaryUrl);
+        
+        if (!cloudinaryUrl) {
+            console.error('No Cloudinary URLs found.');
+             res.status(500).send('Internal Server Error');
+        }else{
+      //  const image = cloudinaryUrl;
+       const tiffin = await TiffinItemModel.findByIdAndUpdate(
+        tifinId,
+        { tiffin_image_url: cloudinaryUrl },
+        { new: true, runValidators: true }
+    );       
+    if(tiffin){
+      res.status(200).json({statuscode:200, data:tiffin})
+    }
+    else {
+      res.status(404).json({statuscode:404, message:"tiffin not found"})
+    }
+  }
+
+    } catch (error) {
+         res.status(500).json({ error});
+    }
 }
+
+}
+
+
+
 
 

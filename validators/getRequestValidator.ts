@@ -21,6 +21,7 @@ const validateIdByType = (idType: string) => {
 
 export const validateGetRequest = (options: { isPagination?: boolean, isIdRequired?: boolean, idType?: string }) => {
     return (req: Request, res: Response, next: NextFunction): void => {
+
         const schema = Joi.object({
             params: Joi.object({
                 [options.idType || 'id']: options.isIdRequired
