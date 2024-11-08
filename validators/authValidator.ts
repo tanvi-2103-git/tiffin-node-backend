@@ -37,8 +37,9 @@ export const validateLoginUser = (req: Request, res: Response, next: NextFunctio
     if (error) {
         console.log(error);
         res.status(400).json({ error: error.details[0].message });
-    }
+    }else{
     next();
+    }
 };
 
 module.exports = { validateRegisterUser, validateLoginUser };

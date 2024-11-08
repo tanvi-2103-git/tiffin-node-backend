@@ -15,6 +15,7 @@ export interface TiffinItem extends Document {
     tiffin_isavailable: boolean;
     tiffin_created_at:Date;
     tiffin_updated_at:Date;
+    isActive:Boolean;
 
   }
  

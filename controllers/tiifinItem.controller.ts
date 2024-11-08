@@ -34,14 +34,15 @@ public getAllTiffinItems = async (
     }
    
     const skip = (page - 1) * limit;
+    const retailerId = req.params.retailerid;
 
     
-    const tiffinItems = await TiffinItemModel.find()
+    const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
       .skip(skip) 
       .limit(limit); 
 
     
-    const totalItems = await TiffinItemModel.countDocuments();
+    const totalItems = tiffinItems.length;
     
     const totalPages = Math.ceil(totalItems / limit);
 
@@ -66,7 +67,7 @@ public getAllTiffinItems = async (
 
     const _id = new ObjectId(req.params.tiffinid);
     try {
-      const TiffinItem = await TiffinItemModel.findOne(_id);
+      const TiffinItem = await TiffinItemModel.findOne({_id:_id, isActive:true});
       // console.log(TiffinItem);
 
       if (!TiffinItem) {
@@ -89,7 +90,7 @@ public getAllTiffinItems = async (
   ): Promise<void> => {
     const { tiffinid } = req.params;
     try {
-      const deleteTiffin = await TiffinItemModel.findByIdAndDelete(tiffinid);
+      const deleteTiffin = await TiffinItemModel.findByIdAndUpdate({_id:tiffinid},{isActive:true});
       if (!deleteTiffin) {
         res.status(404).json({ message: "Tiffin Item not found" });
       }
@@ -107,7 +108,7 @@ public getAllTiffinItems = async (
       const { tiffinid } = req.params;
       const tiffinItemData: TiffinItem = req.body;
       const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
-        tiffinid,
+        {_id:tiffinid,isActive:true},
         tiffinItemData,
         {
           new: true,
@@ -136,7 +137,7 @@ public getAllTiffinItems = async (
       
       const {tiffin_available_quantity,tiffin_isavailable} = req.body;
       const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
-        {_id:tiffin_id},
+        {_id:tiffin_id, isActive:true},
         {tiffin_available_quantity:tiffin_available_quantity,tiffin_isavailable:tiffin_isavailable},
         {
           new: true,
