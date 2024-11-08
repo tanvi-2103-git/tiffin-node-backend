@@ -20,6 +20,7 @@ export class OrganizationController {
 
 
 
+  
    public getAllOrganizations = async (req: Request, res: Response) =>{
     try {
     const page = parseInt(req.query.page as string) || 1; 
