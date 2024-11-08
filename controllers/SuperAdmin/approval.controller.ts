@@ -24,6 +24,7 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "pending",
+        isActive : true
       }).skip(skip).limit(limit).exec();
       
       const totalItems = await UserModel.countDocuments({
@@ -71,6 +72,7 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "approved",
+        isActive : true
       }).skip(skip).limit(limit).exec();
 
        
@@ -116,6 +118,7 @@ export class ApprovalController {
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "rejected",
+        isActive : true
       }).skip(skip).limit(limit).exec();
 
       const totalItems = await UserModel.countDocuments({
@@ -159,7 +162,7 @@ export class ApprovalController {
         admins = await this.getAllApprovedAdmin(req, res);
         res.status(200).json(admins);
       } else {
-        admins = await UserModel.find({ role_id: ADMIN_ID });
+        admins = await UserModel.find({ role_id: ADMIN_ID, isActive : true });
         const newdata = await this.addOrganizationName(admins);//to display org name in res 
 
         res.status(200).json(newdata);
@@ -176,7 +179,7 @@ export class ApprovalController {
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
-      if (!approvalRequest) {
+      if (approvalRequest?.isActive==false || !approvalRequest ) {
         res
           .status(404)
           .json({ statuscode: 404, message: "Approval Request not found" });
@@ -196,7 +199,7 @@ export class ApprovalController {
       const user = await getUserFromToken(req);
       console.log(user, "user");
 
-      if (!user) {
+      if (user?.isActive==false || !user) {
         res.status(401).json({
           statuscode: 401,
           message: "Unauthorized or invalid user details.",
@@ -205,7 +208,7 @@ export class ApprovalController {
         const admin_id = req.params.admin_id;
         console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
-          { _id: admin_id },
+          { _id: admin_id, isActive:true },
           { $set: { "role_specific_details.approval_status": "approved" } }
         );
         console.log(result);
@@ -241,7 +244,7 @@ export class ApprovalController {
       const user = await getUserFromToken(req);
       console.log(user, "user");
 
-      if (!user) {
+      if (user?.isActive==false || !user) {
         res.status(401).json({
           statuscode: 401,
           message: "Unauthorized or invalid user details.",
@@ -250,7 +253,7 @@ export class ApprovalController {
         const admin_id = req.params.admin_id;
         console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
-          { _id: admin_id },
+          { _id: admin_id , isActive:true },
           { $set: { "role_specific_details.approval_status": "rejected" } }
         );
         console.log(result);

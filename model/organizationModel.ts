@@ -28,7 +28,7 @@ const OrganizationSchema = new mongoose.Schema({
     }], required: true},
     org_created_at: { type: Date, required: true,default:Date.now },
     org_updated_at: { type: Date, required: true,default: Date.now},
-    isActive: { type: Boolean, required: true },
+    isActive: { type: Boolean, required: true ,default:true},
 
 })
 

@@ -19,7 +19,7 @@ export interface User extends Document {
     resetPasswordToken: string| undefined;
     resetPasswordTokenExpires: Date | undefined;
     role_specific_details:any;
- 
+    isActive:Boolean;
 }
 
 
@@ -35,7 +35,8 @@ const UserSchema = new mongoose.Schema({
     role_id: { type: String,  required: true },
     resetPasswordToken: { type: String },
     resetPasswordTokenExpires: { type: Date},
-    role_specific_details:{}
+    role_specific_details:{},
+    isActive:{ type: Boolean, required: true, default:true }
     //     retailer: {
     //        gst_no:{ type: String,  required: function (user:User) {
     //         return user.role == "Retailer";

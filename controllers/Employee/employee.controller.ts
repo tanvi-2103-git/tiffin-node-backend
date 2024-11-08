@@ -12,12 +12,13 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if (  user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id ) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
                 });
-            } else {
+            } 
+            else {
                 const organizationId = user.role_specific_details.organization_id;
                 
                 const page = parseInt(req.query.page as string) || 1;  
@@ -74,7 +75,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if (  user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id ) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
@@ -136,7 +137,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
@@ -183,7 +184,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
@@ -237,7 +238,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
