@@ -32,7 +32,7 @@ export class ApprovalController {
         .exec();
 
       const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
+        role_id: ADMIN_ID,
         "role_specific_details.approval_status": "pending",
       });
 
@@ -82,7 +82,7 @@ export class ApprovalController {
         .exec();
 
       const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
+        role_id: ADMIN_ID,
         "role_specific_details.approval_status": "approved",
       });
 
@@ -132,7 +132,7 @@ export class ApprovalController {
         .exec();
 
       const totalItems = await UserModel.countDocuments({
-        role_id: "672775e4f2a1e38ef52c63c6",
+        role_id: ADMIN_ID,
         "role_specific_details.approval_status": "rejected",
       });
 
@@ -184,7 +184,7 @@ export class ApprovalController {
           .exec();
 
         const totalItems = await UserModel.countDocuments({
-          role_id: "672775e4f2a1e38ef52c63c6",
+          role_id:ADMIN_ID,
           "role_specific_details.approval_status": status,
         });
 
