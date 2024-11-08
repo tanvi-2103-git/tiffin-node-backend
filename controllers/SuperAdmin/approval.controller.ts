@@ -104,7 +104,7 @@ export class ApprovalController {
        
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "pending",
+        "role_specific_details.approval_status": "approved",
       });
 
       const totalPages = Math.ceil(totalItems / limit);
@@ -170,7 +170,7 @@ export class ApprovalController {
 
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "pending",
+        "role_specific_details.approval_status": "rejected",
       });
 
       const totalPages = Math.ceil(totalItems / limit);

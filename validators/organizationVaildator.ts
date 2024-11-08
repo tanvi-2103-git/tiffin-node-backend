@@ -13,8 +13,8 @@ export const validateOrganization = (req: Request, res: Response, next: NextFunc
             'number.max': 'Mobile number should be 10 digit'
         }),
         loc_email: Joi.string().email().required(),
-        admin_id: Joi.string().required(),
-    });
+        // admin_id: Joi.string().required(),
+    }).unknown();
 
     // organization schema
     const schema = Joi.object({

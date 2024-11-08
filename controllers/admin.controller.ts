@@ -37,9 +37,20 @@ export const getUserFromToken = async (
 };
 
 export class AdminController {
-  
+  //pagination
   public pendingApprovalRetailer = async (req: Request, res: Response) => {
     try {
+    const page = parseInt(req.query.page as string) || 1; 
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
+     }
+
+     const skip = (page - 1) * limit;
+
       const user = await getUserFromToken(req);
       console.log("org", user?.role_specific_details.organization_id);
 
@@ -61,10 +72,31 @@ export class AdminController {
               organization_id: user?.role_specific_details.organization_id,
             },
           },
-        }).exec();
+        }).skip(skip)
+      .limit(limit).exec();
+
+      const totalItems = await UserModel.countDocuments({
+        role_id: "6723475f74b32cfe39e5d0a2",
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "pending",
+              organization_id: user?.role_specific_details.organization_id,
+            },
+          },
+      });
+
+      const totalPages = Math.ceil(totalItems / limit);
+
         console.log(result);
 
-        res.status(200).json({ statuscode: 200, data: result });
+        res.status(200).json({ statuscode: 200,
+           data: result ,
+           pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          },
+          });
       }
     } catch (error) {
       console.error("Error fetching pending approval retailers:", error);
@@ -74,8 +106,20 @@ export class AdminController {
     }
   };
 
+  //pagination
   public getApprovedRetailer = async (req: Request, res: Response) => {
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
+
+       const skip = (page - 1) * limit;
+
       const user = await getUserFromToken(req);
       if (
         !user ||
@@ -95,10 +139,28 @@ export class AdminController {
               organization_id: user?.role_specific_details.organization_id,
             },
           },
-        }).exec();
+        }).skip(skip).limit(limit).exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: "6723475f74b32cfe39e5d0a2",
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "approved",
+              organization_id: user?.role_specific_details.organization_id,
+            },
+          },
+        });
+  
+        const totalPages = Math.ceil(totalItems / limit);
         console.log(result);
 
-        res.status(200).json({ statuscode: 200, data: result });
+        res.status(200).json({ statuscode: 200, data: result,
+          pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          },
+         });
       }
     } catch (error) {
       console.error("Error fetching pending approval retailers:", error);
@@ -108,8 +170,19 @@ export class AdminController {
     }
   };
 
+  //pagination
   public getRejectedRetailer = async (req: Request, res: Response) => {
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
+
+      const skip = (page - 1) * limit;
       const user = await getUserFromToken(req);
 
       if (
@@ -130,10 +203,28 @@ export class AdminController {
               organization_id: user?.role_specific_details.organization_id,
             },
           },
-        }).exec();
+        }).skip(skip).limit(limit).exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: "6723475f74b32cfe39e5d0a2", //retailer:roleid
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "rejected",
+              organization_id: user?.role_specific_details.organization_id,
+            },
+          },
+        });
+  
+        const totalPages = Math.ceil(totalItems / limit);
         console.log(result);
 
-        res.status(200).json({ statuscode: 200, data: result });
+        res.status(200).json({ statuscode: 200, data: result ,
+          pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          },
+        });
       }
     } catch (error) {
       console.error("Error fetching rejected approval retailers:", error);
