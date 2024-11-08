@@ -5,7 +5,7 @@ import { User, UserModel } from "../../model/userModel";
 // interface Params {
 //     id: string; // Assuming you are using "id" as the parameter name
 // }
-//ananya
+
 export class OrganizationController {
   public addOrganization = async (req: Request, res: Response) => {
     try {
@@ -115,7 +115,6 @@ export class OrganizationController {
   };
 
   // to do -> create an api which get all the retailers which are approved by one organization
-
   public getOrgsOfRetailer = async (
     req: Request<{ id: string }>,
     res: Response
