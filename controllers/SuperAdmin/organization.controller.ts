@@ -32,11 +32,11 @@ export class OrganizationController {
 
     const skip = (page - 1) * limit;
 
-      const organizations = await OrganizationModel.find()
+      const organizations = await OrganizationModel.find({isActive:true})
       .skip(skip)
       .limit(limit);
 
-      const totalItems = await OrganizationModel.countDocuments();
+      const totalItems = organizations.length;
 
       const totalPages = Math.ceil(totalItems / limit);
 
@@ -71,7 +71,7 @@ export class OrganizationController {
     const { id } = req.params;
     try {
       const organization = await OrganizationModel.findById(id);
-      if (!organization) {
+      if (organization?.isActive==false || !organization) {
         res
           .status(404)
           .json({ statuscode: 404, message: "Organization not found" });
@@ -95,7 +95,9 @@ export class OrganizationController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const deletedOrg = await OrganizationModel.findByIdAndDelete(id);
+      const deletedOrg = await OrganizationModel.findByIdAndUpdate({_id:id},{
+        isActive:false
+      });
       if (!deletedOrg) {
         res
           .status(404)
@@ -124,9 +126,15 @@ export class OrganizationController {
     res: Response
   ): Promise<void> => {
     // const { _id, ...organization } = req.body;
-    const _id = req.params.id;
-    const {...organization } = req.body;
+    
     try {
+      const _id = req.params.id;
+
+
+    const {...organization } = req.body;
+    const org = await OrganizationModel.findById(_id);
+    if(org?.isActive==true){
+
       // Update the organization
       const result = await OrganizationModel.updateOne({ _id }, organization);
 
@@ -145,7 +153,15 @@ export class OrganizationController {
         .json({
           statuscode: 200,
           message: "Organization updated successfully",
-        });
+        });}
+        else{
+          res
+          .status(404)
+          .json({
+            statuscode: 404,
+            message: "Organization not found ",
+          });
+        }
     } catch (error) {
       res
         .status(500)

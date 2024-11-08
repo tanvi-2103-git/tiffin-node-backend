@@ -78,7 +78,7 @@ export class ApprovalController {
        
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "pending",
+        "role_specific_details.approval_status": "approved",
       });
 
       const totalPages = Math.ceil(totalItems / limit);
@@ -123,7 +123,7 @@ export class ApprovalController {
 
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
-        "role_specific_details.approval_status": "pending",
+        "role_specific_details.approval_status": "rejected",
       });
 
       const totalPages = Math.ceil(totalItems / limit);
@@ -162,7 +162,24 @@ export class ApprovalController {
         admins = await this.getAllApprovedAdmin(req, res);
         res.status(200).json(admins);
       } else {
-        admins = await UserModel.find({ role_id: ADMIN_ID, isActive : true });
+        const page = parseInt(req.query.page as string) || 1; 
+        const limit = parseInt(req.query.limit as string) || 10;
+  
+        const skip = (page - 1) * limit;
+  
+        if(page < 1 || limit < 1){
+          res.status(400).json({ message: "Page and limit must be positive integers" });
+          return;
+          
+         }
+        admins = await UserModel.find({ role_id: ADMIN_ID, isActive : true }).skip(skip).limit(limit).exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: ADMIN_ID
+        });
+  
+        const totalPages = Math.ceil(totalItems / limit);
+  
         const newdata = await this.addOrganizationName(admins);//to display org name in res 
 
         res.status(200).json(newdata);

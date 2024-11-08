@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../model/userModel";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import { RETAILER_ID } from "../utils/constants";
 
 export const Admin = async (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome Admin" });
@@ -15,7 +16,7 @@ export const getUserFromToken = async (
 
     if (!token) {
       console.error("No token provided");
-      return undefined; 
+      return undefined;
     }
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
@@ -26,27 +27,27 @@ export const getUserFromToken = async (
 
     if (!user) {
       console.error("User not found");
-      return undefined; 
+      return undefined;
     }
 
-    return user; 
+    return user;
   } catch (error) {
     console.error("Invalid token", error);
-    return undefined; 
+    return undefined;
   }
 };
 
 export class AdminController {
-  
   public pendingApprovalRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
       console.log("org", user?.role_specific_details.organization_id);
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -54,7 +55,8 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
+          role_id: RETAILER_ID,
+          isActive: true,
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "pending",
@@ -78,9 +80,10 @@ export class AdminController {
     try {
       const user = await getUserFromToken(req);
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -88,7 +91,8 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
+          role_id: RETAILER_ID,
+          isActive: true,
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "approved",
@@ -113,9 +117,10 @@ export class AdminController {
       const user = await getUserFromToken(req);
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -123,7 +128,8 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer:roleid
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "rejected",
@@ -149,9 +155,10 @@ export class AdminController {
       console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -165,7 +172,8 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID, //retailer
+          isActive: true,
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -185,7 +193,7 @@ export class AdminController {
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
               "role_specific_details.approval.$[elem].approval_status":
@@ -214,9 +222,10 @@ export class AdminController {
       console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -230,7 +239,9 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID,
+          //retailer
+          isActive: true,
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -250,7 +261,7 @@ export class AdminController {
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
               "role_specific_details.approval.$[elem].approval_status":
@@ -273,16 +284,16 @@ export class AdminController {
     }
   };
 
-
   public makeRetailerTrendy = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
       console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
         res.status(401).json({
           statuscode: 401,
@@ -296,8 +307,8 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
-
+          role_id: RETAILER_ID, //retailer
+          isActive: true,
           "role_specific_details.approval": {
             $elemMatch: {
               // approval_status: "pending",
@@ -316,11 +327,10 @@ export class AdminController {
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
-              "role_specific_details.approval.$[elem].istrendy":
-                true,
+              "role_specific_details.approval.$[elem].istrendy": true,
             },
           },
           {
@@ -410,6 +420,5 @@ export class AdminController {
   //   }
   // };
 
- 
   //ADD TO RETAILER
 }

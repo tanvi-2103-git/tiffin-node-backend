@@ -14,3 +14,6 @@ const  roleController = new RoleController();
 //   'getall_roles'
 roleRoutes.post("/addRole",validateRole,validateToken, RoleBaseValidation('add_role'), roleController.addRole);
 roleRoutes.delete("/deleteRole/:role_id",validateToken, RoleBaseValidation('delete_role'), roleController.addRole);
+roleRoutes.get("/getallroles",validateToken, RoleBaseValidation('getall_roles'), roleController.getAllRoles);
+roleRoutes.get("/getallpermissions",validateToken, RoleBaseValidation('getall_roles'), roleController.getAllPermissions);
+

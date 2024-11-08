@@ -37,5 +37,5 @@ router.post('/addOrganization',validateOrganization,RoleBaseValidation('add_orga
 router.get('/getallOrganization', validateGetRequest({isPagination: true,isIdRequired:false}),organizationRoutes.getAllOrganizations);
 router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRequired:true,idType: 'id'}),RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
 router.put('/updateOrganization/:id',validateOrganization,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
-router.delete('/deleteOrganization/:id',RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
+router.put('/deleteOrganization/:id',RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 export default router;
