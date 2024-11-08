@@ -10,16 +10,41 @@ export class ApprovalController {
     res: Response
   ) => {
     try {
+     const page = parseInt(req.query.page as string) || 1; 
+     const limit = parseInt(req.query.limit as string) || 10;
+
+     if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
+     }
+
+     const skip = (page - 1) * limit;
+
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "pending",
-      }).exec();
+        isActive : true
+      }).skip(skip).limit(limit).exec();
+      
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "pending",
+      });
+
+      const totalPages = Math.ceil(totalItems / limit);
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      console.log(newdata);
+     
 
-      res.status(200).json({ statuscode: 200, data: newdata });
+      res.status(200).json({ statuscode: 200, data: newdata ,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -29,16 +54,45 @@ export class ApprovalController {
     }
   };
 
-  public getAllApprovedAdmin = async (req: Request, res: Response) => {
+
+  public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
+
+      const skip = (page - 1) * limit;
+
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "approved",
-      }).exec();
+        isActive : true
+      }).skip(skip).limit(limit).exec();
+
+       
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "approved",
+      });
+
+      const totalPages = Math.ceil(totalItems / limit);
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      res.status(200).json({ statuscode: 200, data: newdata });
+      res.status(200).json({ statuscode: 200, data: newdata,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+       });
+      
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -50,13 +104,41 @@ export class ApprovalController {
 
   public getAllRejectedAdmin = async (req: Request, res: Response) => {
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const skip = (page - 1) * limit;
+
+      if(page < 1 || limit < 1){
+        res.status(400).json({ message: "Page and limit must be positive integers" });
+        return;
+        
+       }
+
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "rejected",
-      }).exec();
+        isActive : true
+      }).skip(skip).limit(limit).exec();
+
+      const totalItems = await UserModel.countDocuments({
+        role_id: "672775e4f2a1e38ef52c63c6",
+        "role_specific_details.approval_status": "rejected",
+      });
+
+      const totalPages = Math.ceil(totalItems / limit);
+
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      res.status(200).json({ statuscode: 200, data: newdata });
+      
+      res.status(200).json({ statuscode: 200, data: newdata ,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
+      
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -80,7 +162,24 @@ export class ApprovalController {
         admins = await this.getAllApprovedAdmin(req, res);
         res.status(200).json(admins);
       } else {
-        admins = await UserModel.find({ role_id: ADMIN_ID });
+        const page = parseInt(req.query.page as string) || 1; 
+        const limit = parseInt(req.query.limit as string) || 10;
+  
+        const skip = (page - 1) * limit;
+  
+        if(page < 1 || limit < 1){
+          res.status(400).json({ message: "Page and limit must be positive integers" });
+          return;
+          
+         }
+        admins = await UserModel.find({ role_id: ADMIN_ID, isActive : true }).skip(skip).limit(limit).exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: ADMIN_ID
+        });
+  
+        const totalPages = Math.ceil(totalItems / limit);
+  
         const newdata = await this.addOrganizationName(admins);//to display org name in res 
 
         res.status(200).json(newdata);
@@ -89,7 +188,6 @@ export class ApprovalController {
       res.status(500).json(error);
     }
   };
-
   public getApprovalRequestById = async (
     req: Request,
     res: Response
