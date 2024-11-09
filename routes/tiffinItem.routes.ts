@@ -1,9 +1,10 @@
-import express from 'express';
-import { TiffinItemController } from '../controllers/tiifinItem.controller';
-import { validateToken } from '../middleware/validateToken';
-import { RoleBaseValidation } from '../middleware/RoleBaseValidation';
-import {validateTiffinItem} from '../validators/tiffinItemValidator';
-import {validateGetRequest} from '../validators/getRequestValidator';
+import express from "express";
+import { TiffinItemController } from "../controllers/tiifinItem.controller";
+import { validateToken } from "../middleware/validateToken";
+import { RoleBaseValidation } from "../middleware/RoleBaseValidation";
+import { validateTiffinItem } from "../validators/tiffinItemValidator";
+import { validateGetRequest } from "../validators/getRequestValidator";
+import { upload, uploadToCloudinary } from "../config/cloudinaryConfig";
 
 const TiffinItemRoutes = express.Router();
 const tiffinItemController = new TiffinItemController();
