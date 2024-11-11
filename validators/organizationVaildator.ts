@@ -22,7 +22,7 @@ export const validateOrganization = (req: Request, res: Response, next: NextFunc
         org_location: Joi.array().items(locationSchema).optional(), // Array of location objects
         org_created_at: Joi.date().optional(),
         org_updated_at: Joi.date().optional(),
-        isActive: Joi.boolean().required(), 
+        isActive: Joi.boolean().optional(), 
     }).unknown(); 
 
     const { error } = schema.validate(req.body);
