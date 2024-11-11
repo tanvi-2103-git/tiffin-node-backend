@@ -232,7 +232,9 @@ export class AdminController {
           message: "Unauthorized or invalid user details.",
         });
       } else {
+
         const retailer_id = req.params.retailer_id;
+        const {rejection_reason} = req.body;
         console.log("retailer_id", retailer_id);
 
         const organization_id = user?.role_specific_details.organization_id;
@@ -266,6 +268,8 @@ export class AdminController {
             $set: {
               "role_specific_details.approval.$[elem].approval_status":
                 "rejected",
+                "role_specific_details.approval.$[elem].rejection_reason":
+                rejection_reason,
             },
           },
           {

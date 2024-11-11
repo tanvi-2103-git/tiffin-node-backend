@@ -268,10 +268,11 @@ export class ApprovalController {
         });
       } else {
         const admin_id = req.params.admin_id;
+        const {rejection_reason} = req.body;
         console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
           { _id: admin_id , isActive:true },
-          { $set: { "role_specific_details.approval_status": "rejected" } }
+          { $set: { "role_specific_details.approval_status": "rejected" , "role_specific_details.rejection_reason":rejection_reason} }
         );
         console.log(result);
 
