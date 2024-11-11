@@ -26,14 +26,14 @@ TiffinItemRoutes.post(
 );
 TiffinItemRoutes.get(
   "/getalltiffin",
-  validateGetRequest({ isPagination: true, isIdRequired: false }),
+  validateGetRequest({ isPagination: true, isIdRequired: false}),
   validateToken,
   RoleBaseValidation("get_all_tiffins"),
   tiffinItemController.getAllTiffinItems
 );
 TiffinItemRoutes.get(
   "/gettiffinbyid/:tiffinid",
-  validateGetRequest({ isPagination: false, isIdRequired: true }),
+  validateGetRequest({ isPagination: false, isIdRequired: true, idType: 'tiffinid'  }),
   validateToken,
   RoleBaseValidation("get_tiffin_by_id"),
   tiffinItemController.getTiffinItemById

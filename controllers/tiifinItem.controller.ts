@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { TiffinItem, TiffinItemModel } from "../model/tiffinItemModel";
 import { ObjectId } from "mongodb";
 import { UserModel } from "../model/userModel";
+import { getUserFromToken } from "./admin.controller";
 
 export class TiffinItemController {
   public addTiffinItem = async (req: Request, res: Response): Promise<void> => {
@@ -15,15 +16,12 @@ export class TiffinItemController {
   };
 
   
-
-
-
 public getAllTiffinItems = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-   
+    
     const page = parseInt(req.query.page as string) || 1; 
     const limit = parseInt(req.query.limit as string) || 10; 
 
@@ -34,7 +32,9 @@ public getAllTiffinItems = async (
     }
    
     const skip = (page - 1) * limit;
-    const retailerId = req.params.retailerid;
+
+    const user = await getUserFromToken(req);
+    const retailerId = user?._id;
 
     
     const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
@@ -90,7 +90,7 @@ public getAllTiffinItems = async (
   ): Promise<void> => {
     const { tiffinid } = req.params;
     try {
-      const deleteTiffin = await TiffinItemModel.findByIdAndUpdate({_id:tiffinid},{isActive:true});
+      const deleteTiffin = await TiffinItemModel.findByIdAndUpdate({_id:tiffinid},{isActive:false});
       if (!deleteTiffin) {
         res.status(404).json({ message: "Tiffin Item not found" });
       }
