@@ -149,7 +149,7 @@ export class ApprovalController {
   };
 
  
-
+// combined API
   public getAllAdminRequest = async (req: Request, res: Response) => {
     try {
       const status = req.query.status;
@@ -341,6 +341,7 @@ export class ApprovalController {
     }
   };
 
+//to display admin name instead of admin id
   public addOrganizationName = async (admins: User[]) => {
     const newdata = await Promise.all(
       admins.map(async (admin) => {

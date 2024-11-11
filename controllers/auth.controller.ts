@@ -170,7 +170,6 @@ export class AuthController {
         });
 
         const resetURL = `http://localhost:5000/api/auth/resetpassword?token=${resetToken}&id=${user._id}`;
-        console.log(resetURL);
 
         const message = `
       <h3>Password Reset</h3>
@@ -189,6 +188,8 @@ export class AuthController {
         res.json({
           success: true,
           message: "Password reset link sent to your email",
+          token: resetToken,
+          userid: user._id
         });
       }
     } catch (error) {
@@ -209,12 +210,15 @@ export class AuthController {
           .createHash("sha256")
           .update(token as string)
           .digest("hex");
+          console.log(hashedToken);
+          
         const user = await UserModel.findOne({
           _id: id,
           resetPasswordToken: hashedToken,
           resetPasswordTokenExpires: { $gte: moment().toDate() },
         });
-
+        console.log(user);
+        
         if (!user) {
           res
             .status(400)
@@ -298,122 +302,6 @@ export class AuthController {
 
   }
 
-  // public resetPassword = async (req: Request, res: Response) => {
-  //   try {
-  //     const { token, id } = req.query;
-  //     const { newPassword } = req.body;
-  //     // console.log("token", token);
-
-  //     // const hashedToken = crypto
-  //     //   .createHash("sha256")
-  //     //   .update(resetToken)
-  //     //   .digest("hex");
-
-  //     const hashedToken = crypto
-  //       .createHash("sha256")
-  //       .update(token as string)
-  //       .digest("hex");
-
-  //       console.log("resethash",hashedToken);
-
-  //     const user = await UserModel.findOne({
-  //       _id: id,
-  //       resetPasswordToken: hashedToken,
-  //       resetPasswordExpires: { $gte: Date.now },
-  //     });
-
-  //     console.log( "user",user?.resetPasswordTokenExpires);
-  //     console.log(new Date());
-
-  //     if (!user) {
-  //       res
-  //         .status(400)
-  //         .json({ success: false, message: "Invalid or expired token" });
-  //     } else {
-  //       user.password = await bcrypt.hash(newPassword, 10);
-  //       user.resetPasswordToken = undefined;
-  //       user.resetPasswordTokenExpires = undefined;
-  //       await user.save();
-
-  //       res.json({ success: true, message: "Password reset successful" });
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     res
-  //       .status(500)
-  //       .json({ success: false, message: "Failed to reset password" });
-  //   }
-  // };
 }
 
-//   public register = async (req: Request, res: Response) => {
-//   try {
-//     const {
-//       username,
-//       password,
-//       email,
-//       contact_number,
-//       address,
-//       role,
-//       gst_no,
-//       employee_code,
-//       organization_id,
 
-//     } = req.body;
-
-//     const hash = await bcrypt.hash(password, 10);
-
-//     let role_specific_details = {};
-
-//     if (role === 'Retailer') {
-//       role_specific_details = {
-//         retailer: {
-//           gst_no
-//         },
-//       };
-//     } else if (role === 'Employee') {
-//       role_specific_details = {
-//         employee: {
-//           employee_code,
-//           organization_id,
-//         },
-//       };
-//     } else if (role === 'Admin') {
-//       role_specific_details = {
-//         subadmin: {
-//           organization_id,
-
-//         },
-//       };
-//     } else if (role === 'SuperAdmin') {
-//       role_specific_details = {};
-//     }
-
-//     const user = new UserModel({
-//       username,
-//       email,
-//       password: hash,
-//       contact_number,
-//       address,
-//       role,
-//       role_specific_details,
-//     });
-
-//     const userData = await user.save();
-
-//     const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY! , {
-//       expiresIn: '2h',
-//     });
-
-//     res.status(201).json({
-//       statuscode:201,
-//       message: "User registered successfully",
-//       token,
-//       _id: userData._id,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({statuscode:400, error: "User registration failed" });
-//   }
-// };
-// }
