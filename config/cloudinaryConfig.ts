@@ -6,7 +6,6 @@ import { v2 as cloudinary, UploadApiResponse,
 UploadApiErrorResponse } from 'cloudinary';
 import sharp from 'sharp';
 
-
 dotenv.config();
  
 cloudinary.config({
@@ -19,64 +18,23 @@ interface CloudinaryFile extends Express.Multer.File {
  buffer: Buffer;
 }
 
+//multer middleware
 const storage = multer.memoryStorage();
 export const upload: Multer = multer({ storage: storage });
 
-// export const uploadToCloudinary = async (req: Request, res: Response, next: NextFunction) => {
-//  try {
-//    const files: CloudinaryFile[] = req.files as CloudinaryFile[];
-//    if (!files || files.length === 0) {
-//      return next(new Error('No files provided'));
-//    }
-//    const cloudinaryUrls: string[] = [];
-//    for (const file of files) {
-//      const resizedBuffer: Buffer = await sharp(file.buffer)
-//        .resize({ width: 800, height: 600 })
-//        .toBuffer();
-
-//      const uploadStream = cloudinary.uploader.upload_stream(
-//        {
-//          resource_type: 'auto',
-//          folder: 'your-cloudinary-folder-name',
-//        } as any,
-//        (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-//          if (err) {
-//            console.error('Cloudinary upload error:', err);
-//            return next(err);
-//          }
-//          if (!result) {
-//            console.error('Cloudinary upload error: Result is undefined');
-//            return next(new Error('Cloudinary upload result is undefined'));
-//          }
-//          cloudinaryUrls.push(result.secure_url);
-
-//          if (cloudinaryUrls.length === files.length) {
-//            //All files processed now get your images here
-//            req.body.cloudinaryUrls = cloudinaryUrls;
-//            next();
-//          }
-//        }
-//      );
-//      uploadStream.end(resizedBuffer);
-//    }
-//  } catch (error) {
-//    console.error('Error in uploadToCloudinary middleware:', error);
-//    next(error);
-//  }
-// };
-
-
-
-export const uploadToCloudinary = async (req: Request, res: Response, next: NextFunction) => {
+//cloudinary service
+export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, res: Response, next: NextFunction) => {
   try {
     const file: CloudinaryFile = req.file as CloudinaryFile;
     console.log("file", file);
+    console.log(folder);
     
     if (!file) {
-      next(new Error('No files provided'));
-      return;
-    }
-    let cloudinaryUrl: string = '';
+      // next(new Error('No files provided'));
+      // return;
+      res.send({message: "No files provided"})
+    }else{
+      let cloudinaryUrl: string = '';
     
       const resizedBuffer: Buffer = await sharp(file.buffer)
         .resize({ width: 800, height: 600 })
@@ -85,7 +43,7 @@ export const uploadToCloudinary = async (req: Request, res: Response, next: Next
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: 'auto',
-          folder: 'tiffin_image',
+          folder: folder,
         } as any,
         (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
           if (err) {
@@ -98,8 +56,6 @@ export const uploadToCloudinary = async (req: Request, res: Response, next: Next
             cloudinaryUrl=result.secure_url;
             console.log("cloudinaryUrl",cloudinaryUrl);
             
-            
-              // All files processed now get your images here
               req.body.cloudinaryUrl = cloudinaryUrl;
               next();
             
@@ -107,9 +63,9 @@ export const uploadToCloudinary = async (req: Request, res: Response, next: Next
         }
       );
       uploadStream.end(resizedBuffer);
-    
+    }
   } catch (error) {
-    console.error('Error in uploadToCloudinary middleware:', error);
+    console.error('Error in uploadToCloudinary service:', error);
     next(error);
   }
-};
+}};

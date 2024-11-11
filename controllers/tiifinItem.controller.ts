@@ -161,7 +161,6 @@ public getAllTiffinItems = async (
     try {
         const tifinId = req.params.tifinid
         const cloudinaryUrl = req.body.cloudinaryUrl;
-        console.log(cloudinaryUrl);
         
         if (!cloudinaryUrl) {
             console.error('No Cloudinary URLs found.');

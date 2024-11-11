@@ -10,6 +10,7 @@ export interface Location {
 
 export interface Organization extends Document {
     org_name : string;
+    org_image_url: string;
     org_location : Location[]; 
     org_created_at : Date;
     org_updated_at : Date;
@@ -19,17 +20,17 @@ export interface Organization extends Document {
 
 const OrganizationSchema = new mongoose.Schema({
     org_name : { type: String, required: true, unique: true },
+    org_image_url: { type: String},
     org_location: {type: [{
         loc: { type: String, required: true},
         address: { type: String, required: true},
         loc_contact: { type: Number, required: true},
         loc_email: { type: String, required: true},
-        admin_id: { type: String, required: true},                               
+        admin_id: { type: String},                               
     }], required: true},
     org_created_at: { type: Date, required: true,default:Date.now },
     org_updated_at: { type: Date, required: true,default: Date.now},
-    isActive: { type: Boolean, required: true ,default:true},
-    
+    isActive: { type: Boolean, required: true ,default:true}
 
 })
 
