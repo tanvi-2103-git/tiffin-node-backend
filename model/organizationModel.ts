@@ -20,7 +20,7 @@ export interface Organization extends Document {
 
 const OrganizationSchema = new mongoose.Schema({
     org_name : { type: String, required: true, unique: true },
-    org_image_url: { type: String},
+    org_image_url: { type: String, default:""},
     org_location: {type: [{
         loc: { type: String, required: true},
         address: { type: String, required: true},
