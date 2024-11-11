@@ -96,7 +96,7 @@ export class AuthController {
 
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
-          console.log(role_specific_details[fieldName]);
+          // console.log(role_specific_details[fieldName]);
         }
 
         const user = new UserModel({

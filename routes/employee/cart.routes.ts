@@ -13,6 +13,8 @@ const  cartController = new CartController();
 
 cartRoutes.post("/addtiffintocart/:tiffinid",validateCart,validateToken,RoleBaseValidation("add_to_cart"), cartController.addTiffinToCart);
 
-cartRoutes.get("/removetiffinFfromcart/:tiffinid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'tiffinid'}),validateToken,RoleBaseValidation("remove_from_cart"), cartController.removeTiffinFromCart);
+cartRoutes.get("/removetiffinFromcart/:tiffinid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'tiffinid'}),validateToken,RoleBaseValidation("remove_from_cart"), cartController.removeTiffinFromCart);
 
 cartRoutes.get("/removecart/:cartid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'cartid'}),validateToken,RoleBaseValidation("remove_cart"), cartController.removeCart);
+cartRoutes.get("/getcart",validateToken,RoleBaseValidation("remove_cart"), cartController.getCart);
+
