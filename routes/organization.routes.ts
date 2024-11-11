@@ -22,7 +22,7 @@ router.post('/addOrganization',validateOrganization,validateToken, RoleBaseValid
 router.get('/getallOrganization', validateGetRequest({isPagination: true,isIdRequired:false}),validateToken,organizationRoutes.getAllOrganizations);
 router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRequired:true,idType: 'id'}),validateToken,RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
 router.put('/updateOrganization/:id',validateOrganization,validateToken,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
-router.put('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
+router.delete('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 export default router;
 
 router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image"), organizationRoutes.uploadOrganizationImage)

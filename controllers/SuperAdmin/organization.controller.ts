@@ -72,8 +72,9 @@ export class OrganizationController {
         res
           .status(404)
           .json({ statuscode: 404, message: "Organization not found" });
+      }else{
+        res.status(200).json({ data: organization, statuscode: 200 });
       }
-      res.status(200).json({ data: organization, statuscode: 200 });
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
