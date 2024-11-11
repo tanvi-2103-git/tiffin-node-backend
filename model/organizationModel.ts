@@ -5,7 +5,7 @@ export interface Location {
     address: string;
     loc_contact: number;
     loc_email: string;
-    admin_id: string;                                
+    admin_id: mongoose.Schema.Types.ObjectId;                                
 }
 
 export interface Organization extends Document {
@@ -26,7 +26,7 @@ const OrganizationSchema = new mongoose.Schema({
         address: { type: String, required: true},
         loc_contact: { type: Number, required: true},
         loc_email: { type: String, required: true},
-        admin_id: { type: String},                               
+        admin_id: { type: mongoose.Schema.Types.ObjectId, ref:'User', default: null},                               
     }], required: true},
     org_created_at: { type: Date, required: true,default:Date.now },
     org_updated_at: { type: Date, required: true,default: Date.now},

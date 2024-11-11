@@ -1,7 +1,8 @@
+import { ref } from 'joi';
 import mongoose from 'mongoose';
 
 export interface Order extends Document {
-    cart_id: string; //add ref
+    cart_id: mongoose.Schema.Types.ObjectId; 
     payment_mode: string;
     payment_status: string;
     payment_date: Date;
@@ -13,7 +14,7 @@ export interface Order extends Document {
 }
 
 const OrderSchema = new mongoose.Schema({
-    cart_id: { type: String, unique: true, required: true }, // add ref
+    cart_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Cart', unique: true, required: true }, 
     payment_mode:{type: String, enum: ['CoD','UPI'],required: true },
     payment_date: { type: Date, required: true },
     delivery_status: { type: String, enum: ['pending','commpleted', 'rejected'],required: true},
