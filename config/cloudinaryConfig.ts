@@ -8,7 +8,6 @@ import sharp from 'sharp';
 
 
 dotenv.config();
- console.log("CLOUDINARY_NAME",process.env.CLOUDINARY_NAME);
  
 cloudinary.config({
  cloud_name: process.env.CLOUDINARY_NAME, 
