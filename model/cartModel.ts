@@ -8,7 +8,7 @@ export interface CartItem {
 
 export interface Cart extends Document {
     retailer_id: string;        //add ref         
-    user_id: string;        //add ref 
+    customer_id: string;        //add ref 
     items: CartItem[];               
     total_amount: number;                                   
     created_at: Date;
