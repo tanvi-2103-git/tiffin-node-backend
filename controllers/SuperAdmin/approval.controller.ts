@@ -10,23 +10,27 @@ export class ApprovalController {
     res: Response
   ) => {
     try {
-     const page = parseInt(req.query.page as string) || 1; 
-     const limit = parseInt(req.query.limit as string) || 10;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
 
-     if(page < 1 || limit < 1){
-      res.status(400).json({ message: "Page and limit must be positive integers" });
-      return;
-      
-     }
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+        return;
+      }
 
-     const skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "pending",
-        isActive : true
-      }).skip(skip).limit(limit).exec();
-      
+        isActive: true,
+      })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
         "role_specific_details.approval_status": "pending",
@@ -36,9 +40,9 @@ export class ApprovalController {
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-     
-
-      res.status(200).json({ statuscode: 200, data: newdata ,
+      res.status(200).json({
+        statuscode: 200,
+        data: newdata,
         pagination: {
           currentPage: page,
           totalPages: totalPages,
@@ -54,28 +58,29 @@ export class ApprovalController {
     }
   };
 
-
-  public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
+  public getAllApprovedAdmin = async (req: Request, res: Response) => {
     try {
-      const page = parseInt(req.query.page as string) || 1; 
+      const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      
 
-      if(page < 1 || limit < 1){
-        res.status(400).json({ message: "Page and limit must be positive integers" });
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
         return;
-        
-       }
+      }
 
       const skip = (page - 1) * limit;
 
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "approved",
-        isActive : true
-      }).skip(skip).limit(limit).exec();
+        isActive: true,
+      })
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
-       
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
         "role_specific_details.approval_status": "approved",
@@ -85,14 +90,15 @@ export class ApprovalController {
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      res.status(200).json({ statuscode: 200, data: newdata,
+      res.status(200).json({
+        statuscode: 200,
+        data: newdata,
         pagination: {
           currentPage: page,
           totalPages: totalPages,
           totalItems: totalItems,
         },
-       });
-      
+      });
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -104,22 +110,26 @@ export class ApprovalController {
 
   public getAllRejectedAdmin = async (req: Request, res: Response) => {
     try {
-      const page = parseInt(req.query.page as string) || 1; 
+      const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
       const skip = (page - 1) * limit;
 
-      if(page < 1 || limit < 1){
-        res.status(400).json({ message: "Page and limit must be positive integers" });
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
         return;
-        
-       }
+      }
 
       const approvalRequests = await UserModel.find({
         role_id: ADMIN_ID, //admin
         "role_specific_details.approval_status": "rejected",
-        isActive : true
-      }).skip(skip).limit(limit).exec();
+        isActive: true,
+      })
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
       const totalItems = await UserModel.countDocuments({
         role_id: "672775e4f2a1e38ef52c63c6",
@@ -130,15 +140,15 @@ export class ApprovalController {
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      
-      res.status(200).json({ statuscode: 200, data: newdata ,
+      res.status(200).json({
+        statuscode: 200,
+        data: newdata,
         pagination: {
           currentPage: page,
           totalPages: totalPages,
           totalItems: totalItems,
         },
       });
-      
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -149,7 +159,7 @@ export class ApprovalController {
   };
 
  
-
+// combined API
   public getAllAdminRequest = async (req: Request, res: Response) => {
     try {
       const status = req.query.status;
@@ -176,7 +186,7 @@ export class ApprovalController {
           .exec();
 
         const totalItems = await UserModel.countDocuments({
-          role_id:ADMIN_ID,
+          role_id: ADMIN_ID,
           "role_specific_details.approval_status": status,
         });
 
@@ -233,7 +243,6 @@ export class ApprovalController {
     }
   };
 
-
   public getApprovalRequestById = async (
     req: Request,
     res: Response
@@ -241,7 +250,7 @@ export class ApprovalController {
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
-      if (approvalRequest?.isActive==false || !approvalRequest ) {
+      if (approvalRequest?.isActive == false || !approvalRequest) {
         res
           .status(404)
           .json({ statuscode: 404, message: "Approval Request not found" });
@@ -261,7 +270,7 @@ export class ApprovalController {
       const user = await getUserFromToken(req);
       console.log(user, "user");
 
-      if (user?.isActive==false || !user) {
+      if (user?.isActive == false || !user) {
         res.status(401).json({
           statuscode: 401,
           message: "Unauthorized or invalid user details.",
@@ -270,7 +279,7 @@ export class ApprovalController {
         const admin_id = req.params.admin_id;
         console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
-          { _id: admin_id, isActive:true },
+          { _id: admin_id, isActive: true },
           { $set: { "role_specific_details.approval_status": "approved" } }
         );
         console.log(result);
@@ -306,18 +315,23 @@ export class ApprovalController {
       const user = await getUserFromToken(req);
       console.log(user, "user");
 
-      if (user?.isActive==false || !user) {
+      if (user?.isActive == false || !user) {
         res.status(401).json({
           statuscode: 401,
           message: "Unauthorized or invalid user details.",
         });
       } else {
         const admin_id = req.params.admin_id;
-        const {rejection_reason} = req.body;
+        const { rejection_reason } = req.body;
         console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
-          { _id: admin_id , isActive:true },
-          { $set: { "role_specific_details.approval_status": "rejected" , "role_specific_details.rejection_reason":rejection_reason} }
+          { _id: admin_id, isActive: true },
+          {
+            $set: {
+              "role_specific_details.approval_status": "rejected",
+              "role_specific_details.rejection_reason": rejection_reason,
+            },
+          }
         );
         console.log(result);
 
@@ -341,6 +355,7 @@ export class ApprovalController {
     }
   };
 
+//to display admin name instead of admin id
   public addOrganizationName = async (admins: User[]) => {
     const newdata = await Promise.all(
       admins.map(async (admin) => {

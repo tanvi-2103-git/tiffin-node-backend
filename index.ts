@@ -4,7 +4,6 @@ const app = express();
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from 'dotenv';
-import { Request, Response } from "express";
 
 import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
@@ -53,8 +52,8 @@ app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/employees/cart', cartRoutes);
 
- const imageUploadRouter = express();
+//  const imageUploadRouter = express();
 
 
 
-app.use('/api',TiffinItemRoutes);
+// app.use('/api',TiffinItemRoutes);
