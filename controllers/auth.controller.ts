@@ -25,14 +25,13 @@ export class AuthController {
 
   public login = async (req: Request, res: Response) => {
     try {
-      const emailId = req.body.email;
-      const user = await this.getUserByEmail(emailId);
-
       const { email, password } = req.body;
+      const newEmail = email.toLowerCase();
+      const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
 
-        if (email === user.email && matchPassword) {
+        if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
             process.env.SECRET_KEY!,
@@ -98,10 +97,12 @@ export class AuthController {
             inputRoleSpecificDetails[fieldName];
           console.log(role_specific_details[fieldName]);
         }
-
+        // console.log(email);
+        // console.log(email.toLowerCase());
+        const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
-          email,
+          email:newEmail,
           password: hash,
           contact_number,
           address,

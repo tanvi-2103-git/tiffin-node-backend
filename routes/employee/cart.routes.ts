@@ -15,4 +15,4 @@ cartRoutes.post("/addtiffintocart/:tiffinid",validateCart,validateToken,RoleBase
 
 cartRoutes.get("/removetiffinFfromcart/:tiffinid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'tiffinid'}),validateToken,RoleBaseValidation("remove_from_cart"), cartController.removeTiffinFromCart);
 
-cartRoutes.get("/removecart/:cartid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'cartid'}),validateToken,RoleBaseValidation("remove_cart"), cartController.removeCart);
+cartRoutes.delete("/removecart/:cartid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'cartid'}),validateToken,RoleBaseValidation("remove_cart"), cartController.removeCart);
