@@ -253,7 +253,7 @@ export class ApprovalController {
     }
   };
 
-  public approveAdminRequest = async (
+  public  approveAdminRequest = async (
     req: Request,
     res: Response
   ): Promise<void> => {
