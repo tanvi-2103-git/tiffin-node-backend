@@ -27,33 +27,32 @@ public getAllTiffinItems = async (
 
     if(page < 1 || limit < 1){
       res.status(400).json({ message: "Page and limit must be positive integers" });
-      return;
       
+    }else{
+      const skip = (page - 1) * limit;
+
+      const user = await getUserFromToken(req);
+      const retailerId = user?._id;
+  
+      
+      const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
+        .skip(skip) 
+        .limit(limit); 
+  
+      
+        const totalItems = await TiffinItemModel.countDocuments({retailer_id:retailerId, isActive:true});
+  
+      const totalPages = Math.ceil(totalItems / limit);
+  
+      res.status(200).json({
+        data: tiffinItems,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
     }
-   
-    const skip = (page - 1) * limit;
-
-    const user = await getUserFromToken(req);
-    const retailerId = user?._id;
-
-    
-    const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
-      .skip(skip) 
-      .limit(limit); 
-
-    
-      const totalItems = await TiffinItemModel.countDocuments({retailer_id:retailerId, isActive:true});
-
-    const totalPages = Math.ceil(totalItems / limit);
-
-    res.status(200).json({
-      data: tiffinItems,
-      pagination: {
-        currentPage: page,
-        totalPages: totalPages,
-        totalItems: totalItems,
-      },
-    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching Tiffin Items", error });
   }
