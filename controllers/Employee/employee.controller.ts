@@ -262,7 +262,7 @@ export class EmployeeController {
                     const retailerIds = Retailers.map(retailer => retailer._id);
     
                     const Tiffin = await TiffinItemModel.find({
-                        id:tifinId,
+                        _id:tifinId,
                         retailer_id: { $in: retailerIds }
                     }).exec();
     

@@ -1,3 +1,4 @@
+
 import { Request, Response } from "express";
 import { TiffinItem, TiffinItemModel } from "../../model/tiffinItemModel";
 import { getUserFromToken } from "../admin.controller";
@@ -21,12 +22,9 @@ export class CartController {
             } else {
                 const retailerId = tiffin.retailer_id;
                 const price = tiffin.tiffin_price;
-                console.log("retailerId",retailerId);
-
-                
+    
                 let customerCart = await CartModel.findOne({ customer_id });
-                console.log("customerCart",customerCart?.retailer_id);
-
+    
                 if (customerCart && customerCart.retailer_id !== retailerId) {
                     res.status(400).json({
                         statuscode: 400,
@@ -65,6 +63,7 @@ export class CartController {
         }
     };
     
+    
     public removeTiffinFromCart = async (req: Request, res: Response)=> {
         try {
             const user = await getUserFromToken(req);
@@ -87,6 +86,9 @@ export class CartController {
                 cart.total_amount = cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
     
                 await cart.save();
+                if(cart.items.length===0){
+                    const remove = await CartModel.findByIdAndDelete(cart._id);
+                }
                 res.status(200).json({ message: 'Tiffin removed from cart', cart });
             } else {
                 res.status(404).json({ message: 'Tiffin item not found in cart' });
@@ -122,28 +124,28 @@ export class CartController {
     }
     
     public getCart = async (req: Request, res: Response) => {
-        try{
-            const user = await getUserFromToken(req);
-            if(user){
-                const userId = user._id;
-            const cart = await CartModel.find({customer_id:userId});
-            if(cart){
-                res.status(200).json({statuscode:200, data:cart})
+                try{
+                    const user = await getUserFromToken(req);
+                    if(user){
+                        const userId = user._id;
+                    const cart = await CartModel.find({customer_id:userId});
+                    if(cart){
+                        res.status(200).json({statuscode:200, data:cart})
+                    }
+                    else{
+                        res.status(404).json({statuscode:404, message:'Cart not found'})
+                    }
+                    }
+                    else{
+                        res.status(404).json({statuscode:404, message:'Customer not found'})
+        
+                    }
+                }catch(error){
+                    res.status(500).json({statuscode:500, message: `Internal server error ${error}`});
+        
+                }
+            
             }
-            else{
-                res.status(404).json({statuscode:404, message:'Cart not found'})
-            }
-            }
-            else{
-                res.status(404).json({statuscode:404, message:'Customer not found'})
-
-            }
-        }catch(error){
-            res.status(500).json({statuscode:500, message: `Internal server error ${error}`});
-
-        }
-    
-    }
     
 
 }
