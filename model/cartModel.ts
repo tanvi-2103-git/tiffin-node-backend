@@ -8,7 +8,7 @@ export interface CartItem {
 
 export interface Cart extends Document {
     retailer_id: mongoose.Schema.Types.ObjectId;                
-    user_id: mongoose.Schema.Types.ObjectId;        
+    customer_id: mongoose.Schema.Types.ObjectId;        
     items: CartItem[];               
     total_amount: number;                                   
     created_at: Date;
@@ -16,8 +16,8 @@ export interface Cart extends Document {
 }
 
 const CartSchema = new mongoose.Schema({
-    retailer_id: { type: String, ref: 'User',  required: true }, 
-    customer_id: { type: String, ref: 'User', required: true },    
+    retailer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  required: true }, 
+    customer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },    
     items: [
         {
             tiffin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TiffinItem', required: true }, 

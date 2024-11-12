@@ -1,38 +1,47 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export interface Location {
-    loc: string;
-    address: string;
-    loc_contact: number;
-    loc_email: string;
-    admin_id: mongoose.Schema.Types.ObjectId;                                
+  loc: string;
+  address: string;
+  loc_contact: number;
+  loc_email: string;
+  admin_id: mongoose.Schema.Types.ObjectId;
 }
 
 export interface Organization extends Document {
-    org_name : string;
-    org_image_url: string;
-    org_location : Location[]; 
-    org_created_at : Date;
-    org_updated_at : Date;
-    isActive: boolean;
-
+  org_name: string;
+  org_image_url: string;
+  org_location: Location[];
+  org_created_at: Date;
+  org_updated_at: Date;
+  isActive: boolean;
 }
 
 const OrganizationSchema = new mongoose.Schema({
-    org_name : { type: String, required: true, unique: true },
-    org_image_url: { type: String, default:""},
-    org_location: {type: [{
-        loc: { type: String, required: true},
-        address: { type: String, required: true},
-        loc_contact: { type: Number, required: true},
-        loc_email: { type: String, required: true},
-        admin_id: { type: mongoose.Schema.Types.ObjectId, ref:'User', default: null},                               
-    }], required: true},
-    org_created_at: { type: Date, required: true,default:Date.now },
-    org_updated_at: { type: Date, required: true,default: Date.now},
-    isActive: { type: Boolean, required: true ,default:true}
+  org_name: { type: String, required: true, unique: true },
+  org_image_url: { type: String, default: "" },
+  org_location: {
+    type: [
+      {
+        loc: { type: String, required: true },
+        address: { type: String, required: true },
+        loc_contact: { type: Number, required: true },
+        loc_email: { type: String, required: true },
+        admin_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          default: null,
+        },
+      },
+    ],
+    required: true,
+  },
+  org_created_at: { type: Date, required: true, default: Date.now },
+  org_updated_at: { type: Date, required: true, default: Date.now },
+  isActive: { type: Boolean, required: true, default: true },
+});
 
-})
-
-export const OrganizationModel = mongoose.model<Organization>('Organization', OrganizationSchema);
-
+export const OrganizationModel = mongoose.model<Organization>(
+  "Organization",
+  OrganizationSchema
+);
