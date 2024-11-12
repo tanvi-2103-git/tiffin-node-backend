@@ -353,6 +353,49 @@ export class AdminController {
     }
   };
 
+
+  public ReApply = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const user = await getUserFromToken(req);
+      console.log(user, "user");
+
+      if (user?.isActive==false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const admin_id = req.params.admin_id;
+        console.log("admin_id", admin_id);
+        const result = await UserModel.updateOne(
+          { _id: admin_id , isActive:true },
+          { $set: { "role_specific_details.approval_status": "pending" } }
+        );
+        console.log(result);
+
+        if (result.modifiedCount === 0) {
+          res.status(404).json({
+            message: "Approval request not found or already updated.",
+          });
+        } else {
+          res.status(200).json({
+            message: "Approval request rejected successfully.",
+            data: result,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error rejecting approval request:", error);
+      res.status(500).json({
+        message: "An error occurred while rejecting the request.",
+        error,
+      });
+    }
+  };
+
   // public rejectRetailer = async (req: Request, res: Response) => {
   //   try {
   //     const user = await getUserFromToken(req);

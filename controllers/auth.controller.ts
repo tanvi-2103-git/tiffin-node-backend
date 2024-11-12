@@ -25,14 +25,13 @@ export class AuthController {
 
   public login = async (req: Request, res: Response) => {
     try {
-      const emailId = req.body.email;
-      const user = await this.getUserByEmail(emailId);
-
       const { email, password } = req.body;
+      const newEmail = email.toLowerCase();
+      const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
 
-        if (email === user.email && matchPassword) {
+        if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
             process.env.SECRET_KEY!,
@@ -98,10 +97,12 @@ export class AuthController {
             inputRoleSpecificDetails[fieldName];
           // console.log(role_specific_details[fieldName]);
         }
-
+        // console.log(email);
+        // console.log(email.toLowerCase());
+        const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
-          email,
+          email:newEmail,
           password: hash,
           contact_number,
           address,
@@ -154,7 +155,7 @@ export class AuthController {
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
-      const resetTokenExpiry = moment().add(10, "minutes").toDate();
+      const resetTokenExpiry = moment().add(5, "minutes").toDate();
 
       if (user) {
         user.resetPasswordToken = hashedToken;
@@ -169,7 +170,7 @@ export class AuthController {
           },
         });
 
-        const resetURL = `http://localhost:5000/api/auth/resetpassword?token=${resetToken}&id=${user._id}`;
+        const resetURL = `http://localhost:5000/api/auth/resetpassword?token=${resetToken}`;
 
         const message = `
       <h3>Password Reset</h3>
@@ -189,11 +190,9 @@ export class AuthController {
           success: true,
           message: "Password reset link sent to your email",
           token: resetToken,
-          userid: user._id
         });
       }
     } catch (error) {
-      console.error(error);
       res
         .status(500)
         .json({ success: false, message: "Error sending reset email" });
@@ -202,7 +201,7 @@ export class AuthController {
 
   public resetPassword = async (req: Request, res: Response) => {
     try {
-      const { token, id } = req.query;
+      const { token } = req.query;
       const { password } = req.body;
 
       if (token) {
@@ -210,15 +209,12 @@ export class AuthController {
           .createHash("sha256")
           .update(token as string)
           .digest("hex");
-          console.log(hashedToken);
-          
+
         const user = await UserModel.findOne({
-          _id: id,
           resetPasswordToken: hashedToken,
           resetPasswordTokenExpires: { $gte: moment().toDate() },
         });
-        console.log(user);
-        
+
         if (!user) {
           res
             .status(400)
@@ -235,7 +231,6 @@ export class AuthController {
         res.json({ success: false, message: "Token not found" });
       }
     } catch (error) {
-      console.error(error);
       res
         .status(500)
         .json({ success: false, message: "Failed to reset password" });
@@ -268,40 +263,33 @@ export class AuthController {
     }
   };
 
-  
-
-  public uploadUserImage = async (req: Request, res: Response) =>{
-    try{
-      const user_id = req.params.userid
+  public uploadUserImage = async (req: Request, res: Response) => {
+    try {
+      const user_id = req.params.userid;
       console.log(user_id);
       const cloudinaryUrl = req.body.cloudinaryUrl;
-      console.log("cloudinaryUrl in controller:", cloudinaryUrl)
+      console.log("cloudinaryUrl in controller:", cloudinaryUrl);
 
       if (!cloudinaryUrl) {
-        console.error('No Cloudinary URLs found.');
-         res.status(500).send('Internal Server Error');
-      }else{
+        console.error("No Cloudinary URLs found.");
+        res.status(500).send("Internal Server Error");
+      } else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
-          {user_image: cloudinaryUrl },
-          {new: true, runValidators: true}
+          { user_image: cloudinaryUrl },
+          { new: true, runValidators: true }
         );
 
         // console.log('user in controller:', user)
 
-        if(user){
-          res.status(200).json({statuscode:200, data: user})
-        }else{
-          res.status(404).json({statuscode:404, message:"user not found"})
+        if (user) {
+          res.status(200).json({ statuscode: 200, data: user });
+        } else {
+          res.status(404).json({ statuscode: 404, message: "user not found" });
         }
       }
-
-    }catch(error){
-      res.status(500).json({ error, message: "error in the catch"});
+    } catch (error) {
+      res.status(500).json({ error, message: "error in the catch" });
     }
-
-  }
-
+  };
 }
-
-
