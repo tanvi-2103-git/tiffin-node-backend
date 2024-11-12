@@ -10,6 +10,7 @@ import jwt from "jsonwebtoken";
 import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
+import { CustomRequest } from "../middleware/validateToken";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -40,11 +41,26 @@ export class AuthController {
               expiresIn: "2h",
             }
           );
+         
+          ////generate refresh token
+          const refreshToken = jwt.sign(
+            { id: user._id, role: user.role_id },
+            process.env.REFRESH_SECRET_KEY!,
+            {
+              expiresIn: "7h",
+            }
+          );
+
+          
+          user.refreshToken = refreshToken 
+          await user.save();
+          
           res.json({
             statuscode: 200,
             success: true,
             message: "Authentication successful!",
             token: token,
+            refreshToken : refreshToken,//sending access token and refresh token
             _id: user._id,
             role_id: user.role_id,
           });
@@ -135,6 +151,120 @@ export class AuthController {
     }
   };
 
+ 
+
+  public logoutUser = async (req: Request, res: Response) : Promise<undefined> =>{
+    try {
+      
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) {
+        console.error("No token provided");
+        return undefined;
+      }
+  
+      const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+        id: string;
+        role: string;
+      };
+     
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        decoded.id,
+        { $set: { refreshToken: undefined } }, // Reset the refresh token on logout
+        { new: true } 
+    );
+  
+      if (!updatedUser) {
+         res.status(404).json({ statuscode: 404, message: "User not found" });
+         return undefined;
+      }else{
+             
+      res.json({
+        statuscode: 200,
+        success: true,
+        message: "User logged out successfully",
+      });
+      }
+  
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ statuscode: 500, error: "Server error while logging out" });
+    }
+  }
+
+  
+
+  public refreshAccessToken = async (req: Request, res: Response) : Promise<void> => {
+    try {
+      const incomingRefreshToken = req.body.refreshToken;
+
+      if (!incomingRefreshToken) {
+           res
+          .status(401)
+          .json({ statuscode: 401, error: "Refresh token is required" });
+      }
+  
+      const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_SECRET_KEY!) as { id: string, role: string };
+  
+      const user = await UserModel.findById(decodedToken.id);
+  
+     
+      if (!user) {
+           res
+          .status(401)
+          .json({ statuscode: 401, error: "Invalid refresh token" });
+      }else{
+        if (incomingRefreshToken !== user?.refreshToken) {
+          res
+         .status(401)
+         .json({ statuscode: 401, error: "Invalid refresh token" });
+     }
+ 
+    
+     const newAccessToken = jwt.sign(
+       { id: user?._id, role: user?.role_id },
+       process.env.SECRET_KEY!,
+       {
+         expiresIn: "2h", 
+       }
+     );
+ 
+     const newRefreshToken = jwt.sign(
+       { id: user?._id, role: user?.role_id },
+       process.env.REFRESH_SECRET_KEY!,
+       { expiresIn: "7h" } 
+     );
+ 
+    
+       user.refreshToken = newRefreshToken;
+       await user.save(); 
+     
+    
+ 
+    
+       res.json({
+       statuscode: 200,
+       success: true,
+       message: "Access token refreshed successfully",
+       token: newAccessToken,
+       refreshToken: newRefreshToken,
+     });
+    }
+  
+      
+      
+  
+    } catch (error) {
+      console.error(error);
+        res.status(400).json({
+        statuscode: 400,
+        error: "Something went wrong while refreshing the access token",
+      });
+    }
+  };
+
+  
   public forgotPassword = async (req: Request, res: Response) => {
     // todo:
     // 1.get user based on posted email
@@ -198,6 +328,7 @@ export class AuthController {
         .json({ success: false, message: "Error sending reset email" });
     }
   };
+
 
   public resetPassword = async (req: Request, res: Response) => {
     try {

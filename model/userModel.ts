@@ -22,6 +22,7 @@ export interface User extends Document {
     role_specific_details:any;
     isActive:Boolean;
     reasonOfRejection:string;
+    refreshToken:string;
 }
 
 
@@ -40,6 +41,10 @@ const UserSchema = new mongoose.Schema({
     resetPasswordTokenExpires: { type: Date},
     role_specific_details:{},
     isActive:{ type: Boolean, required: true, default:true },
+    refreshToken: {  type: String,required: false }
+       
+       
+      
     
     //     retailer: {
     //        gst_no:{ type: String,  required: function (user:User) {

@@ -42,8 +42,8 @@ public getAllTiffinItems = async (
       .limit(limit); 
 
     
-    const totalItems = tiffinItems.length;
-    
+    //const totalItems = tiffinItems.length;
+    const totalItems = await TiffinItemModel.countDocuments();
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
