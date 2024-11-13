@@ -17,6 +17,62 @@ export class OrganizationController {
     }
   };
 
+  public searchOrganizations = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query } = req.query;  // Accept a generic query parameter
+
+      console.log('Received query parameter:', query);
+  
+      if (!query || typeof query !== 'string') {
+        res.status(400).json({
+          statuscode: 400,
+          message: "Query parameter is required and must be a string."
+        });
+        
+      }else{
+        
+      const searchFields = ['org_name','org_location.loc']; // Customize as needed
+
+      let organizations: Organization[] = [];
+
+      for(let field of searchFields){
+        organizations = await OrganizationModel.find({
+          isActive:true,
+          [field]: query,
+        }).exec();
+
+        if(organizations.length > 0){
+          break;
+        }
+
+      }
+  
+      if (organizations.length === 0) {
+        res.status(404).json({
+          statuscode: 404,
+          message: "No organizations found matching the search criteria"
+        });
+        
+      }else{
+        res.status(200).json({
+          statuscode: 200,
+          data: organizations,
+        });
+      }
+  
+    }
+  
+      
+    } catch (error) {
+      console.error('Error searching organizations:', error);
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error searching organizations",
+        error,
+      });
+    }
+  };
+  
   
    public getAllOrganizations = async (req: Request, res: Response) =>{
     try {

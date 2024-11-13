@@ -17,6 +17,7 @@ const  approval = new ApprovalController()
 //   'update_role',
 //   'get_role',
 //   'getall_roles'
+superAdminRoutes.get("/searchAdminApproval",validateToken,approval.searchAdminApproval);
 superAdminRoutes.get("/pendingAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_pending_admin_request'), approval.getAllPendingAdminApprovalRequests);
 superAdminRoutes.get("/approvedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_approved_admin_request'), approval.getAllApprovedAdmin);
 superAdminRoutes.get("/rejectedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_rejected_admin_request'), approval.getAllRejectedAdmin);

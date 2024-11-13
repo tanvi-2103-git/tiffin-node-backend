@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserModel } from "../../model/userModel";
+import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { TiffinItemModel } from "../../model/tiffinItemModel";
 
@@ -128,7 +128,62 @@ export class EmployeeController {
         }
     };
 
+    public searchRetailersOfOrg = async(req: Request,res: Response) : Promise<void> =>{
+        try{
+           const user = await getUserFromToken(req);
+           console.log(user, "user");
+           const { query } = req.query;
 
+           if(!query  || typeof query !== 'string' || !user || !user.role_specific_details.organization_id){
+             res.status(400).json({
+               statuscode: 400,
+               message: "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+             });
+           }else{
+            const organizationId = user.role_specific_details.organization_id;
+            console.log(user.role_specific_details.organization_id);
+             const searchFields = ['username','email','contact_number','address'];
+     
+             let retailers : User[] = [];
+     
+             for(let field of searchFields){
+               retailers = await UserModel.find({
+                 role_id:"6723475f74b32cfe39e5d0a2", //retailer id
+                 "role_specific_details.approval": {
+                     $elemMatch: {
+                         organization_id: organizationId
+                    }
+                 },
+                 isActive:true,
+                 [field] : query,
+               }).exec();
+
+          
+               if(retailers.length > 0){
+                 break;
+               }
+             }
+             if(retailers.length === 0){
+               res.status(404).json({
+                 statuscode: 404,
+                 message: "No retailers found matching the search criteria" 
+               })
+             }else{
+               res.status(200).json({
+                 statuscode: 200,
+                 data: retailers,
+               });
+             }
+           }
+        }catch(error){
+         console.error('Error searching retailers of organizations:', error);
+         res.status(500).json({
+           statuscode: 500,
+           message: "Error searching retailer of organizations",
+           error,
+         });
+        }
+       }
    
     public getAllTiffinofOrg = async  (req: Request, res: Response) =>{
         try {

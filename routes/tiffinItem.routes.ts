@@ -31,6 +31,8 @@ TiffinItemRoutes.get(
   RoleBaseValidation("get_all_tiffins"),
   tiffinItemController.getAllTiffinItems
 );
+
+TiffinItemRoutes.get('/searchTiffinItem',validateToken,RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.searchTiffinItem);
 TiffinItemRoutes.get(
   "/gettiffinbyid/:tiffinid",
   validateGetRequest({ isPagination: false, isIdRequired: true, idType: 'tiffinid'  }),

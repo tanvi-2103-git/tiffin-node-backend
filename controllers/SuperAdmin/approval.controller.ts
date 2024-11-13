@@ -5,6 +5,86 @@ import { OrganizationModel } from "../../model/organizationModel";
 import { ADMIN_ID } from "../../utils/constants";
 
 export class ApprovalController {
+
+  public searchAdminApproval = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query } = req.query;  // Accept a generic query parameter
+  
+      if (!query || typeof query !== 'string') {
+          res.status(400).json({
+          statuscode: 400,
+          message: "Query parameter is required and must be a string."
+        });
+        return;
+      }
+  
+     
+      const searchFields = ['username', 'contact_number', 'email', 'address'];  
+  
+      let users : User[]= [];  
+  
+      
+      for (let field of searchFields) {
+        
+        users = await UserModel.find({
+          role_id: "672775e4f2a1e38ef52c63c6",  
+          isActive:true,
+          // [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
+          [field]: query,
+        }).exec();
+  
+       
+        if (users.length > 0) {
+          break;
+        }
+      }
+  
+      
+      if (users.length === 0) {
+        res.status(404).json({
+          statuscode: 404,
+          message: "No users found matching the search criteria",
+        });
+        return;
+      }
+  
+     
+      const result = await Promise.all(
+        users.map(async (user) => {
+          const org_id = user.role_specific_details.organization_id;
+          const org_name = await OrganizationModel.findById(org_id).exec();
+  
+          return {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            contact_number: user.contact_number,
+            address: user.address,
+            role_id: user.role_id,
+            role_specific_details: {
+              organization_id: user.role_specific_details.organization_id,
+              organization_name: org_name?.org_name,
+              approval_status: user.role_specific_details.approval_status,
+            },
+          };
+        })
+      );
+  
+    
+      res.status(200).json({
+        statuscode: 200,
+        data: result,
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error searching admin approval",
+        error,
+      });
+    }
+  };
+  
   public getAllPendingAdminApprovalRequests = async (
     req: Request,
     res: Response
