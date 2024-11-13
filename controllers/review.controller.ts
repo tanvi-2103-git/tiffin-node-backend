@@ -37,7 +37,6 @@ export class reviewController {
           },
         ]);
 
-        // const avgRating = avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
         const tiffinRating =
           avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
 
@@ -57,19 +56,14 @@ export class reviewController {
   public getRetailerRating = async (req: Request, res: Response) => {
     try {
       const id = req.params.retailerid;
-      console.log(id);
 
       if (id) {
         const Tiffins = await TiffinItemModel.find({
-          retailer_id: new mongoose.Types.ObjectId(id),
+          retailer_id: id,
+          isActive: true,
         }).exec();
-        console.log(Tiffins);
 
         const tiffinIds = Tiffins.map((tiffin) => tiffin._id);
-        // res.status(200).json({ data: tiffinIds });
-
-        // now we have tiffinids accordong to retailers
-        //what we need to do is find a way to aggregate review according to tiffinId
 
         const avgRatingResult = await ReviewModel.aggregate([
           {
@@ -79,17 +73,30 @@ export class reviewController {
           },
           {
             $group: {
-              _id: null,
-              avgRating: {
+              _id: "$tiffin_id",
+              avgTiffinRating: {
                 $avg: "$rating",
               },
             },
           },
+          {
+            $group: {
+              _id: null,
+              avgRetailerRating: {
+                $avg: "$avgTiffinRating",
+              },
+            },
+          },
         ]);
-        console.log(avgRatingResult);
-        res.status(200).json({ data: avgRatingResult });
 
-        //something wrong with the API check again
+        const retailerRating =
+          avgRatingResult.length > 0 ? avgRatingResult[0].avgRetailerRating : 0;
+
+        res.status(200).json({ data: retailerRating });
+      } else {
+        res.status(404).json({
+          message: "id not found",
+        });
       }
     } catch (error) {
       res.status(404).json(error);
