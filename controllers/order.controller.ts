@@ -18,7 +18,7 @@ export class OrderController {
         } else if (payment_mode == "UPI") {
           payment_status = "paid";
           delivery_status = "pending";
-        } 
+        }
         const cart = await CartModel.findById(cartId);
         console.log(cart);
 
@@ -40,7 +40,9 @@ export class OrderController {
           });
         }
       } else {
-        res.status(404).json({statuscode: 404, message: "Add valid payment mode" });
+        res
+          .status(404)
+          .json({ statuscode: 404, message: "Add valid payment mode" });
       }
     } catch (error) {
       res
@@ -50,53 +52,54 @@ export class OrderController {
   };
 
   public confirmPayment = async (req: Request, res: Response) => {
-    try{
+    try {
       const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
-      if(order){
-        if(order.payment_mode=="CoD"){
+      if (order) {
+        if (order.payment_mode == "CoD") {
           const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
-            payment_status : "paid",
-          delivery_status : "delivered"
-          })
-          if(updateOrder)
-          res.status(200).json({statuscode:200, message:"Payment done"})
-        }else{//in case of upi it will change after adding razorpay or neccesary payment service 
+            payment_status: "paid",
+            delivery_status: "delivered",
+          });
+          if (updateOrder) {
+            const cartId = order.cart._id;
+
+            const destroyCart = await CartModel.findByIdAndDelete(cartId);
+            res.status(200).json({ statuscode: 200, message: "Payment done" });
+          }
+        } else {
+          //in case of upi it will change after adding razorpay or neccesary payment service
           const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
-            payment_status : "paid",
-          delivery_status : "pending"
-          })
-          if(updateOrder)
-          res.status(200).json({statuscode:200, message:"Payment done"})
-        
+            payment_status: "paid",
+            delivery_status: "pending",
+          });
+          if (updateOrder) {
+             res.status(200).json({ statuscode: 200, message: "Payment done" });
+          }
         }
-       
-      }else{
-        res.status(404).json({statuscode:200, message:"Order not found"})
-
+      } else {
+        res.status(404).json({ statuscode: 200, message: "Order not found" });
       }
-       
-    }catch(error){
-      res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
     }
-  }
+  };
 
-  public getOrderById =async (req: Request, res: Response) => {
-    try{
+  public getOrderById = async (req: Request, res: Response) => {
+    try {
       const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
-      if(order){
-        res.status(200).json({statuscode:200, data:order})
-      }else{
-        res.status(404).json({statuscode:404, message:"order not found"})
-
+      if (order) {
+        res.status(200).json({ statuscode: 200, data: order });
+      } else {
+        res.status(404).json({ statuscode: 404, message: "order not found" });
       }
-
-    }catch(error){
-      res.status(500).json({statuscode:500, message:`internal server error ${error}`})
-
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
     }
-  }
-
-
+  };
 }
