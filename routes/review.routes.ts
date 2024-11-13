@@ -5,5 +5,5 @@ export const reviewRouter = express.Router();
  const reviewRoutes = new reviewController();
 
 reviewRouter.post("/addreview", reviewRoutes.addReview);
-reviewRouter.get("/gettiffinitemratingbyid/:tiffinid", reviewRoutes.getTiffinItemReviewById)
+// reviewRouter.get("/gettiffinitemratingbyid/:tiffinid", reviewRoutes.getTiffinItemReviewById)
 reviewRouter.get("/getretailerrating/:retailerid", reviewRoutes.getRetailerRating)
