@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { TiffinItemModel } from "../../model/tiffinItemModel";
+import { OrderModel } from "../../model/orderModel";
 
 
 export class EmployeeController {
@@ -277,6 +278,79 @@ export class EmployeeController {
             res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
         }
     };
+
+    public getDeliveredOrders = async(req: Request, res: Response)=> {
+        try{
+            const user = await getUserFromToken(req);
+            if (user?.isActive==false || !user) {
+                res.status(401).json({
+                  statuscode: 401,
+                  message: "Unauthorized or invalid user details.",
+                });
+              } else {
+                
+                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'delivered'});
+                if(orders.length>0)
+                    res.status(200).json({statuscode:200, data:orders})
+                else
+                res.status(404).json({statuscode:404, message:"orders not found"})
+ 
+
+                }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
+
+    public getPendngOrders = async(req: Request, res: Response)=> {
+        try{
+            const user = await getUserFromToken(req);
+            if (user?.isActive==false || !user) {
+                res.status(401).json({
+                  statuscode: 401,
+                  message: "Unauthorized or invalid user details.",
+                });
+              } else {
+                
+                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'pending'});
+                if(orders.length>0)
+                    res.status(200).json({statuscode:200, data:orders})
+                else
+                res.status(404).json({statuscode:404, message:"orders not found"})
+ 
+
+                }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
+    
+    public cancelOrder = async(req: Request, res: Response)=> {
+        try{
+            const orderId = req.params.orderid;
+            const order = await OrderModel.findById(orderId);
+            if(order){
+                if(order.delivery_status=='pending'){
+                    const order = await OrderModel.findByIdAndUpdate(orderId,{delivery_status:'cancelled'});
+                    if(order)
+                    res.status(200).json({statuscode:200, message:"order updated successful"})
+                }else if(order.delivery_status=='delivered'){
+                    res.status(409).json({statuscode:409, message:"order is already delivered cannot be modified"})
+                }else{
+                    res.status(409).json({statuscode:409, message:"order is already cancelled "})
+
+                }
+            }else{
+                res.status(404).json({statuscode:404, message:"order not found"})
+
+            }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
     
 
 }

@@ -17,6 +17,7 @@ import retailerRoutes from "./routes/retailer.routes";
 import { employeeRoutes } from "./routes/employee.routes";
 import { cartRoutes } from "./routes/employee/cart.routes";
 import {upload, uploadToCloudinary } from './config/cloudinaryConfig'; //the file path where you had written this functions in earlier
+import { orderRoutes } from "./routes/employee/order.routes";
 
 app.use(express.json());
 app.use(cors());
@@ -48,10 +49,12 @@ app.use('/api/superadmin/organizations', organizationRoutes);
 //retailer routes
 app.use('/api/retailers', retailerRoutes); 
 app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
+app.use('/api/retailers/order',orderRoutes);
 
 //employee routes
 app.use('/api/employees', employeeRoutes);
 app.use('/api/employees/cart', cartRoutes);
+app.use('/api/employees/order',orderRoutes);
 
  const imageUploadRouter = express();
 

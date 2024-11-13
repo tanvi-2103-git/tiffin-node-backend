@@ -1,7 +1,9 @@
+
 import { Request, Response } from "express";
 import { TiffinItem, TiffinItemModel } from "../../model/tiffinItemModel";
 import { getUserFromToken } from "../admin.controller";
 import { CartModel } from "../../model/cartModel";
+import mongoose from "mongoose";
 
 export class CartController {
    
@@ -12,19 +14,24 @@ export class CartController {
             const customer_id = user?._id;
     
             const tiffinId = req.params.tiffinid;
+            
             const { quantity } = req.body;
     
             const tiffin = await TiffinItemModel.findById(tiffinId).exec() as TiffinItem;
-    
-            if (tiffin.isActive==true || !tiffin) {
+            
+            if (tiffin.isActive==false || !tiffin) {
                 res.status(404).json({ message: 'Tiffin item not found' });
             } else {
                 const retailerId = tiffin.retailer_id;
+                console.log("retailerId",retailerId);
+                
                 const price = tiffin.tiffin_price;
     
                 let customerCart = await CartModel.findOne({ customer_id });
-    
-                if (customerCart && customerCart.retailer_id !== retailerId) {
+                console.log("customerCart.retailer_id",customerCart?.retailer_id);
+                
+                if (customerCart && (JSON.stringify(customerCart.retailer_id) != JSON.stringify(retailerId))) {
+                    
                     res.status(400).json({
                         statuscode: 400,
                         message: "You can add tiffin from a single retailer only"
@@ -40,12 +47,17 @@ export class CartController {
                            total_amount: price * quantity,
                         });
                     } else {
-                        const itemIndex = cart.items.findIndex(item => item.tiffin_id === tiffinId);
-    
+                        // console.log("inelse");
+                        // const mapp = cart.items.map(item =>JSON.stringify(item.tiffin_id)== JSON.stringify(tiffinId))
+                        // console.log("map", mapp);
+                        
+                        const itemIndex = cart.items.findIndex(item => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId));
+                        console.log("itemIndex",itemIndex);
+                        
                         if (itemIndex > -1) {
                             cart.items[itemIndex].quantity += quantity;
                         } else {
-                            cart.items.push({ tiffin_id: tiffinId, quantity, price });
+                            cart.items.push({ tiffin_id: new mongoose.Schema.Types.ObjectId(tiffinId), quantity, price });
                         }
     
                         cart.total_amount = cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
@@ -62,28 +74,35 @@ export class CartController {
         }
     };
     
+    
     public removeTiffinFromCart = async (req: Request, res: Response)=> {
         try {
             const user = await getUserFromToken(req);
             const customer_id = user?._id;
             const tiffinId = req.params.tiffinid;
-    
+            console.log("tiffinId",tiffinId);
+            
             const tiffin = await TiffinItemModel.findById(tiffinId).exec() as TiffinItem;
-            if (tiffin.isActive==true || !tiffin) {
+            if (tiffin.isActive==false || !tiffin) {
                 res.status(404).json({ message: 'Tiffin item not found' });
             }
     
             const retailerId = tiffin.retailer_id;
+            console.log(retailerId,"retailerId");
+            
             let cart = await CartModel.findOne({ retailer_id: retailerId, customer_id: customer_id });
     
             if (cart) {
-                const itemIndex = cart.items.findIndex(item => item.tiffin_id == tiffinId);
+                const itemIndex = cart.items.findIndex(item => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId));
             
             if (itemIndex > -1) {
                 cart.items.splice(itemIndex, 1);
                 cart.total_amount = cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
     
                 await cart.save();
+                if(cart.items.length===0){
+                    const remove = await CartModel.findByIdAndDelete(cart._id);
+                }
                 res.status(200).json({ message: 'Tiffin removed from cart', cart });
             } else {
                 res.status(404).json({ message: 'Tiffin item not found in cart' });
@@ -118,7 +137,31 @@ export class CartController {
         }
     }
     
-
+    public getCart = async (req: Request, res: Response) => {
+                try{
+                    const user = await getUserFromToken(req);
+                    if(user){
+                        const userId = user._id;
+                        console.log(userId);
+                        
+                    const cart = await CartModel.find({customer_id:userId});
+                    if(cart){
+                        res.status(200).json({statuscode:200, data:cart})
+                    }
+                    else{
+                        res.status(404).json({statuscode:404, message:'Cart not found'})
+                    }
+                    }
+                    else{
+                        res.status(404).json({statuscode:404, message:'Customer not found'})
+        
+                    }
+                }catch(error){
+                    res.status(500).json({statuscode:500, message: `Internal server error ${error}`});
+        
+                }
+            
+            }
     
 
 }

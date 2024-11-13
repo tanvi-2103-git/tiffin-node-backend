@@ -1,8 +1,10 @@
-import { ref } from "joi";
+import { ref, required } from "joi";
 import mongoose from "mongoose";
+import { Cart, CartSchema } from "./cartModel";
 
 export interface Order extends Document {
-  cart_id: mongoose.Schema.Types.ObjectId;
+  // cart_id: mongoose.Schema.Types.ObjectId;
+  cart:Cart
   payment_mode: string;
   payment_status: string;
   payment_date: Date;
@@ -15,14 +17,15 @@ export interface Order extends Document {
 }
 
 const OrderSchema = new mongoose.Schema({
-  cart_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Cart",
-    unique: true,
-    required: true,
-  },
+  // cart_id: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Cart",
+  //   unique: true,
+  //   required: true,
+  // }
+  cart:{type:CartSchema,required:true},
   payment_mode: { type: String, enum: ["CoD", "UPI"], required: true },
-  payment_date: { type: Date, required: true },
+  payment_date: { type: Date},
   payment_status: {
     type: String,
     enum: ["paid", "unpaid"],
@@ -31,11 +34,11 @@ const OrderSchema = new mongoose.Schema({
   },
   delivery_status: {
     type: String,
-    enum: ["pending", "commpleted", "rejected"],
+    enum: ["pending", "delivered", "cancelled"],
     required: true,
   },
-  org_created_at: { type: Date, required: true },
-  org_updated_at: { type: Date, required: true },
+  created_at: { type: Date, required: true ,default:Date.now},
+  updated_at: { type: Date, required: true ,default:Date.now},
   isActive: { type: Boolean, required: true, default: true },
 });
 

@@ -8,6 +8,7 @@ export class TiffinItemController {
   public addTiffinItem = async (req: Request, res: Response): Promise<void> => {
     try {
       const tiffinItemData: TiffinItem = req.body;
+      
       const newTiffinItem = await TiffinItemModel.create(tiffinItemData);
       res.status(201).json({ message: "Added Tiffin Item", newTiffinItem });
     } catch (error) {

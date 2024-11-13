@@ -15,9 +15,9 @@ export interface Cart extends Document {
     isActive: boolean;     
 }
 
-const CartSchema = new mongoose.Schema({
+export const CartSchema = new mongoose.Schema({
     retailer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  required: true }, 
-    customer_id: { type: mongoose.Schema.Types.ObjectId , ref: 'User', required: true },    
+    customer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },    
     items: [
         {
             tiffin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'TiffinItem', required: true }, 
