@@ -1,28 +1,43 @@
+
 import Joi from 'joi';
 import { Request, Response, NextFunction } from 'express';
 
-export const validateGetRequest = (options: { isPagination?: boolean, isIdRequired?: boolean }) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
 
+const validateIdByType = (idType: string) => {
+    switch (idType) {
+        case 'tiffinid':
+            return Joi.string().regex(/^[a-fA-F0-9]{24}$/).required();  
+        case 'retailerid':
+            return Joi.string().regex(/^[a-fA-F0-9]{24}$/).required(); 
+        case 'retailer_id':
+                return Joi.string().regex(/^[a-fA-F0-9]{24}$/).required();     
+        case 'id':
+                return Joi.string().regex(/^[a-fA-F0-9]{24}$/).required();    
+        default:
+            return Joi.string().regex(/^[a-fA-F0-9]{24}$/).required();  
+    }
+};
+
+export const validateGetRequest = (options: { isPagination?: boolean, isIdRequired?: boolean, idType?: string }) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
         const schema = Joi.object({
             params: Joi.object({
-                id: options.isIdRequired
-                    ? Joi.string().regex(/^[a-fA-F0-9]{24}$/).required()  
-                    : Joi.string().regex(/^[a-fA-F0-9]{24}$/).optional()  
+                [options.idType || 'id']: options.isIdRequired
+                    ? validateIdByType(options.idType || 'default')  
+                    : validateIdByType(options.idType || 'default').optional()  
             }),
 
-            
             query: options.isPagination
                 ? Joi.object({
-                    page: Joi.number().integer().min(1).default(1),   
-                    limit: Joi.number().integer().min(1).default(10), 
+                    page: Joi.number().integer().min(1).default(1),
+                    limit: Joi.number().integer().min(1).default(10),
                 })
-                : Joi.object({})  //If pagination is not present then skip
+                : Joi.object({})  //if pagintion is not there then skip
         });
 
         const { error, value } = schema.validate({
-            params: req.params,  
-            query: req.query     
+            params: req.params,
+            query: req.query
         });
 
         if (error) {
@@ -33,12 +48,10 @@ export const validateGetRequest = (options: { isPagination?: boolean, isIdRequir
             });
             return;
         }
-          
+        else{
             req.query = value.query;
- 
             next();
-        
-
+        }
        
     };
 };

@@ -4,7 +4,6 @@ const app = express();
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from 'dotenv';
-import { Request, Response } from "express";
 
 import { authRoutes } from "./routes/auth.routes";
 import { adminRoutes } from "./routes/admin.routes";
@@ -14,7 +13,7 @@ import  RetailerRoutes from "./routes/retailer.routes"
 import TiffinItemRoutes from "./routes/tiffinItem.routes"
 import { roleRoutes } from "./routes/role.routes";
 import retailerRoutes from "./routes/retailer.routes";
-import { employeeRoutes } from "./routes/employee/employee.routes";
+import { employeeRoutes } from "./routes/employee.routes";
 import { cartRoutes } from "./routes/employee/cart.routes";
 import {upload, uploadToCloudinary } from './config/cloudinaryConfig'; //the file path where you had written this functions in earlier
 
@@ -53,8 +52,8 @@ app.use('/api/retailers/tiffinItems', TiffinItemRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/employees/cart', cartRoutes);
 
- const imageUploadRouter = express();
+//  const imageUploadRouter = express();
 
 
 
-app.use('/api',TiffinItemRoutes);
+// app.use('/api',TiffinItemRoutes);

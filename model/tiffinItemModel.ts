@@ -15,6 +15,7 @@ export interface TiffinItem extends Document {
     tiffin_isavailable: boolean;
     tiffin_created_at:Date;
     tiffin_updated_at:Date;
+    isActive:Boolean;
 
   }
  
@@ -30,6 +31,7 @@ export interface TiffinItem extends Document {
     tiffin_isavailable: { type: Boolean, required: true },
     tiffin_created_at:{ type: Date, required: true, default:Date.now },
     tiffin_updated_at:{ type: Date, required: true,default:Date.now  },
+    isActive:{ type: Boolean, required: true, default:true }
     // tiffin_created_at:{ type: Date, required: true, default : Date.now },
     // tiffin_updated_at:{ type: Date, required: true, default : Date.now },
 
