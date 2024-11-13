@@ -1,8 +1,6 @@
-import { promises } from "dns";
 import { Review, ReviewModel } from "../model/reviewModel";
 import { Request, Response } from "express";
 import { TiffinItemModel } from "../model/tiffinItemModel";
-import { constrainedMemory } from "process";
 import mongoose from "mongoose";
 
 export class reviewController {
@@ -12,7 +10,9 @@ export class reviewController {
       const newReview = await ReviewModel.create(reviewData);
       res.status(201).json({ statuscode: 201, data: newReview });
     } catch (error) {
-      res.status(500).json({ message: "Error creating review", error });
+      res
+        .status(500)
+        .json({ statuscode: 500, message: "Error creating review", error });
     }
   };
 
@@ -40,16 +40,19 @@ export class reviewController {
         const tiffinRating =
           avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
 
-        res.status(200).json({ data: tiffinRating });
+        res.status(200).json({ statuscode: 200, data: tiffinRating });
       } else {
         const tiffinRating = 0;
-        res.status(200).json({
-          data: tiffinRating,
-          message: "no reviews for this tiffin id",
-        });
+        res
+          .status(200)
+          .json({
+            statuscode: 200,
+            data: tiffinRating,
+            message: "no reviews for this tiffin id",
+          });
       }
     } catch (error) {
-      res.status(500).json(error);
+      res.status(500).json({ statuscode: 500, data: error });
     }
   };
 
@@ -92,14 +95,15 @@ export class reviewController {
         const retailerRating =
           avgRatingResult.length > 0 ? avgRatingResult[0].avgRetailerRating : 0;
 
-        res.status(200).json({ data: retailerRating });
+        res.status(200).json({ statuscode: 200, data: retailerRating });
       } else {
         res.status(404).json({
+          statuscode: 404,
           message: "id not found",
         });
       }
     } catch (error) {
-      res.status(404).json(error);
+      res.status(404).json({ statuscode: 500, data: error });
     }
   };
 }
