@@ -8,6 +8,7 @@ const retailerController = new RetailerController();
 
 
 retailerRoutes.put("/addRequest/:organization_id",validateToken,RoleBaseValidation('add_request'), retailerController.addRequest);
+retailerRoutes.get("/getallorders",validateToken,RoleBaseValidation("get_order"), retailerController.getAllOrders);
 
 
 

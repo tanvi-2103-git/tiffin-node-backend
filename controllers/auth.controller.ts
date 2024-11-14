@@ -23,263 +23,118 @@ export class AuthController {
     return await UserModel.findOne({ email: email });
   };
 
-//   public login = async (req: Request, res: Response) => {
-//     try {
-//       const emailId = req.body.email;
-//       const user = await this.getUserByEmail(emailId);
-//       console.log(user);
+  public login = async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+      const newEmail = email.toLowerCase();
+      const user = await this.getUserByEmail(newEmail);
+      if (user) {
+        const matchPassword = await bcrypt.compare(password, user.password);
 
-//       const { email, password } = req.body;
-//       if (user) {
-//         const matchPassword = await bcrypt.compare(password, user.password);
-
-//         if (email === user.email && matchPassword) {
-//           const token = jwt.sign(
-//             { id: user._id, role: user.role_id },
-//             process.env.SECRET_KEY!,
-//             {
-//               expiresIn: "2h",
-//             }
-//           );
-//           res.json({
-//             statuscode: 200,
-//             success: true,
-//             message: "Authentication successful!",
-//             token: token,
-//             _id: user._id,
-//           });
-//         } else {
-//           res.status(401).json({
-//             statuscode: 401,
-//             success: false,
-//             message: "Invalid username or password",
-//           });
-//         }
-//       }
-//     } catch (error) {
-//       console.error(error);
-//       res.status(400).json({ statuscode: 400, error: "User Login failed" });
-//     }
-//   };
-
-//   public register = async (req: Request, res: Response) => {
-//     try {
-//       const {
-//         username,
-//         password,
-//         email,
-//         contact_number,
-//         address,
-//         role_id,
-//         role_specific_details: inputRoleSpecificDetails,
-//       } = req.body;
-
-//       const hash = await bcrypt.hash(password, 10);
-
-//       const roleDoc = await RoleModel.findById(role_id);
-//       if (!roleDoc) {
-//         res
-//           .status(400)
-//           .json({ statuscode: 400, error: "Invalid role ID provided" });
-// public login = 
-// async (req: Request, res: Response) => {
-//   try {
-//     const emailId= req.body.email;
-//     const user = await this.getUserByEmail(emailId);
-  
-//     const { email, password } = req.body;
-//      if (user) {
-//        const matchPassword = await bcrypt.compare(password, user.password);
-      
-       
-//       if (email === user.email && matchPassword) {
-//         const token = jwt.sign({ id: user._id, role: user.role_id }, process.env.SECRET_KEY!, {
-//           expiresIn: '2h',
-//         });
-//         res.json({
-//           statuscode: 200,
-//           success: true,
-//           message: "Authentication successful!",
-//           token: token,
-//           _id: user._id,
-//           role_id: user.role_id
-          
-//         });
-//       } else {
-//         // Validate and build role_specific_details based on Role document
-//         let role_specific_details: RoleSpecificDetail = {};
-//         const roleTemplate = roleDoc.role_specific_details; // expected structure from Role
-
-//         // Ensure each field in roleTemplate exists in inputRoleSpecificDetails
-//         for (const field of roleTemplate) {
-//           const fieldName = field.name;
-//           // if (!(fieldName in inputRoleSpecificDetails)) {
-//           //    res.status(400).json({
-//           //     statuscode: 400,
-//           //     error: `Missing required role-specific field: ${fieldName}`,
-//           //   });
-//           // }
-//           // Set the field in role_specific_details to ensure it matches Role structure
-//           role_specific_details[fieldName] =
-//             inputRoleSpecificDetails[fieldName];
-//           console.log(role_specific_details[fieldName]);
-//         }
-
-//         // Create the user document
-//         const user = new UserModel({
-//           username,
-//           email,
-//           password: hash,
-//           contact_number,
-//           address,
-//           role_id: roleDoc._id,
-//           role_specific_details,
-//         });
-
-//         // Save the user
-//         const userData = await user.save();
-
-//         // Generate JWT token
-//         const token = jwt.sign(
-//           { id: userData._id, role: userData.role_id },
-//           process.env.SECRET_KEY!,
-//           {
-//             expiresIn: "2h",
-//           }
-//         );
-
-//         // Respond with success
-//         res.status(201).json({
-//           statuscode: 201,
-//           message: "User registered successfully",
-//           token,
-//           _id: userData._id,
-//         });
-//       }
-//     }else{
-//       res.status(404).json({
-//         statuscode:404,
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//    } catch (error) {
-//       console.error(error);
-//       res
-//         .status(400)
-//         .json({ statuscode: 400, error: `User registration failed ${error}` });
-//     }
-//   };
-
-
-public login = 
-async (req: Request, res: Response) => {
-  try {
-    const emailId= req.body.email;
-    const user = await this.getUserByEmail(emailId);
-  
-    const { email, password } = req.body;
-     if (user) {
-       const matchPassword = await bcrypt.compare(password, user.password);
-      
-       
-      if (email === user.email && matchPassword) {
-        const token = jwt.sign({ id: user._id, role: user.role_id }, process.env.SECRET_KEY!, {
-          expiresIn: '2h',
-        });
-        res.json({
-          statuscode: 200,
-          success: true,
-          message: "Authentication successful!",
-          token: token,
-          _id: user._id,
-          role_id: user.role_id
-          
-        });
+        if (matchPassword) {
+          const token = jwt.sign(
+            { id: user._id, role: user.role_id },
+            process.env.SECRET_KEY!,
+            {
+              expiresIn: "2h",
+            }
+          );
+          res.json({
+            statuscode: 200,
+            success: true,
+            message: "Authentication successful!",
+            token: token,
+            _id: user._id,
+            role_id: user.role_id,
+          });
+        } else {
+          res.status(401).json({
+            statuscode: 401,
+            success: false,
+            message: "Invalid username or password",
+          });
+        }
       } else {
-        res.status(401).json({
-          statuscode:401,
+        res.status(404).json({
+          statuscode: 404,
           success: false,
-          message: "Invalid username or password",
+          message: "User not found",
         });
       }
-    }else{
-      res.status(404).json({
-        statuscode:404,
-        success: false,
-        message: "User not found",
-      });
-    }
-   } catch (error) {
+    } catch (error) {
       console.error(error);
-      res.status(400).json({statuscode:400, error: "User Login failed" });
+      res.status(400).json({ statuscode: 400, error: "User Login failed" });
     }
-  }
+  };
 
+  public register = async (req: Request, res: Response) => {
+    try {
+      const {
+        username,
+        password,
+        email,
+        contact_number,
+        address,
+        role_id,
+        role_specific_details: inputRoleSpecificDetails,
+      } = req.body;
 
+      const hash = await bcrypt.hash(password, 10);
 
+      const roleDoc = await RoleModel.findById(role_id);
+      if (!roleDoc) {
+        res
+          .status(400)
+          .json({ statuscode: 400, error: "Invalid role ID provided" });
+      } else {
+        let role_specific_details: RoleSpecificDetail = {};
+        const roleTemplate = roleDoc.role_specific_details;
 
-public register = async (req: Request, res: Response) => {
-  try {
-    const {
-      username,
-      password,
-      email,
-      contact_number,
-      address,
-      role_id,  
-      role_specific_details: inputRoleSpecificDetails,
-    } = req.body;
+        for (const field of roleTemplate) {
+          const fieldName = field.name;
 
-   
-    const hash = await bcrypt.hash(password, 10);
+          role_specific_details[fieldName] =
+            inputRoleSpecificDetails[fieldName];
+          console.log(role_specific_details[fieldName]);
+        }
+        // console.log(email);
+        // console.log(email.toLowerCase());
+        const newEmail = email.toLowerCase();
+        const user = new UserModel({
+          username,
+          email:newEmail,
+          password: hash,
+          contact_number,
+          address,
+          role_id: roleDoc._id,
+          role_specific_details,
+        });
 
-    const roleDoc = await RoleModel.findById(role_id);
-    if (!roleDoc) {
-       res.status(400).json({ statuscode: 400, error: "Invalid role ID provided" });
-    }else{
+        const userData = await user.save();
 
-    let role_specific_details : RoleSpecificDetail= {};
-    const roleTemplate = roleDoc.role_specific_details;
+        const token = jwt.sign(
+          { id: userData._id, role: userData.role_id },
+          process.env.SECRET_KEY!,
+          {
+            expiresIn: "2h",
+          }
+        );
 
-    for (const field of roleTemplate) {
-      const fieldName = field.name;
-
-    
-      role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
-      console.log(role_specific_details[fieldName]);
-      
+        res.status(201).json({
+          statuscode: 201,
+          message: "User registered successfully",
+          token,
+          _id: userData._id,
+          role_id: userData.role_id,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      res
+        .status(400)
+        .json({ statuscode: 400, error: `User registration failed ${error}` });
     }
-
-    const user = new UserModel({
-      username,
-      email,
-      password: hash,
-      contact_number,
-      address,
-      role_id: roleDoc._id,
-      role_specific_details,
-    });
-
-    const userData = await user.save();
-
-    const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY!, {
-      expiresIn: '2h',
-    });
-
-    res.status(201).json({
-      statuscode: 201,
-      message: "User registered successfully",
-      token,
-      _id: userData._id,
-      role_id:userData.role_id
-    });}
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ statuscode: 400, error: `User registration failed ${error}` });
-  }
-};
-
+  };
 
   public forgotPassword = async (req: Request, res: Response) => {
     // todo:
@@ -300,7 +155,7 @@ public register = async (req: Request, res: Response) => {
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
-      const resetTokenExpiry = moment().add(10, "minutes").toDate();
+      const resetTokenExpiry = moment().add(5, "minutes").toDate();
 
       if (user) {
         user.resetPasswordToken = hashedToken;
@@ -315,8 +170,7 @@ public register = async (req: Request, res: Response) => {
           },
         });
 
-        const resetURL = `http://localhost:5000/api/auth/resetpassword?token=${resetToken}&id=${user._id}`;
-        console.log(resetURL);
+        const resetURL = `http://localhost:5000/api/auth/resetpassword?token=${resetToken}`;
 
         const message = `
       <h3>Password Reset</h3>
@@ -335,10 +189,10 @@ public register = async (req: Request, res: Response) => {
         res.json({
           success: true,
           message: "Password reset link sent to your email",
+          token: resetToken,
         });
       }
     } catch (error) {
-      console.error(error);
       res
         .status(500)
         .json({ success: false, message: "Error sending reset email" });
@@ -347,7 +201,7 @@ public register = async (req: Request, res: Response) => {
 
   public resetPassword = async (req: Request, res: Response) => {
     try {
-      const { token, id } = req.query;
+      const { token } = req.query;
       const { password } = req.body;
 
       if (token) {
@@ -355,8 +209,8 @@ public register = async (req: Request, res: Response) => {
           .createHash("sha256")
           .update(token as string)
           .digest("hex");
+
         const user = await UserModel.findOne({
-          _id: id,
           resetPasswordToken: hashedToken,
           resetPasswordTokenExpires: { $gte: moment().toDate() },
         });
@@ -377,161 +231,65 @@ public register = async (req: Request, res: Response) => {
         res.json({ success: false, message: "Token not found" });
       }
     } catch (error) {
-      console.error(error);
       res
         .status(500)
         .json({ success: false, message: "Failed to reset password" });
     }
   };
 
-
-getUserByToken =  async (req: Request, res: Response) => {
+  getUserByToken = async (req: Request, res: Response) => {
     try {
       const token = req.headers.authorization?.split(" ")[1];
-  
+
       if (!token) {
-        res.json("No token provided")
-        res.status(404).json({statuscode:404, message:`No token provided`})
+        res.json("No token provided");
+        res.status(404).json({ statuscode: 404, message: `No token provided` });
+      } else {
+        const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+          id: string;
+          role: string;
+        };
+        const user = (await UserModel.findOne({
+          _id: decoded.id,
+        }).exec()) as User;
 
-      }else{
-  
-      const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-        id: string;
-        role: string;
-      };
-      const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as User;
-  
-      if (!user) {
-        
-        res.status(404).json({statuscode:404, message:`User not found`})
-
-        
-      }
-      res.status(200).json({statuscode:200,data:user})
+        if (!user) {
+          res.status(404).json({ statuscode: 404, message: `User not found` });
+        }
+        res.status(200).json({ statuscode: 200, data: user });
       }
     } catch (error) {
-      res.status(500).json({statuscode:500, message:` ${error}`})
-     
+      res.status(500).json({ statuscode: 500, message: ` ${error}` });
     }
   };
 
+  public uploadUserImage = async (req: Request, res: Response) => {
+    try {
+      const user_id = req.params.userid;
+      console.log(user_id);
+      const cloudinaryUrl = req.body.cloudinaryUrl;
+      console.log("cloudinaryUrl in controller:", cloudinaryUrl);
 
-  // public resetPassword = async (req: Request, res: Response) => {
-  //   try {
-  //     const { token, id } = req.query;
-  //     const { newPassword } = req.body;
-  //     // console.log("token", token);
+      if (!cloudinaryUrl) {
+        console.error("No Cloudinary URLs found.");
+        res.status(500).send("Internal Server Error");
+      } else {
+        const user = await UserModel.findByIdAndUpdate(
+          user_id,
+          { user_image: cloudinaryUrl },
+          { new: true, runValidators: true }
+        );
 
-  //     // const hashedToken = crypto
-  //     //   .createHash("sha256")
-  //     //   .update(resetToken)
-  //     //   .digest("hex");
+        // console.log('user in controller:', user)
 
-  //     const hashedToken = crypto
-  //       .createHash("sha256")
-  //       .update(token as string)
-  //       .digest("hex");
-
-  //       console.log("resethash",hashedToken);
-
-  //     const user = await UserModel.findOne({
-  //       _id: id,
-  //       resetPasswordToken: hashedToken,
-  //       resetPasswordExpires: { $gte: Date.now },
-  //     });
-
-  //     console.log( "user",user?.resetPasswordTokenExpires);
-  //     console.log(new Date());
-
-  //     if (!user) {
-  //       res
-  //         .status(400)
-  //         .json({ success: false, message: "Invalid or expired token" });
-  //     } else {
-  //       user.password = await bcrypt.hash(newPassword, 10);
-  //       user.resetPasswordToken = undefined;
-  //       user.resetPasswordTokenExpires = undefined;
-  //       await user.save();
-
-  //       res.json({ success: true, message: "Password reset successful" });
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     res
-  //       .status(500)
-  //       .json({ success: false, message: "Failed to reset password" });
-  //   }
-  // };
+        if (user) {
+          res.status(200).json({ statuscode: 200, data: user });
+        } else {
+          res.status(404).json({ statuscode: 404, message: "user not found" });
+        }
+      }
+    } catch (error) {
+      res.status(500).json({ error, message: "error in the catch" });
+    }
+  };
 }
-
-//   public register = async (req: Request, res: Response) => {
-//   try {
-//     const {
-//       username,
-//       password,
-//       email,
-//       contact_number,
-//       address,
-//       role,
-//       gst_no,
-//       employee_code,
-//       organization_id,
-
-//     } = req.body;
-
-//     const hash = await bcrypt.hash(password, 10);
-
-//     let role_specific_details = {};
-
-//     if (role === 'Retailer') {
-//       role_specific_details = {
-//         retailer: {
-//           gst_no
-//         },
-//       };
-//     } else if (role === 'Employee') {
-//       role_specific_details = {
-//         employee: {
-//           employee_code,
-//           organization_id,
-//         },
-//       };
-//     } else if (role === 'Admin') {
-//       role_specific_details = {
-//         subadmin: {
-//           organization_id,
-
-//         },
-//       };
-//     } else if (role === 'SuperAdmin') {
-//       role_specific_details = {};
-//     }
-
-//     const user = new UserModel({
-//       username,
-//       email,
-//       password: hash,
-//       contact_number,
-//       address,
-//       role,
-//       role_specific_details,
-//     });
-
-//     const userData = await user.save();
-
-//     const token = jwt.sign({ id: userData._id, role: userData.role_id }, process.env.SECRET_KEY! , {
-//       expiresIn: '2h',
-//     });
-
-//     res.status(201).json({
-//       statuscode:201,
-//       message: "User registered successfully",
-//       token,
-//       _id: userData._id,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({statuscode:400, error: "User registration failed" });
-//   }
-// };
-// }

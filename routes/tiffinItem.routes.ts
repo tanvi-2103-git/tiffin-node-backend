@@ -15,6 +15,7 @@ const tiffinItemController = new TiffinItemController();
 // "add_request",
 // get_all_tiffins,
 // get_tiffin_by_id
+// TiffinItemRoutes.get('/gettiffinbyid/:id', validateGetRequest({ isPagination: false, isIdRequired: true, idType: 'default' }), validateToken, RoleBaseValidation('get_tiffin_by_id'), tiffinItemController.getTiffinItemById);
 
 TiffinItemRoutes.post(
   "/addtiffin",
@@ -25,14 +26,14 @@ TiffinItemRoutes.post(
 );
 TiffinItemRoutes.get(
   "/getalltiffin",
-  validateGetRequest({ isPagination: true, isIdRequired: false }),
+  validateGetRequest({ isPagination: true, isIdRequired: false}),
   validateToken,
   RoleBaseValidation("get_all_tiffins"),
   tiffinItemController.getAllTiffinItems
 );
 TiffinItemRoutes.get(
   "/gettiffinbyid/:tiffinid",
-  validateGetRequest({ isPagination: false, isIdRequired: true }),
+  validateGetRequest({ isPagination: false, isIdRequired: true, idType: 'tiffinid'  }),
   validateToken,
   RoleBaseValidation("get_tiffin_by_id"),
   tiffinItemController.getTiffinItemById
@@ -58,6 +59,6 @@ TiffinItemRoutes.put(
   tiffinItemController.updateTiffinQuantityAvailability
 );
 
-TiffinItemRoutes.post("/upload/:tifinid",validateToken,RoleBaseValidation("update_tiffin"), upload.single('recfile'),  uploadToCloudinary, tiffinItemController.uploadImage)
+TiffinItemRoutes.post("/upload/:tifinid",validateToken,RoleBaseValidation("update_tiffin"), upload.single('recfile'),  uploadToCloudinary("tiffin_image"), tiffinItemController.uploadImage)
 
 export default TiffinItemRoutes;

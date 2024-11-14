@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { TiffinItem, TiffinItemModel } from "../model/tiffinItemModel";
 import { ObjectId } from "mongodb";
 import { UserModel } from "../model/userModel";
+import { getUserFromToken } from "./admin.controller";
 
 export class TiffinItemController {
   public addTiffinItem = async (req: Request, res: Response): Promise<void> => {
     try {
       const tiffinItemData: TiffinItem = req.body;
+      
       const newTiffinItem = await TiffinItemModel.create(tiffinItemData);
       res.status(201).json({ message: "Added Tiffin Item", newTiffinItem });
     } catch (error) {
@@ -14,17 +16,49 @@ export class TiffinItemController {
     }
   };
 
-  public getAllTiffinItems = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
-    try {
-      const tiffinItems = await TiffinItemModel.find();
-      res.status(200).json(tiffinItems);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching Tiffin Items", error });
+  
+public getAllTiffinItems = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    
+    const page = parseInt(req.query.page as string) || 1; 
+    const limit = parseInt(req.query.limit as string) || 10; 
+
+    if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
     }
-  };
+   
+    const skip = (page - 1) * limit;
+
+    const user = await getUserFromToken(req);
+    const retailerId = user?._id;
+
+    
+    const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
+      .skip(skip) 
+      .limit(limit); 
+
+    
+    const totalItems = tiffinItems.length;
+    
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: tiffinItems,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Tiffin Items", error });
+  }
+};
 
   public getTiffinItemById = async (
     req: Request,
@@ -34,7 +68,7 @@ export class TiffinItemController {
 
     const _id = new ObjectId(req.params.tiffinid);
     try {
-      const TiffinItem = await TiffinItemModel.findOne(_id);
+      const TiffinItem = await TiffinItemModel.findOne({_id:_id, isActive:true});
       // console.log(TiffinItem);
 
       if (!TiffinItem) {
@@ -48,13 +82,16 @@ export class TiffinItemController {
     }
   };
 
+
+
+
   public deleteTiffinItem = async (
     req: Request,
     res: Response
   ): Promise<void> => {
     const { tiffinid } = req.params;
     try {
-      const deleteTiffin = await TiffinItemModel.findByIdAndDelete(tiffinid);
+      const deleteTiffin = await TiffinItemModel.findByIdAndUpdate({_id:tiffinid},{isActive:false});
       if (!deleteTiffin) {
         res.status(404).json({ message: "Tiffin Item not found" });
       }
@@ -72,7 +109,7 @@ export class TiffinItemController {
       const { tiffinid } = req.params;
       const tiffinItemData: TiffinItem = req.body;
       const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
-        tiffinid,
+        {_id:tiffinid,isActive:true},
         tiffinItemData,
         {
           new: true,
@@ -101,7 +138,7 @@ export class TiffinItemController {
       
       const {tiffin_available_quantity,tiffin_isavailable} = req.body;
       const updatedTiffinItem = await TiffinItemModel.findByIdAndUpdate(
-        {_id:tiffin_id},
+        {_id:tiffin_id, isActive:true},
         {tiffin_available_quantity:tiffin_available_quantity,tiffin_isavailable:tiffin_isavailable},
         {
           new: true,
@@ -125,7 +162,6 @@ export class TiffinItemController {
     try {
         const tifinId = req.params.tifinid
         const cloudinaryUrl = req.body.cloudinaryUrl;
-        console.log(cloudinaryUrl);
         
         if (!cloudinaryUrl) {
             console.error('No Cloudinary URLs found.');

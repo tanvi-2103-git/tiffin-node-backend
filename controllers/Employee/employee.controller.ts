@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { TiffinItemModel } from "../../model/tiffinItemModel";
+import { OrderModel } from "../../model/orderModel";
 
 
 export class EmployeeController {
@@ -12,14 +13,26 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if (  user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id ) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
                 });
-            } else {
+            } 
+            else {
                 const organizationId = user.role_specific_details.organization_id;
                 
+                const page = parseInt(req.query.page as string) || 1;  
+                const limit = parseInt(req.query.limit as string) || 10;  
+
+                if(page < 1 || limit < 1){
+                    res.status(400).json({ message: "Page and limit must be positive integers" });
+                    return;
+                    
+                }
+
+                const skip = (page - 1) * limit;  
+
                 const TrendyRetailers = await UserModel.find({
                     role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
                     "role_specific_details.approval": {
@@ -28,10 +41,29 @@ export class EmployeeController {
                             istrendy: true
                         }
                     }
-                }).exec();
+                }).skip(skip).limit(limit).exec();
+
+                const totalItems = await UserModel.countDocuments({
+                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                    "role_specific_details.approval": {
+                        $elemMatch: {
+                            organization_id: organizationId,
+                            istrendy: true
+                        }
+                    }
+                });
+
+                const totalPages = Math.ceil(totalItems / limit);
     
                 console.log(`Organization ID: ${organizationId}`);
-                res.status(200).json({ statuscode: 200, data: TrendyRetailers });
+                res.status(200).json({ statuscode: 200, 
+                                data: TrendyRetailers,
+                                pagination: {
+                                    currentPage: page,
+                                    totalPages: totalPages,
+                                    totalItems: totalItems,
+                                },
+                            });
             }
         } catch (error) {
             console.error("Error fetching trendy retailers:", error);
@@ -44,14 +76,25 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if (  user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id ) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
                 });
             } else {
                 const organizationId = user.role_specific_details.organization_id;
+
+                let page = parseInt(req.query.page as string) || 1;  
+                let limit = parseInt(req.query.limit as string) || 10;
+
+                if(page < 1 || limit < 1){
+                    res.status(400).json({ message: "Page and limit must be positive integers" });
+                    return;
+                    
+                }
                 
+                const skip = (page - 1) * limit;
+
                 const Retailers = await UserModel.find({
                     role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
                     "role_specific_details.approval": {
@@ -59,10 +102,28 @@ export class EmployeeController {
                             organization_id: organizationId
                         }
                     }
-                }).exec();
+                }).skip(skip).limit(limit).exec();
+
+                const totalItems = await UserModel.countDocuments({
+                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                    "role_specific_details.approval": {
+                        $elemMatch: {
+                            organization_id: organizationId
+                        }
+                    }
+                });
     
+                const totalPages = Math.ceil(totalItems / limit);
+
                 console.log(`Organization ID: ${organizationId}`);
-                res.status(200).json({ statuscode: 200, data: Retailers });
+                res.status(200).json({ statuscode: 200, 
+                    data: Retailers,
+                     pagination: {
+                        currentPage: page,
+                        totalPages: totalPages,
+                        totalItems: totalItems,
+                },
+                });
             }
         } catch (error) {
             console.error("Error fetching trendy retailers:", error);
@@ -77,7 +138,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
@@ -85,6 +146,7 @@ export class EmployeeController {
             } else {
                 const organizationId = user.role_specific_details.organization_id;
     
+                
                 const Retailers = await UserModel.find({
                     role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
                     "role_specific_details.approval": {
@@ -123,23 +185,44 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
                 });
             } else {
+               
+        
                 const organizationId = user.role_specific_details.organization_id;
     
-                
+                const page = parseInt(req.query.page as string) || 1; 
+                const limit = parseInt(req.query.limit as string) || 10; 
+                const skip = (page - 1) * limit; 
+
+                if(page < 1 || limit < 1){
+                    res.status(400).json({ message: "Page and limit must be positive integers" });
+                    return;
+                    
+                }
     
                     const Tiffins = await TiffinItemModel.find({
                         retailer_id: retailerId
-                    }).exec();
+                    }).skip(skip).limit(limit).exec();
     
-                    
+                    const totalItems = await TiffinItemModel.countDocuments({
+                        retailer_id: retailerId
+                    });
     
-                    res.status(200).json({ statuscode: 200, data: Tiffins });
+                    const totalPages = Math.ceil(totalItems / limit);
+
+                    res.status(200).json({ statuscode: 200, 
+                        data: Tiffins,
+                        pagination: {
+                            currentPage: page,
+                            totalPages: totalPages,
+                            totalItems: totalItems,
+                        },
+                     });
                 
             }
         } catch (error) {
@@ -156,7 +239,7 @@ export class EmployeeController {
             const user = await getUserFromToken(req);
             console.log(user, "user");
     
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
+            if ( user?.isActive==false || !user || !user.role_specific_details || !user.role_specific_details.organization_id) {
                 res.status(401).json({
                     statuscode: 401,
                     message: "Unauthorized or invalid user details.",
@@ -195,6 +278,79 @@ export class EmployeeController {
             res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
         }
     };
+
+    public getDeliveredOrders = async(req: Request, res: Response)=> {
+        try{
+            const user = await getUserFromToken(req);
+            if (user?.isActive==false || !user) {
+                res.status(401).json({
+                  statuscode: 401,
+                  message: "Unauthorized or invalid user details.",
+                });
+              } else {
+                
+                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'delivered'});
+                if(orders.length>0)
+                    res.status(200).json({statuscode:200, data:orders})
+                else
+                res.status(404).json({statuscode:404, message:"orders not found"})
+ 
+
+                }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
+
+    public getPendngOrders = async(req: Request, res: Response)=> {
+        try{
+            const user = await getUserFromToken(req);
+            if (user?.isActive==false || !user) {
+                res.status(401).json({
+                  statuscode: 401,
+                  message: "Unauthorized or invalid user details.",
+                });
+              } else {
+                
+                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'pending'});
+                if(orders.length>0)
+                    res.status(200).json({statuscode:200, data:orders})
+                else
+                res.status(404).json({statuscode:404, message:"orders not found"})
+ 
+
+                }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
+    
+    public cancelOrder = async(req: Request, res: Response)=> {
+        try{
+            const orderId = req.params.orderid;
+            const order = await OrderModel.findById(orderId);
+            if(order){
+                if(order.delivery_status=='pending'){
+                    const order = await OrderModel.findByIdAndUpdate(orderId,{delivery_status:'cancelled'});
+                    if(order)
+                    res.status(200).json({statuscode:200, message:"order updated successful"})
+                }else if(order.delivery_status=='delivered'){
+                    res.status(409).json({statuscode:409, message:"order is already delivered cannot be modified"})
+                }else{
+                    res.status(409).json({statuscode:409, message:"order is already cancelled "})
+
+                }
+            }else{
+                res.status(404).json({statuscode:404, message:"order not found"})
+
+            }
+        }catch(error){
+            res.status(500).json({statuscode:500, message:`internal server error ${error}`})
+
+        }
+    }
     
 
 }
