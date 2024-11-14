@@ -57,12 +57,12 @@ export class AdminController {
         const result = await UserModel.find({
           role_id: RETAILER_ID,
           isActive: true,
-          "role_specific_details.approval": {
-            $elemMatch: {
-              approval_status: "pending",
-              organization_id: user?.role_specific_details.organization_id,
-            },
-          },
+          // "role_specific_details.approval": {
+          //   $elemMatch: {
+          //     approval_status: "pending",
+          //     organization_id: user?.role_specific_details.organization_id,
+          //   },
+          // },
         }).exec();
         console.log(result);
 
