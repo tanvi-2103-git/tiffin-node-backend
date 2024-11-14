@@ -3,6 +3,7 @@ import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { OrganizationModel } from "../../model/organizationModel";
 import { ADMIN_ID } from "../../utils/constants";
+import mongoose from "mongoose";
 
 export class ApprovalController {
   public getAllPendingAdminApprovalRequests = async (
@@ -273,8 +274,33 @@ export class ApprovalController {
           { _id: admin_id, isActive:true },
           { $set: { "role_specific_details.approval_status": "approved" } }
         );
-        console.log(result);
+        // console.log(result);
+        const admin = await UserModel.findById(admin_id);
+        console.log("admin", admin);
 
+        const orgId = admin?.role_specific_details.organization_id;
+        const orgLoc = admin?.role_specific_details.org_location;
+        console.log("orgId", orgId, "orgLoc", orgLoc);
+
+        const organization = await OrganizationModel.findById(orgId);
+        console.log("organization", organization);
+        if (organization) {
+          const itemIndex = organization.org_location.findIndex(
+            (orgLocation) => orgLocation.loc == orgLoc
+          );
+          console.log("itemIndex", itemIndex);
+
+          if (itemIndex > -1) {
+            organization.org_location[itemIndex].admin_id =
+              new mongoose.Types.ObjectId(admin_id);
+            await organization.save();
+          } else {
+            res.status(404).json({
+              statuscode: 404,
+              message:
+                "Location of admin has no match on respective organization",
+            });
+          }
         if (result.modifiedCount === 0) {
           res.status(404).json({
             statuscode: 404,
@@ -287,7 +313,7 @@ export class ApprovalController {
             data: result,
           });
         }
-      }
+      }}
     } catch (error) {
       console.error("Error rejecting approval request:", error);
       res.status(500).json({
@@ -297,6 +323,8 @@ export class ApprovalController {
       });
     }
   };
+
+
 
   public rejectApprovalRequest = async (
     req: Request,
