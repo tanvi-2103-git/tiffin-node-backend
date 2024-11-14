@@ -152,7 +152,7 @@ export class AdminController {
   public searchRetailers = async(req: Request,res: Response) : Promise<void> =>{
     try{
        
-       const { query } = req.query;
+       const { query ,approval_status} = req.query;
  
        if(!query  || typeof query !== 'string'){
          res.status(400).json({
@@ -167,8 +167,10 @@ export class AdminController {
          for(let field of searchFields){
            retailers = await UserModel.find({
              role_id:"6723475f74b32cfe39e5d0a2", //retailer id
-            //  [field] : query,
+             //  [field] : query,
+            role_specific_details:approval_status,
             isActive:true,
+            /// [field] : query
             [field]: { $regex: query, $options: "i" }
            }).exec();
 
