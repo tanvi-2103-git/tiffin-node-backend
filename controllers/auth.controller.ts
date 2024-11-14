@@ -31,7 +31,8 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-
+        console.log(process.env.SECRET_KEY);
+        
         if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
@@ -79,7 +80,7 @@ export class AuthController {
       }
     } catch (error) {
       console.error(error);
-      res.status(400).json({ statuscode: 400, error: "User Login failed" });
+      res.status(400).json({ statuscode: 400, message: "User Login failed" , error:error });
     }
   };
 
