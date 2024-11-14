@@ -20,7 +20,7 @@ const  approval = new ApprovalController()
 superAdminRoutes.get("/pendingAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_pending_admin_request'), approval.getAllPendingAdminApprovalRequests);
 superAdminRoutes.get("/approvedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_approved_admin_request'), approval.getAllApprovedAdmin);
 superAdminRoutes.get("/rejectedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_rejected_admin_request'), approval.getAllRejectedAdmin);
-
+superAdminRoutes.get("/getalladminrequest",validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
 superAdminRoutes.put("/rejectadmin/:admin_id",validateToken,RoleBaseValidation('reject_admin_request'), approval.rejectApprovalRequest);
 superAdminRoutes.put("/approveadmin/:admin_id",validateToken,RoleBaseValidation('approve_admin_request'), approval.approveAdminRequest);
 

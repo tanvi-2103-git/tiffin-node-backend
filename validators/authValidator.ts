@@ -19,8 +19,9 @@ export const validateRegisterUser = (req: Request, res: Response, next: NextFunc
     if (error) {
         console.log(error);
         res.status(400).json({ error: error.details[0].message });
-    }
+    }else{
     next();
+    }
 };
 
 export const validateLoginUser = (req: Request, res: Response, next: NextFunction): void => {
@@ -37,8 +38,9 @@ export const validateLoginUser = (req: Request, res: Response, next: NextFunctio
     if (error) {
         console.log(error);
         res.status(400).json({ error: error.details[0].message });
-    }
+    }else{
     next();
+    }
 };
 
 module.exports = { validateRegisterUser, validateLoginUser };
