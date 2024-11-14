@@ -198,7 +198,10 @@ export class AdminController {
       }
 
     }catch(error){
-
+      res
+      .status(500)
+      .json({ statuscode: 500, message: `Internal server error ${error}` });
+  
     }
   }
 
