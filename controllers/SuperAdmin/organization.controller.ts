@@ -35,7 +35,7 @@ export class OrganizationController {
       .skip(skip)
       .limit(limit);
 
-      const totalItems = organizations.length;
+      const totalItems = await OrganizationModel.countDocuments({isActive:true});
 
       const totalPages = Math.ceil(totalItems / limit);
 

@@ -95,7 +95,7 @@ export class AuthController {
 
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
-          console.log(role_specific_details[fieldName]);
+          // console.log(role_specific_details[fieldName]);
         }
         // console.log(email);
         // console.log(email.toLowerCase());
