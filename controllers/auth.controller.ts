@@ -10,6 +10,7 @@ import jwt from "jsonwebtoken";
 import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
+import { getUserFromToken } from "./admin.controller";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -30,7 +31,8 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-
+        console.log(user);
+        
         if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
@@ -292,4 +294,22 @@ export class AuthController {
       res.status(500).json({ error, message: "error in the catch" });
     }
   };
+
+public updateLoc = async (req: Request, res: Response) => {
+  try {
+    const org_location = req.query.org_location;
+    const user = await getUserFromToken(req) as User;
+    const updateloc = await UserModel.updateOne({
+      _id : user._id
+    },{ $set: { "role_specific_details.org_location": org_location } })
+
+    
+   res.status(200).json({statuscode:200, data:updateloc})
+  }catch(error){
+    res
+    .status(500)
+    .json({ statuscode: 500, message: `Internal server error ${error}` });
+
+  }
+}
 }
