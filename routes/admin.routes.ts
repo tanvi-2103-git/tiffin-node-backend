@@ -21,6 +21,6 @@ adminRoutes.get("/searchRetailer", adminController.searchRetailers);
 adminRoutes.put("/approveRetailer/:retailer_id",validateToken,RoleBaseValidation("approve_retailer_request"), adminController.approveRetailer);
 adminRoutes.put("/rejectRetailer/:retailer_id",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.rejectRetailer);
 adminRoutes.put("/reapply",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.ReApply);
-
+adminRoutes.get("/getallRetailers",validateToken,RoleBaseValidation("get_retailer_request"), adminController.getallRetailerRequest);
 
 //retailer request
