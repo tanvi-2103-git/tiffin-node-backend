@@ -149,6 +149,59 @@ export class AdminController {
     }
   };
 
+  public getallRetailerRequest = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        if(status){
+        const result = await UserModel.find({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: status,
+              organization_id: user?.role_specific_details.organization_id,
+            },
+          },
+        }).exec();
+        // console.log(result);
+
+        res.status(200).json({ statuscode: 200, data: result });
+      }
+      else{
+        const result = await UserModel.find({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              
+              organization_id: user?.role_specific_details.organization_id,
+            },
+          },
+        }).exec();
+        // console.log(result);
+
+        res.status(200).json({ statuscode: 200, data: result });
+      }
+      }
+
+    }catch(error){
+
+    }
+  }
+
   public approveRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
