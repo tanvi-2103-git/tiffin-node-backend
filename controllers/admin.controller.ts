@@ -149,6 +149,56 @@ export class AdminController {
     }
   };
 
+  public searchRetailers = async(req: Request,res: Response) : Promise<void> =>{
+    try{
+       
+       const { query } = req.query;
+ 
+       if(!query  || typeof query !== 'string'){
+         res.status(400).json({
+           statuscode: 400,
+           message: "Query parameter is required and must be a string."
+         });
+       }else{
+         const searchFields = ['username','email','contact_number','address'];
+ 
+         let retailers : User[] = [];
+ 
+         for(let field of searchFields){
+           retailers = await UserModel.find({
+             role_id:"6723475f74b32cfe39e5d0a2", //retailer id
+            //  [field] : query,
+            isActive:true,
+            [field]: { $regex: query, $options: "i" }
+           }).exec();
+
+           if(retailers.length > 0){
+             break;
+           }
+         }
+         if(retailers.length === 0){
+           res.status(404).json({
+             statuscode: 404,
+             message: "No retailers found matching the search criteria" 
+           })
+         }else{
+           res.status(200).json({
+             statuscode: 200,
+             data: retailers,
+           });
+         }
+       }
+    }catch(error){
+     console.error('Error searching retailer:', error);
+     res.status(500).json({
+       statuscode: 500,
+       message: "Error searching retailer",
+       error,
+     });
+    }
+   }
+ 
+
   public approveRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);

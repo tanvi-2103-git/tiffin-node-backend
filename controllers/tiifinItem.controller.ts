@@ -28,33 +28,32 @@ public getAllTiffinItems = async (
 
     if(page < 1 || limit < 1){
       res.status(400).json({ message: "Page and limit must be positive integers" });
-      return;
       
+    }else{
+      const skip = (page - 1) * limit;
+
+      const user = await getUserFromToken(req);
+      const retailerId = user?._id;
+  
+      
+      const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
+        .skip(skip) 
+        .limit(limit); 
+  
+      
+        const totalItems = await TiffinItemModel.countDocuments({retailer_id:retailerId, isActive:true});
+  
+      const totalPages = Math.ceil(totalItems / limit);
+  
+      res.status(200).json({
+        data: tiffinItems,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
     }
-   
-    const skip = (page - 1) * limit;
-
-    const user = await getUserFromToken(req);
-    const retailerId = user?._id;
-
-    
-    const tiffinItems = await TiffinItemModel.find({retailer_id:retailerId, isActive:true})
-      .skip(skip) 
-      .limit(limit); 
-
-    
-      const totalItems = await TiffinItemModel.countDocuments({retailer_id:retailerId, isActive:true});
-
-    const totalPages = Math.ceil(totalItems / limit);
-
-    res.status(200).json({
-      data: tiffinItems,
-      pagination: {
-        currentPage: page,
-        totalPages: totalPages,
-        totalItems: totalItems,
-      },
-    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching Tiffin Items", error });
   }
@@ -82,7 +81,52 @@ public getAllTiffinItems = async (
     }
   };
 
-
+  public searchTiffinItem = async(req: Request,res: Response) : Promise<void> =>{
+    try{
+       
+       const { query } = req.query;
+  
+       if(!query  || typeof query !== 'string'){
+         res.status(400).json({
+           statuscode: 400,
+           message: "Query parameter is required and must be a string."
+         });
+       }else{
+         const searchFields = ['tiffin_name','tiffin_type'];
+  
+         let tiffins : TiffinItem[] = [];
+  
+         for(let field of searchFields){
+           tiffins = await TiffinItemModel.find({
+            isActive:true,
+            [field] : query,
+            }).exec();
+  
+           if(tiffins.length > 0){
+             break;
+           }
+         }
+         if(tiffins.length === 0){
+           res.status(404).json({
+             statuscode: 404,
+             message: "No tiffin found matching the search criteria" 
+           })
+         }else{
+           res.status(200).json({
+             statuscode: 200,
+             data: tiffins,
+           });
+         }
+       }
+    }catch(error){
+     console.error('Error searching tiffin:', error);
+     res.status(500).json({
+       statuscode: 500,
+       message: "Error searching tiffin",
+       error,
+     });
+    }
+   }
 
 
   public deleteTiffinItem = async (
