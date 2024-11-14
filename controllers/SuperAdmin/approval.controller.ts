@@ -8,7 +8,7 @@ export class ApprovalController {
 
   public searchAdminApproval = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { query } = req.query;  // Accept a generic query parameter
+      const { query , approval_status} = req.query;  // Accept a generic query parameter
   
       if (!query || typeof query !== 'string') {
           res.status(400).json({
@@ -29,6 +29,7 @@ export class ApprovalController {
         users = await UserModel.find({
           role_id: "672775e4f2a1e38ef52c63c6",  
           isActive:true,
+          "role_specific_details.approval_status": approval_status,
           // [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
           [field]: query,
         }).exec();
