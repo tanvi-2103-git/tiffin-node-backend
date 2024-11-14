@@ -94,6 +94,9 @@ export class OrganizationController {
       const deletedOrg = await OrganizationModel.findByIdAndUpdate({_id:id},{
         isActive:false
       });
+      const deleteEmployees = await UserModel.updateMany({
+        "role_specific_details.organization_id": id
+      },{ $set: { isActive: false } });
       if (!deletedOrg) {
         res
           .status(404)
@@ -111,6 +114,8 @@ export class OrganizationController {
       });
     }
   };
+
+
 
   // Update org
   public updateOrganization = async (

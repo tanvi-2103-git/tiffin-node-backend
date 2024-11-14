@@ -5,7 +5,7 @@ export interface Location {
     address: string;
     loc_contact: number;
     loc_email: string;
-    admin_id: mongoose.Schema.Types.ObjectId;                                
+    admin_id: mongoose.Types.ObjectId;                                
 }
 
 export interface Organization extends Document {
