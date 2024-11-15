@@ -5,13 +5,15 @@ export const sendSuccessResponse = (
   statusCode: number,
   success: boolean,
   message: string,
-  data?: any
+  data?: any,
+  pagination?: any
 ) => {
   return res.status(statusCode).json({
     statusCode,
     success: true,
     message,
     data,
+    pagination
   });
 };
 
