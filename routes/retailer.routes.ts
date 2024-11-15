@@ -9,7 +9,8 @@ const retailerController = new RetailerController();
 
 retailerRoutes.put("/addRequest/:organization_id",validateToken,RoleBaseValidation('add_request'), retailerController.addRequest);
 retailerRoutes.get("/getallorders",validateToken,RoleBaseValidation("get_order"), retailerController.getAllOrders);
-
+retailerRoutes.get("/getweeklyorders",validateToken,RoleBaseValidation("get_order"), retailerController.getWeeklyOrders);
+retailerRoutes.get("/getmonthlyorders",validateToken,RoleBaseValidation("get_order"), retailerController.getMonthlylyOrders);
 
 
 export default retailerRoutes;

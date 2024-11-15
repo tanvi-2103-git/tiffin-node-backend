@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 import { getUserFromToken } from "./admin.controller";
 import { OrderModel } from "../model/orderModel";
+import moment from "moment";
 
 export class RetailerController {
   public addRequest = async (req: Request, res: Response) => {
@@ -83,5 +84,200 @@ export class RetailerController {
     }
   };
 
- 
+  public getWeeklyOrders = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let orders;
+        let data;
+        if (status && year) {
+          orders = await OrderModel.aggregate([
+            {
+              $match: {
+                delivery_status: status,
+                org_created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$org_created_at" }, // Group by week number
+                  year: { $year: "$org_created_at" },
+                },
+                totalOrders: { $sum: 1 },
+                totalAmount: { $sum: "$cart.total_amount" },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
+        } else {
+          orders = await OrderModel.aggregate([
+            {
+              $match: {
+                org_created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$org_created_at" }, // Group by week number
+                  year: { $year: "$org_created_at" },
+                },
+                totalOrders: { $sum: 1 },
+                totalAmount: { $sum: "$cart.total_amount" },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
+        }
+        if (orders) {
+          data = orders.map((item) => {
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+            
+            return {
+              week: startOfWeek,
+              totalOrders: item.totalOrders,
+              totalAmount: item.totalAmount,
+            };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
+          res
+            .status(404)
+            .json({ statuscode: 404, message: "orders not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
+  };
+
+  public getMonthlylyOrders = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let orders;
+        let data;
+        if (status && year) {
+          orders = await OrderModel.aggregate([
+            {
+              $match: {
+                delivery_status: status,
+                org_created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$org_created_at" },     
+                  month: { $month: "$org_created_at" }    
+                },
+                totalOrders: { $sum: 1 },                    
+                totalAmount: { $sum: "$cart.total_amount" }        
+              }
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1
+              }
+            }
+          ])	
+          
+          
+          
+        } else {
+          orders = await OrderModel.aggregate([
+            {
+              $match: {
+                org_created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$org_created_at" },     
+                  month: { $month: "$org_created_at" }    
+                },
+                totalOrders: { $sum: 1 },                    
+                totalAmount: { $sum: "$cart.total_amount" }        
+              }
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1
+              }
+            }
+          ])	
+        }
+        if (orders) {
+          data = orders.map((item) => {
+            const startOfmonth = moment().month(item._id.month-1).format('YYYY-MM');
+      
+    
+        //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+         return { month: startOfmonth,
+              totalOrders: item.totalOrders,
+              totalAmount: item.totalAmount,
+            };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
+          res
+            .status(404)
+            .json({ statuscode: 404, message: "orders not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
+  };
+
 }
