@@ -68,7 +68,7 @@ export class AuthController {
 
       const roleDoc = await RoleModel.findById(role_id);
       if (!roleDoc) {
-        sendError(res, 400, false, "Invalid role ID provided" )
+        sendError(res, 400, false, "Invalid role ID provided");
       } else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
@@ -100,23 +100,21 @@ export class AuthController {
             expiresIn: "2h",
           }
         );
-        sendToken(res, 201, true,"User registered successfully", token)
+        sendToken(res, 201, true, "User registered successfully", token);
       }
     } catch (error) {
       console.error(error);
-      sendError(res, 400, false, `User registration failed ${error}`)
-
+      sendError(res, 400, false, `User registration failed ${error}`);
     }
   };
 
   public forgotPassword = async (req: Request, res: Response) => {
     try {
-
       const emailtemp = req.body.email;
       const emailId = emailtemp.toLowerCase();
       const user = await this.getUserByEmail(emailId);
       if (!user) {
-        sendError(res, 404, false, "Invalid email ID provided")
+        sendError(res, 404, false, "Invalid email ID provided");
       }
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -155,10 +153,16 @@ export class AuthController {
           html: message,
         });
 
-        sendToken(res, 200, true, "Password reset link sent to your email", resetToken )
+        sendToken(
+          res,
+          200,
+          true,
+          "Password reset link sent to your email",
+          resetToken
+        );
       }
     } catch (error) {
-      sendError(res, 500, false, "Error sending reset email")
+      sendError(res, 500, false, "Error sending reset email");
     }
   };
 
@@ -179,20 +183,19 @@ export class AuthController {
         });
 
         if (!user) {
-          sendError(res, 400, true, "Invalid or expired token")
-
+          sendError(res, 400, true, "Invalid or expired token");
         } else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
           await user.save();
-          sendResponse(res, 200, true, "Password reset successful")
+          sendResponse(res, 200, true, "Password reset successful");
         }
       } else {
-        sendError(res, 400, false, "Token not found")
+        sendError(res, 400, false, "Token not found");
       }
     } catch (error) {
-      sendError(res, 500, false, "Failed to reset password" )
+      sendError(res, 500, false, "Failed to reset password");
     }
   };
 
@@ -212,12 +215,12 @@ export class AuthController {
         }).exec()) as User;
 
         if (!user) {
-          sendError(res, 404, false, `User not found`)
+          sendError(res, 404, false, `User not found`);
         }
-        sendResponse(res, 200, true, "user found", user)
+        sendResponse(res, 200, true, "user found", user);
       }
     } catch (error) {
-      sendError(res, 500, false, `${error}`)
+      sendError(res, 500, false, `${error}`);
     }
   };
 
@@ -238,13 +241,13 @@ export class AuthController {
         );
 
         if (user) {
-          res.status(200).json({ statuscode: 200, data: user });
+          sendResponse(res, 200, true, "successfully added image", user);
         } else {
-          res.status(404).json({ statuscode: 404, message: "user not found" });
+          sendError(res, 404, false, "user not found");
         }
       }
     } catch (error) {
-      res.status(500).json({ error, message: "error in the catch" });
+      sendError(res, 500, false, "error in the catch");
     }
   };
 
@@ -258,12 +261,9 @@ export class AuthController {
         },
         { $set: { "role_specific_details.org_location": org_location } }
       );
-
-      res.status(200).json({ statuscode: 200, data: updateloc });
+      sendResponse(res, 200, true, "org updated", updateloc);
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error ${error}` });
+      sendError(res, 500, false, `Internal server error ${error}`);
     }
   };
 }
