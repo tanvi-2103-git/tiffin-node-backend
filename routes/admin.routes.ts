@@ -17,6 +17,7 @@ const  adminController = new AdminController();
 adminRoutes.get("/pendingRetailers",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_pending_retailer_request"), adminController.pendingApprovalRetailer);
 adminRoutes.get("/getapprovedRetailers",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_approved_retailer_request"), adminController.getApprovedRetailer);
 adminRoutes.get("/getrejectedRetailers",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_rejected_retailer_request"), adminController.getRejectedRetailer);
+adminRoutes.get("/getallRetailers",validateToken,RoleBaseValidation("get_retailer_request"), adminController.getallRetailerRequest);
 adminRoutes.get("/searchRetailer", adminController.searchRetailers);
 adminRoutes.put("/approveRetailer/:retailer_id",validateToken,RoleBaseValidation("approve_retailer_request"), adminController.approveRetailer);
 adminRoutes.put("/rejectRetailer/:retailer_id",validateToken,RoleBaseValidation("reject_retailer_request"), adminController.rejectRetailer);
