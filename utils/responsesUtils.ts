@@ -1,6 +1,6 @@
 import { Response } from "express";
 
-export const sendResponse = (
+export const sendSuccessResponse = (
   res: Response,
   statusCode: number,
   success: boolean,
@@ -15,7 +15,7 @@ export const sendResponse = (
   });
 };
 
-export const sendToken = (
+export const sendSuccessToken = (
   res: Response,
   statusCode: number,
   success: boolean,
@@ -30,7 +30,7 @@ export const sendToken = (
   });
 };
 
-export const sendError = (
+export const sendErrorResponse = (
   res: Response,
   statusCode: number,
   success: boolean,

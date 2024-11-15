@@ -10,7 +10,11 @@ import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
 import { getUserFromToken } from "./admin.controller";
-import { sendError, sendResponse, sendToken } from "../utils/responsesUtils";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+  sendSuccessToken,
+} from "../utils/responsesUtils";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -40,15 +44,15 @@ export class AuthController {
               expiresIn: "2h",
             }
           );
-          sendToken(res, 200, true, "Authentication successful!", token);
+          sendSuccessToken(res, 200, true, "Authentication successful!", token);
         } else {
-          sendError(res, 401, false, "Invalid username or password");
+          sendErrorResponse(res, 401, false, "Invalid username or password");
         }
       } else {
-        sendError(res, 404, false, "User not found");
+        sendErrorResponse(res, 404, false, "User not found");
       }
     } catch (error) {
-      sendError(res, 404, false, "User Login failed", error);
+      sendErrorResponse(res, 404, false, "User Login failed", error);
     }
   };
 
@@ -68,7 +72,7 @@ export class AuthController {
 
       const roleDoc = await RoleModel.findById(role_id);
       if (!roleDoc) {
-        sendError(res, 400, false, "Invalid role ID provided");
+        sendErrorResponse(res, 400, false, "Invalid role ID provided");
       } else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
@@ -100,11 +104,11 @@ export class AuthController {
             expiresIn: "2h",
           }
         );
-        sendToken(res, 201, true, "User registered successfully", token);
+        sendSuccessToken(res, 201, true, "User registered successfully", token);
       }
     } catch (error) {
       console.error(error);
-      sendError(res, 400, false, `User registration failed ${error}`);
+      sendErrorResponse(res, 400, false, `User registration failed ${error}`);
     }
   };
 
@@ -114,7 +118,7 @@ export class AuthController {
       const emailId = emailtemp.toLowerCase();
       const user = await this.getUserByEmail(emailId);
       if (!user) {
-        sendError(res, 404, false, "Invalid email ID provided");
+        sendErrorResponse(res, 404, false, "Invalid email ID provided");
       }
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -153,7 +157,7 @@ export class AuthController {
           html: message,
         });
 
-        sendToken(
+        sendSuccessToken(
           res,
           200,
           true,
@@ -162,7 +166,7 @@ export class AuthController {
         );
       }
     } catch (error) {
-      sendError(res, 500, false, "Error sending reset email");
+      sendErrorResponse(res, 500, false, "Error sending reset email");
     }
   };
 
@@ -183,19 +187,19 @@ export class AuthController {
         });
 
         if (!user) {
-          sendError(res, 400, true, "Invalid or expired token");
+          sendErrorResponse(res, 400, true, "Invalid or expired token");
         } else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
           await user.save();
-          sendResponse(res, 200, true, "Password reset successful");
+          sendSuccessResponse(res, 200, true, "Password reset successful");
         }
       } else {
-        sendError(res, 400, false, "Token not found");
+        sendErrorResponse(res, 400, false, "Token not found");
       }
     } catch (error) {
-      sendError(res, 500, false, "Failed to reset password");
+      sendErrorResponse(res, 500, false, "Failed to reset password");
     }
   };
 
@@ -204,7 +208,7 @@ export class AuthController {
       const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        sendError(res, 404, false, `No token provided`);
+        sendErrorResponse(res, 404, false, `No token provided`);
       } else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
@@ -215,12 +219,12 @@ export class AuthController {
         }).exec()) as User;
 
         if (!user) {
-          sendError(res, 404, false, `User not found`);
+          sendErrorResponse(res, 404, false, `User not found`);
         }
-        sendResponse(res, 200, true, "user found", user);
+        sendSuccessResponse(res, 200, true, "user found", user);
       }
     } catch (error) {
-      sendError(res, 500, false, `${error}`);
+      sendErrorResponse(res, 500, false, `${error}`);
     }
   };
 
@@ -232,7 +236,7 @@ export class AuthController {
 
       if (!cloudinaryUrl) {
         // console.error("No Cloudinary URLs found.");
-        sendError(res, 500, false, "Internal Server Error");
+        sendErrorResponse(res, 500, false, "Internal Server Error");
       } else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
@@ -241,13 +245,13 @@ export class AuthController {
         );
 
         if (user) {
-          sendResponse(res, 200, true, "successfully added image", user);
+          sendSuccessResponse(res, 200, true, "successfully added image", user);
         } else {
-          sendError(res, 404, false, "user not found");
+          sendErrorResponse(res, 404, false, "user not found");
         }
       }
     } catch (error) {
-      sendError(res, 500, false, "error in the catch");
+      sendErrorResponse(res, 500, false, "error in the catch");
     }
   };
 
@@ -261,9 +265,9 @@ export class AuthController {
         },
         { $set: { "role_specific_details.org_location": org_location } }
       );
-      sendResponse(res, 200, true, "org updated", updateloc);
+      sendSuccessResponse(res, 200, true, "org updated", updateloc);
     } catch (error) {
-      sendError(res, 500, false, `Internal server error ${error}`);
+      sendErrorResponse(res, 500, false, `Internal server error ${error}`);
     }
   };
 }
