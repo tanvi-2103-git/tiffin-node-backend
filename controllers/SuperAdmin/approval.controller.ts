@@ -218,6 +218,7 @@ export class ApprovalController {
           const totalItems = await UserModel.countDocuments({
             role_id: "672775e4f2a1e38ef52c63c6",
             "role_specific_details.approval_status": "rejected",
+            isActive: true,
           });
     
           const totalPages = Math.ceil(totalItems / limit);

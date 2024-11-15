@@ -31,8 +31,8 @@ export const validateGetRequest = (options: { isPagination?: boolean, isIdRequir
                 ? Joi.object({
                     page: Joi.number().integer().min(1).default(1),
                     limit: Joi.number().integer().min(1).default(10),
-                })
-                : Joi.object({})  //if pagintion is not there then skip
+                }).unknown(true)
+                : Joi.object({}).unknown(true)  //if pagintion is not there then skip
         });
 
         const { error, value } = schema.validate({

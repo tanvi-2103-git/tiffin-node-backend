@@ -74,38 +74,49 @@ export class OrganizationController {
   };
   
   
-   public getAllOrganizations = async (req: Request, res: Response) =>{
+  public getAllOrganizations = async (req: Request, res: Response) =>{
     try {
+    const status = req.query.status || 'true';  
+    console.log(status);
     const page = parseInt(req.query.page as string) || 1; 
-    const limit = parseInt(req.query.limit as string) || 10;
+    let limit;
+    if(status == 'true'){
+       limit = parseInt(req.query.limit as string) || 10;
+       console.log(status);
+       console.log(limit);
+    }else{
+      limit = await OrganizationModel.countDocuments({isActive:true});
+    }
+   
+    console.log(limit);
+    if(page < 1 || limit < 1){
+      res.status(400).json({ message: "Page and limit must be positive integers" });
+      return;
+      
+    }
 
-        if(page < 1 || limit < 1){
-          res.status(400).json({ message: "Page and limit must be positive integers" });
-        }else{
-          const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-          const organizations = await OrganizationModel.find({isActive:true})
-          .skip(skip)
-          .limit(limit);
-    
-         // const totalItems = organizations.length;
-          const totalItems = await OrganizationModel.countDocuments({
-            isActive : true
-          });
-    
-          const totalPages = Math.ceil(totalItems / limit);
-    
-          res.status(200).json({ 
-            statuscode: 200, 
-            data: organizations,
-            pagination: {
-              currentPage: page,
-              totalPages: totalPages,
-              totalItems: totalItems,
-            },
-          });
-        }
-      } catch (error) {
+      const organizations = await OrganizationModel.find({isActive:true})
+      .skip(skip)
+      .limit(limit);
+
+      const totalItems = await OrganizationModel.countDocuments({
+        isActive : true
+      })
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      res.status(200).json({ 
+        statuscode: 200, 
+        data: organizations,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+      });
+    } catch (error) {
       res.status(500).json({
         statuscode: 500,
         message: "Error fetching organizations",
@@ -113,6 +124,7 @@ export class OrganizationController {
       });
     }
   };
+
 
   
 
