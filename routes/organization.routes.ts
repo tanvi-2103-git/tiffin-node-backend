@@ -13,11 +13,9 @@ const organizationRoutes = new OrganizationController();
 
 
 router.post('/addOrganization',validateOrganization,validateToken, RoleBaseValidation('add_organization'), organizationRoutes.addOrganization);
-
-router.get('/getallOrganization', validateGetRequest({isPagination: true,isIdRequired:false}),validateToken,organizationRoutes.getAllOrganizations);
-
+router.get('/getallOrganization', validateGetRequest({isPagination: true,isIdRequired:false}),organizationRoutes.getAllOrganizations);
 router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRequired:true,idType: 'id'}),validateToken,RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
-
+router.get('/searchOrganizations',organizationRoutes.searchOrganizations);
 router.put('/updateOrganization/:id',validateOrganization,validateToken,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
 
 router.delete('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);

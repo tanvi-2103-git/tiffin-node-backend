@@ -19,6 +19,7 @@ export class CartController {
     
             const tiffin = await TiffinItemModel.findById(tiffinId).exec() as TiffinItem;
             
+    
             if (tiffin.isActive==false || !tiffin) {
                 res.status(404).json({ message: 'Tiffin item not found' });
             } else {
@@ -26,7 +27,9 @@ export class CartController {
                 console.log("retailerId",retailerId);
                 
                 const price = tiffin.tiffin_price;
-    
+                console.log("retailerId",retailerId);
+
+                
                 let customerCart = await CartModel.findOne({ customer_id });
                 console.log("customerCart.retailer_id",customerCart?.retailer_id);
                 
