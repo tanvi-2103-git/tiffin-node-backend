@@ -162,9 +162,17 @@ export class RetailerController {
               .isoWeek(item._id.week + 1)
               .startOf("isoWeek")
               .format("MMM Do YY");
+
+              
+              const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
             
             return {
-              week: startOfWeek,
+              startOfWeek: startOfWeek,
+              endOfWeek:endOfWeek,
               totalOrders: item.totalOrders,
               totalAmount: item.totalAmount,
             };
