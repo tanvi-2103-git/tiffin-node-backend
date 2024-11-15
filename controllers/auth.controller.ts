@@ -1,6 +1,5 @@
 import express from "express";
 import { Request, Response } from "express";
-
 import dotenv from "dotenv";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -11,6 +10,7 @@ import { User, UserModel } from "../model/userModel";
 import { RoleModel } from "../model/roleModel";
 import moment from "moment";
 import { getUserFromToken } from "./admin.controller";
+import { sendError, sendResponse, sendToken } from "../utils/responsesUtils";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -31,8 +31,7 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-        console.log(user);
-        
+
         if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
@@ -41,31 +40,15 @@ export class AuthController {
               expiresIn: "2h",
             }
           );
-          res.json({
-            statuscode: 200,
-            success: true,
-            message: "Authentication successful!",
-            token: token,
-            _id: user._id,
-            role_id: user.role_id,
-          });
+          sendToken(res, 200, true, "Authentication successful!", token);
         } else {
-          res.status(401).json({
-            statuscode: 401,
-            success: false,
-            message: "Invalid username or password",
-          });
+          sendError(res, 401, false, "Invalid username or password");
         }
       } else {
-        res.status(404).json({
-          statuscode: 404,
-          success: false,
-          message: "User not found",
-        });
+        sendError(res, 404, false, "User not found");
       }
     } catch (error) {
-      console.error(error);
-      res.status(400).json({ statuscode: 400, error: "User Login failed" });
+      sendError(res, 404, false, "User Login failed", error);
     }
   };
 
@@ -85,9 +68,7 @@ export class AuthController {
 
       const roleDoc = await RoleModel.findById(role_id);
       if (!roleDoc) {
-        res
-          .status(400)
-          .json({ statuscode: 400, error: "Invalid role ID provided" });
+        sendError(res, 400, false, "Invalid role ID provided" )
       } else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
@@ -97,14 +78,12 @@ export class AuthController {
 
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
-          console.log(role_specific_details[fieldName]);
         }
-        // console.log(email);
-        // console.log(email.toLowerCase());
+
         const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
-          email:newEmail,
+          email: newEmail,
           password: hash,
           contact_number,
           address,
@@ -121,35 +100,23 @@ export class AuthController {
             expiresIn: "2h",
           }
         );
-
-        res.status(201).json({
-          statuscode: 201,
-          message: "User registered successfully",
-          token,
-          _id: userData._id,
-          role_id: userData.role_id,
-        });
+        sendToken(res, 201, true,"User registered successfully", token)
       }
     } catch (error) {
       console.error(error);
-      res
-        .status(400)
-        .json({ statuscode: 400, error: `User registration failed ${error}` });
+      sendError(res, 400, false, `User registration failed ${error}`)
+
     }
   };
 
   public forgotPassword = async (req: Request, res: Response) => {
-    // todo:
-    // 1.get user based on posted email
-    // 2.generate a random reset token
-    // 3. send the token back to the user
     try {
-      const emailId = req.body.email;
+
+      const emailtemp = req.body.email;
+      const emailId = emailtemp.toLowerCase();
       const user = await this.getUserByEmail(emailId);
       if (!user) {
-        res
-          .status(404)
-          .json({ statuscode: 404, error: "Invalid email ID provided" });
+        sendError(res, 404, false, "Invalid email ID provided")
       }
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -188,16 +155,10 @@ export class AuthController {
           html: message,
         });
 
-        res.json({
-          success: true,
-          message: "Password reset link sent to your email",
-          token: resetToken,
-        });
+        sendToken(res, 200, true, "Password reset link sent to your email", resetToken )
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Error sending reset email" });
+      sendError(res, 500, false, "Error sending reset email")
     }
   };
 
@@ -218,24 +179,20 @@ export class AuthController {
         });
 
         if (!user) {
-          res
-            .status(400)
-            .json({ success: false, message: "Invalid or expired token" });
+          sendError(res, 400, true, "Invalid or expired token")
+
         } else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
           await user.save();
-
-          res.json({ success: true, message: "Password reset successful" });
+          sendResponse(res, 200, true, "Password reset successful")
         }
       } else {
-        res.json({ success: false, message: "Token not found" });
+        sendError(res, 400, false, "Token not found")
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to reset password" });
+      sendError(res, 500, false, "Failed to reset password" )
     }
   };
 
@@ -244,8 +201,7 @@ export class AuthController {
       const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        res.json("No token provided");
-        res.status(404).json({ statuscode: 404, message: `No token provided` });
+        sendError(res, 404, false, `No token provided`);
       } else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
@@ -256,33 +212,30 @@ export class AuthController {
         }).exec()) as User;
 
         if (!user) {
-          res.status(404).json({ statuscode: 404, message: `User not found` });
+          sendError(res, 404, false, `User not found`)
         }
-        res.status(200).json({ statuscode: 200, data: user });
+        sendResponse(res, 200, true, "user found", user)
       }
     } catch (error) {
-      res.status(500).json({ statuscode: 500, message: ` ${error}` });
+      sendError(res, 500, false, `${error}`)
     }
   };
 
   public uploadUserImage = async (req: Request, res: Response) => {
     try {
       const user_id = req.params.userid;
-      console.log(user_id);
+
       const cloudinaryUrl = req.body.cloudinaryUrl;
-      console.log("cloudinaryUrl in controller:", cloudinaryUrl);
 
       if (!cloudinaryUrl) {
-        console.error("No Cloudinary URLs found.");
-        res.status(500).send("Internal Server Error");
+        // console.error("No Cloudinary URLs found.");
+        sendError(res, 500, false, "Internal Server Error");
       } else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
           { user_image: cloudinaryUrl },
           { new: true, runValidators: true }
         );
-
-        // console.log('user in controller:', user)
 
         if (user) {
           res.status(200).json({ statuscode: 200, data: user });
@@ -295,21 +248,22 @@ export class AuthController {
     }
   };
 
-public updateLoc = async (req: Request, res: Response) => {
-  try {
-    const org_location = req.query.org_location;
-    const user = await getUserFromToken(req) as User;
-    const updateloc = await UserModel.updateOne({
-      _id : user._id
-    },{ $set: { "role_specific_details.org_location": org_location } })
+  public updateLoc = async (req: Request, res: Response) => {
+    try {
+      const org_location = req.query.org_location;
+      const user = (await getUserFromToken(req)) as User;
+      const updateloc = await UserModel.updateOne(
+        {
+          _id: user._id,
+        },
+        { $set: { "role_specific_details.org_location": org_location } }
+      );
 
-    
-   res.status(200).json({statuscode:200, data:updateloc})
-  }catch(error){
-    res
-    .status(500)
-    .json({ statuscode: 500, message: `Internal server error ${error}` });
-
-  }
-}
+      res.status(200).json({ statuscode: 200, data: updateloc });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `Internal server error ${error}` });
+    }
+  };
 }
