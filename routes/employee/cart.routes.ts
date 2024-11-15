@@ -17,4 +17,4 @@ cartRoutes.get("/removetiffinfromcart/:tiffinid",validateGetRequest({isPaginatio
 
 cartRoutes.delete("/removecart/:cartid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'cartid'}),validateToken,RoleBaseValidation("remove_cart"), cartController.removeCart);
 
-cartRoutes.get("/getcart",validateToken,RoleBaseValidation("remove_cart"), cartController.getCart);
+cartRoutes.get("/getcart",validateToken,RoleBaseValidation("get_cart"), cartController.getCart);
