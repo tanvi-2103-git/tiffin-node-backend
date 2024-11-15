@@ -7,7 +7,6 @@ import { validateToken } from "../middleware/validateToken";
 import {AuthController} from "../controllers/auth.controller";
 import { getUserFromToken } from "../controllers/admin.controller";
 import { upload, uploadToCloudinary } from "../config/cloudinaryConfig";
-import { validateToken } from "../middleware/validateToken";
 export const authRoutes = express();
 
 const  authController = new AuthController();

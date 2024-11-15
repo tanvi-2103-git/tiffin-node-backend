@@ -16,7 +16,7 @@ export interface User extends Document {
     address: string;
     created_at: Date;
     updated_at: Date; 
-    role_id: string;
+    role_id: mongoose.Schema.Types.ObjectId;
     resetPasswordToken: string| undefined;
     resetPasswordTokenExpires: Date | undefined;
     role_specific_details:any;
@@ -34,7 +34,7 @@ const UserSchema = new mongoose.Schema({
     address: { type: String, required: true },
     created_at:{ type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
-    role_id: { type: String,  required: true },
+    role_id: { type: mongoose.Schema.Types.ObjectId,  required: true },
     resetPasswordToken: { type: String },
     resetPasswordTokenExpires: { type: Date},
     role_specific_details:{},
