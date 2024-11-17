@@ -31,6 +31,7 @@ export class AuthController {
 
       const { email, password } = req.body;
       if (user) {
+        console.log(user);
         const matchPassword = await bcrypt.compare(password, user.password);
 
         if (email === user.email && matchPassword) {
