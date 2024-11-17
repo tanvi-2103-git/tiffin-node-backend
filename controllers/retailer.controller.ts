@@ -50,7 +50,7 @@ export class RetailerController {
   };
 
   
-
+//add pagination
   public getAllOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
@@ -61,22 +61,58 @@ export class RetailerController {
         });
       } else {
         const status = req.query.status;
+        const page = parseInt(req.query.page as string) || 1;  
+        const limit = parseInt(req.query.limit as string) || 10;  
+
+        if(page < 1 || limit < 1){
+          res.status(400).json({ message: "Page and limit must be positive integers" });
+          
+        }else{
+        const skip = (page - 1) * limit;  
         let orders;
+        let totalItems;
+        let totalPages;
+
         if (status) {
           orders = await OrderModel.find({
             "cart.retailer_id": user._id,
             delivery_status: status,
+          }).skip(skip).limit(limit).exec();
+
+            totalItems = await OrderModel.countDocuments({
+            "cart.retailer_id": user._id,
+            delivery_status: status,
           });
+
+           totalPages = Math.ceil(totalItems / limit);
+
         } else {
-          orders = await OrderModel.find({ "cart.retailer_id": user._id });
+          orders = await OrderModel.find({ "cart.retailer_id": user._id })
+          .skip(skip).limit(limit).exec();
+        
+            totalItems = await OrderModel.countDocuments({
+            "cart.retailer_id": user._id,
+          });
+
+           totalPages = Math.ceil(totalItems / limit);
+          
         }
         if (orders.length > 0)
-          res.status(200).json({ statuscode: 200, data: orders });
+          res.status(200).json({ statuscode: 200, data: orders ,
+            pagination: {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
+          },
+        });
         else
           res
             .status(404)
             .json({ statuscode: 404, message: "orders not found" });
       }
+    }
+
+       
     } catch (error) {
       res
         .status(500)

@@ -23,7 +23,7 @@ export class OrganizationController {
 
       console.log('Received query parameter:', query);
   
-      if (!query || typeof query !== 'string') {
+      if (!query) {
         res.status(400).json({
           statuscode: 400,
           message: "Query parameter is required and must be a string."
@@ -91,11 +91,10 @@ export class OrganizationController {
     console.log(limit);
     if(page < 1 || limit < 1){
       res.status(400).json({ message: "Page and limit must be positive integers" });
-      return;
+      //return;
       
-    }
-
-    const skip = (page - 1) * limit;
+    }else{
+      const skip = (page - 1) * limit;
 
       const organizations = await OrganizationModel.find({isActive:true})
       .skip(skip)
@@ -116,7 +115,9 @@ export class OrganizationController {
           totalItems: totalItems,
         },
       });
-    } catch (error) {
+    }
+
+  } catch (error) {
       res.status(500).json({
         statuscode: 500,
         message: "Error fetching organizations",
@@ -124,6 +125,7 @@ export class OrganizationController {
       });
     }
   };
+
 
 
   

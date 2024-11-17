@@ -3,6 +3,7 @@ import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { TiffinItemModel } from "../../model/tiffinItemModel";
 import { OrderModel } from "../../model/orderModel";
+import { RETAILER_ID } from "../../utils/constants";
 
 
 export class EmployeeController {
@@ -30,7 +31,7 @@ export class EmployeeController {
                         const skip = (page - 1) * limit;  
 
                         const TrendyRetailers = await UserModel.find({
-                            role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                            role_id: RETAILER_ID, // retailer role ID
                             "role_specific_details.approval": {
                                 $elemMatch: {
                                     organization_id: organizationId,
@@ -93,7 +94,7 @@ export class EmployeeController {
                     const skip = (page - 1) * limit;
 
                     const Retailers = await UserModel.find({
-                        role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                        role_id: RETAILER_ID, // retailer role ID
                         "role_specific_details.approval": {
                             $elemMatch: {
                                 organization_id: organizationId
@@ -102,7 +103,7 @@ export class EmployeeController {
                     }).skip(skip).limit(limit).exec();
 
                     const totalItems = await UserModel.countDocuments({
-                        role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                        role_id: RETAILER_ID, // retailer role ID
                         "role_specific_details.approval": {
                             $elemMatch: {
                                 organization_id: organizationId
@@ -131,29 +132,30 @@ export class EmployeeController {
 
     public searchRetailersOfOrg = async(req: Request,res: Response) : Promise<void> =>{
         try{
-           const user = await getUserFromToken(req);
-           console.log(user, "user");
-           const { query } = req.query;
 
-           if(!query  || typeof query !== 'string' || !user || !user.role_specific_details.organization_id){
+           const user = await getUserFromToken(req);
+           const { query ,approval_status} = req.query;
+          
+            console.log(approval_status);
+           if(!query  || !user || !user.role_specific_details.organization_id){
              res.status(400).json({
                statuscode: 400,
                message: "Query parameter is required and must be a string Or Unauthorized or invalid user details."
              });
            }else{
             const organizationId = user.role_specific_details.organization_id;
-            console.log(user.role_specific_details.organization_id);
              const searchFields = ['username','email','contact_number','address'];
      
              let retailers : User[] = [];
-     
              for(let field of searchFields){
                retailers = await UserModel.find({
-                 role_id:"6723475f74b32cfe39e5d0a2", //retailer id
-                 "role_specific_details.approval": {
+                 //role_id:RETAILER_ID, //retailer id//retailer id matching is not working
+                  "role_specific_details.approval": {
                      $elemMatch: {
-                         organization_id: organizationId
-                    }
+                         organization_id: organizationId,
+                         approval_status:approval_status || { $exists: true } 
+                        
+                     }
                  },
                  isActive:true,
                  [field] : query,
@@ -186,7 +188,7 @@ export class EmployeeController {
         }
        }
    
-    public getAllTiffinofOrg = async  (req: Request, res: Response) =>{
+       public getAllTiffinofOrg = async  (req: Request, res: Response) =>{
         try {
             const user = await getUserFromToken(req);
             console.log(user, "user");
@@ -198,37 +200,60 @@ export class EmployeeController {
                 });
             } else {
                 const organizationId = user.role_specific_details.organization_id;
-    
+                const page = parseInt(req.query.page as string) || 1; 
+                const limit = parseInt(req.query.limit as string) || 10;
                 
-                const Retailers = await UserModel.find({
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
-                    "role_specific_details.approval": {
-                        $elemMatch: {
-                            organization_id: organizationId
+                if (page < 1 || limit < 1) {
+                      res.status(400).json({
+                      statuscode: 400,
+                      message: "Page and limit must be positive integers.",
+                    });
+                }else{
+                    const Retailers = await UserModel.find({
+                        role_id: RETAILER_ID, // retailer role ID
+                        "role_specific_details.approval": {
+                            $elemMatch: {
+                                organization_id: organizationId
+                            }
                         }
-                    }
-                }).exec();
-    
-                if (Retailers.length === 0) {
-                    res.status(404).json({ statuscode: 404, message: "No retailers found for the given organization." });
-                } else {
-                    const retailerIds = Retailers.map(retailer => retailer._id);
-    
-                    const Tiffins = await TiffinItemModel.find({
-                        retailer_id: { $in: retailerIds }
                     }).exec();
+        
+                    if (Retailers.length === 0) {
+                        res.status(404).json({ statuscode: 404, message: "No retailers found for the given organization." });
+                    } else {
+                        const retailerIds = Retailers.map(retailer => retailer._id);
+        
+                        const skip = (page - 1) * limit;
     
-                    console.log(`Organization ID: ${organizationId}`);
-                    console.log(`Found Tiffin items: ${Tiffins.length}`);
+                        const Tiffins = await TiffinItemModel.find({
+                            retailer_id: { $in: retailerIds }
+                        }).skip(skip)  
+                         .limit(limit).exec();
     
-                    res.status(200).json({ statuscode: 200, data: Tiffins });
+                        const totalTiffins = await TiffinItemModel.countDocuments({
+                            retailer_id: { $in: retailerIds },
+                        });
+    
+                        const totalPages = Math.ceil(totalTiffins / limit);
+        
+        
+                        res.status(200).json({ statuscode: 200, data: Tiffins ,
+                            pagination: {
+                                currentPage: page,
+                                totalPages: totalPages,
+                                totalItems: totalTiffins,
+                              },
+                        });
+                    }
                 }
+                
             }
         } catch (error) {
             console.error("Error fetching tiffin items:", error);
             res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
         }
     };
+
     
 
     
@@ -300,7 +325,7 @@ export class EmployeeController {
     
                 const Retailers = await UserModel.find({
 
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+                    role_id: RETAILER_ID, // retailer role ID
                     "role_specific_details.approval": {
                         $elemMatch: {
                             organization_id: organizationId
@@ -338,16 +363,39 @@ export class EmployeeController {
                   statuscode: 401,
                   message: "Unauthorized or invalid user details.",
                 });
-              } else {
-                
-                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'delivered'});
-                if(orders.length>0)
-                    res.status(200).json({statuscode:200, data:orders})
-                else
-                res.status(404).json({statuscode:404, message:"orders not found"})
- 
+            } else {
+                const page = parseInt(req.query.page as string) || 1;  
+                const limit = parseInt(req.query.limit as string) || 10; 
+            
+               
+                if (page < 1 || limit < 1) {
+                    res.status(400).json({
+                    statuscode: 400,
+                    message: "Page and limit must be positive integers.",
+                  });
+                }else{
+                    const skip = (page - 1) * limit;
 
+                    const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'delivered'}).
+                    skip(skip)
+                    .limit(limit)
+                    .exec();
+    
+                    const totalOrders = await OrderModel.countDocuments({'cart.customer_id':user._id, delivery_status:'delivered'});
+                    const totalPages = Math.ceil(totalOrders / limit);
+    
+                    if(orders.length>0)
+                        res.status(200).json({statuscode:200, data:orders,
+                            pagination: {
+                                currentPage: page,
+                                totalPages: totalPages,
+                                totalItems: totalOrders,
+                              },})
+                    else
+                    res.status(404).json({statuscode:404, message:"orders not found"})
                 }
+
+            }
         }catch(error){
             res.status(500).json({statuscode:500, message:`internal server error ${error}`})
 
@@ -362,16 +410,38 @@ export class EmployeeController {
                   statuscode: 401,
                   message: "Unauthorized or invalid user details.",
                 });
-              } else {
-                
-                const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'pending'});
-                if(orders.length>0)
-                    res.status(200).json({statuscode:200, data:orders})
-                else
-                res.status(404).json({statuscode:404, message:"orders not found"})
- 
+            } else {
+                const page = parseInt(req.query.page as string) || 1;  
+                const limit = parseInt(req.query.limit as string) || 10;
 
-                }
+                 if (page < 1 || limit < 1) {
+                    res.status(400).json({
+                    statuscode: 400,
+                    message: "Page and limit must be positive integers.",
+                  });
+                }else{
+                    const skip = (page - 1) * limit;
+                    const orders = await OrderModel.find({'cart.customer_id':user._id, delivery_status:'pending'}).
+                    skip(skip)
+                    .limit(limit)
+                    .exec();
+
+                    const totalOrders = await OrderModel.countDocuments({'cart.customer_id':user._id, delivery_status:'pending'});
+                    const totalPages = Math.ceil(totalOrders / limit);
+
+                    if(orders.length>0)
+                        res.status(200).json({statuscode:200, data:orders,
+                            pagination: {
+                                currentPage: page,
+                                totalPages: totalPages,
+                                totalItems: totalOrders,
+                              },
+                            })
+                    else
+                    res.status(404).json({statuscode:404, message:"orders not found"})  
+                } 
+               
+            }
         }catch(error){
             res.status(500).json({statuscode:500, message:`internal server error ${error}`})
 

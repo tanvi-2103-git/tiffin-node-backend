@@ -12,73 +12,70 @@ export class ApprovalController {
     try {
       const { query , approval_status} = req.query;  // Accept a generic query parameter
   
-      if (!query || typeof query !== 'string') {
+      if (!query && !approval_status ){
           res.status(400).json({
           statuscode: 400,
-          message: "Query parameter is required and must be a string."
+          message: "Query parameter and Approval status is required and must be a string."
         });
-        return;
-      }
+      }else{
+        const searchFields = ['username', 'contact_number', 'email', 'address'];  
   
-     
-      const searchFields = ['username', 'contact_number', 'email', 'address'];  
-  
-      let users : User[]= [];  
-  
-      
-      for (let field of searchFields) {
-        
-        users = await UserModel.find({
-          role_id: "672775e4f2a1e38ef52c63c6",  
-          isActive:true,
-          "role_specific_details.approval_status": approval_status,
-          // [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
-          [field]: query,
-        }).exec();
-  
-       
-        if (users.length > 0) {
-          break;
-        }
-      }
-  
-      
-      if (users.length === 0) {
-        res.status(404).json({
-          statuscode: 404,
-          message: "No users found matching the search criteria",
-        });
-        return;
-      }
-  
-     
-      const result = await Promise.all(
-        users.map(async (user) => {
-          const org_id = user.role_specific_details.organization_id;
-          const org_name = await OrganizationModel.findById(org_id).exec();
-  
-          return {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            contact_number: user.contact_number,
-            address: user.address,
-            role_id: user.role_id,
-            role_specific_details: {
-              organization_id: user.role_specific_details.organization_id,
-              organization_name: org_name?.org_name,
-              approval_status: user.role_specific_details.approval_status,
-            },
-          };
-        })
-      );
-  
+        let users : User[]= [];  
     
-      res.status(200).json({
-        statuscode: 200,
-        data: result,
-      });
+        
+        for (let field of searchFields) {
+          
+          users = await UserModel.find({
+            role_id: ADMIN_ID,  
+            isActive:true,
+            "role_specific_details.approval_status": approval_status,
+            // [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
+            [field]: query,
+          }).exec();
+    
+         
+          if (users.length > 0) {
+            break;
+          }
+        }
+    
+        
+        if (users.length === 0) {
+          res.status(404).json({
+            statuscode: 404,
+            message: "No users found matching the search criteria",
+          });
+          
+        }else{
+          const result = await Promise.all(
+            users.map(async (user) => {
+              const org_id = user.role_specific_details.organization_id;
+              const org_name = await OrganizationModel.findById(org_id).exec();
+      
+              return {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                contact_number: user.contact_number,
+                address: user.address,
+                role_id: user.role_id,
+                role_specific_details: {
+                  organization_id: user.role_specific_details.organization_id,
+                  organization_name: org_name?.org_name,
+                  approval_status: user.role_specific_details.approval_status,
+                },
+              };
+            })
+          );
+          res.status(200).json({
+            statuscode: 200,
+            data: result,
+          });
+        }
+    
+    }
   
+     
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
@@ -87,6 +84,10 @@ export class ApprovalController {
       });
     }
   };
+  
+  
+  
+ 
   
   public getAllPendingAdminApprovalRequests = async (
     req: Request,
@@ -114,7 +115,7 @@ export class ApprovalController {
           .exec();
 
           const totalItems = await UserModel.countDocuments({
-          role_id: "672775e4f2a1e38ef52c63c6",
+          role_id: ADMIN_ID,
           "role_specific_details.approval_status": "pending",
           isActive: true,
           });
@@ -216,7 +217,7 @@ export class ApprovalController {
             .exec();
     
           const totalItems = await UserModel.countDocuments({
-            role_id: "672775e4f2a1e38ef52c63c6",
+            role_id: ADMIN_ID,
             "role_specific_details.approval_status": "rejected",
             isActive: true,
           });

@@ -21,11 +21,12 @@ superAdminRoutes.get("/searchAdminApproval",validateToken,approval.searchAdminAp
 superAdminRoutes.get("/pendingAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_pending_admin_request'), approval.getAllPendingAdminApprovalRequests);
 superAdminRoutes.get("/approvedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_approved_admin_request'), approval.getAllApprovedAdmin);
 superAdminRoutes.get("/rejectedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_rejected_admin_request'), approval.getAllRejectedAdmin);
-superAdminRoutes.get("/getalladminrequest",validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
+superAdminRoutes.get("/getalladminrequest",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
+//searchalladminrequest
 superAdminRoutes.put("/rejectadmin/:admin_id",validateToken,RoleBaseValidation('reject_admin_request'), approval.rejectApprovalRequest);
 superAdminRoutes.put("/approveadmin/:admin_id",validateToken,RoleBaseValidation('approve_admin_request'), approval.approveAdminRequest);
-superAdminRoutes.get("/getweeklyrequests",validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyRequest);
-superAdminRoutes.get("/getmonthlyrequests",validateToken,RoleBaseValidation("get_admin_request"), approval.getMonthlylyRequest);
+superAdminRoutes.get("/getweeklyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyRequest);
+superAdminRoutes.get("/getmonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getMonthlylyRequest);
 
 
 
