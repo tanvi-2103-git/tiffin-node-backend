@@ -15,7 +15,6 @@ import { roleRoutes } from "./routes/role.routes";
 import retailerRoutes from "./routes/retailer.routes";
 import { employeeRoutes } from "./routes/employee.routes";
 import { cartRoutes } from "./routes/employee/cart.routes";
-import {upload, uploadToCloudinary } from './config/cloudinaryConfig'; //the file path where you had written this functions in earlier
 import { orderRoutes } from "./routes/employee/order.routes";
 import { reviewRouter } from "./routes/review.routes";
 
