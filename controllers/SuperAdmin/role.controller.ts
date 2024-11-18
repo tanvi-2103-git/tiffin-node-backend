@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { RoleModel } from "../../model/roleModel";
-import { permission } from "process";
 import {
   sendErrorResponse,
   sendSuccessResponse,

@@ -32,7 +32,6 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-        console.log(user);
         
         if (matchPassword) {
           const token = jwt.sign(
@@ -113,10 +112,8 @@ export class AuthController {
 
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
-          // console.log(role_specific_details[fieldName]);
         }
-        // console.log(email);
-        // console.log(email.toLowerCase());
+       
         const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
@@ -399,12 +396,9 @@ export class AuthController {
   public uploadUserImage = async (req: Request, res: Response) => {
     try {
       const user_id = req.params.userid;
-      console.log(user_id);
       const cloudinaryUrl = req.body.cloudinaryUrl;
-      console.log("cloudinaryUrl in controller:", cloudinaryUrl);
 
       if (!cloudinaryUrl) {
-        console.error("No Cloudinary URLs found.");
         res.status(500).send("Internal Server Error");
       } else {
         const user = await UserModel.findByIdAndUpdate(
@@ -413,7 +407,6 @@ export class AuthController {
           { new: true, runValidators: true }
         );
 
-        // console.log('user in controller:', user)
 
         if (user) {
           res.status(200).json({ statuscode: 200, data: user });

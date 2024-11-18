@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { User, UserModel } from "../model/userModel";
 import jwt from "jsonwebtoken";
-import { ObjectId } from "mongodb";
 import { RETAILER_ID } from "../utils/constants";
 import { sendErrorResponse, sendSuccessResponse } from "../utils/responsesUtils";
 import { getDefaultResultOrder } from "dns/promises";
@@ -97,7 +96,6 @@ export class AdminController {
                 },
               },
             });
-            // console.log(result);
             totalPages = Math.ceil(totalItems / limit);
 
              sendSuccessResponse(
@@ -124,7 +122,6 @@ export class AdminController {
               .skip(skip)
               .limit(limit)
               .exec();
-            // console.log(result);
 
             totalItems = await UserModel.countDocuments({
               role_id: RETAILER_ID, //retailer:roleid
@@ -135,7 +132,6 @@ export class AdminController {
                 },
               },
             });
-            // console.log(result);
             totalPages = Math.ceil(totalItems / limit);
 
             sendSuccessResponse(res, 200, true, "All retailer requests", result,
@@ -195,7 +191,6 @@ export class AdminController {
             .skip(skip)
             .limit(limit)
             .exec();
-          console.log(result);
 
           const totalItems = await UserModel.countDocuments({
             role_id: RETAILER_ID, // retailer role ID
@@ -343,7 +338,6 @@ export class AdminController {
             .skip(skip)
             .limit(limit)
             .exec();
-          console.log(result);
 
           const totalItems = await UserModel.countDocuments({
             role_id: RETAILER_ID, // retailer role ID
@@ -379,7 +373,6 @@ export class AdminController {
   ): Promise<void> => {
     try {
       const { query, approval_status } = req.query;
-      console.log(approval_status);
 
       if (!query) {
         res.status(400).json({
@@ -428,7 +421,6 @@ export class AdminController {
   public approveRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -444,10 +436,8 @@ export class AdminController {
         );
       } else {
         const retailer_id = req.params.retailer_id;
-        console.log("retailer_id", retailer_id);
 
         const organization_id = user?.role_specific_details.organization_id;
-        console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
           role_id: RETAILER_ID, //retailer
@@ -481,7 +471,6 @@ export class AdminController {
             arrayFilters: [{ "elem.organization_id": organization_id }],
           }
         );
-        console.log(result);
         sendSuccessResponse(res, 200, true, "approved", result);
 
       }
@@ -496,7 +485,6 @@ export class AdminController {
   public rejectRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -551,7 +539,6 @@ export class AdminController {
             arrayFilters: [{ "elem.organization_id": organization_id }],
           }
         );
-        console.log(result);
 
         sendSuccessResponse(res, 200, true, "rejected", result);
       }
@@ -563,7 +550,6 @@ export class AdminController {
   public makeRetailerTrendy = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -579,10 +565,8 @@ export class AdminController {
         );
       } else {
         const retailer_id = req.params.retailer_id;
-        console.log("retailer_id", retailer_id);
 
         const organization_id = user?.role_specific_details.organization_id;
-        console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
           role_id: RETAILER_ID, //retailer
@@ -594,7 +578,6 @@ export class AdminController {
             },
           },
         }).exec();
-        console.log("retailer", retailer);
         // res.json(retailer)
         if (!retailer) {
           sendSuccessResponse(
@@ -627,7 +610,6 @@ export class AdminController {
   public ReApply = async (req: Request, res: Response): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (user?.isActive == false || !user) {
         sendSuccessResponse(

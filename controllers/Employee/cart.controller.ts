@@ -160,7 +160,6 @@ export class CartController {
 
         const cart = await CartModel.find({ customer_id: userId });
         if (cart.length > 0) {
-          console.log(cart.length);
 
           sendSuccessResponse(res, 200, true, "Cart loaded successfully", cart);
         } else {
