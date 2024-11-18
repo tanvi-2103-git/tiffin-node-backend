@@ -13,7 +13,7 @@ export const sendSuccessResponse = (
     success: true,
     message,
     data,
-    pagination
+    pagination,
   });
 };
 
@@ -22,13 +22,15 @@ export const sendSuccessToken = (
   statusCode: number,
   success: boolean,
   message: string,
-  token: string
+  token: string,
+  refreshToken?: string
 ) => {
   return res.status(statusCode).json({
     statusCode,
     success: true,
     message,
     token,
+    refreshToken,
   });
 };
 
