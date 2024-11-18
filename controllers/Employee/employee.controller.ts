@@ -316,7 +316,6 @@ export class EmployeeController {
             true,
             "No retailers found for the given organization."
           );
-          
         } else {
           const retailerIds = Retailers.map((retailer) => retailer._id);
 
@@ -326,13 +325,7 @@ export class EmployeeController {
           }).exec();
 
           console.log(`Organization ID: ${organizationId}`);
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "Tiffin",
-            Tiffin
-          );
+          sendSuccessResponse(res, 200, true, "Tiffin", Tiffin);
         }
       }
     } catch (error) {
@@ -357,31 +350,14 @@ export class EmployeeController {
           false,
           "Unauthorized or invalid user details."
         );
-        
       } else {
         const orders = await OrderModel.find({
           "cart.customer_id": user._id,
           delivery_status: "delivered",
         });
         if (orders.length > 0)
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "orders",
-            orders
-          );
-          // res.status(200).json({ statuscode: 200, data: orders });
-        else
-        sendSuccessResponse(
-          res,
-          200,
-          true,
-          "orders not found"
-        );
-          // res
-          //   .status(404)
-          //   .json({ statuscode: 404, message: "orders not found" });
+          sendSuccessResponse(res, 200, true, "orders", orders);
+        else sendSuccessResponse(res, 200, true, "orders not found");
       }
     } catch (error) {
       sendErrorResponse(
@@ -391,9 +367,6 @@ export class EmployeeController {
         "An error occurred while processing your request.",
         error
       );
-      // res
-      //   .status(500)
-      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 
@@ -407,35 +380,14 @@ export class EmployeeController {
           false,
           "Unauthorized or invalid user details."
         );
-        
-        // res.status(401).json({
-        //   statuscode: 401,
-        //   message: "Unauthorized or invalid user details.",
-        // });
       } else {
         const orders = await OrderModel.find({
           "cart.customer_id": user._id,
           delivery_status: "pending",
         });
         if (orders.length > 0)
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "orders",
-            orders
-          );
-          // res.status(200).json({ statuscode: 200, data: orders });
-        else
-        sendSuccessResponse(
-          res,
-          200,
-          true,
-          "orders not found"
-        );
-          // res
-          //   .status(404)
-          //   .json({ statuscode: 404, message: "orders not found" });
+          sendSuccessResponse(res, 200, true, "orders", orders);
+        else sendSuccessResponse(res, 200, true, "orders not found");
       }
     } catch (error) {
       sendErrorResponse(
@@ -445,9 +397,6 @@ export class EmployeeController {
         "An error occurred while processing your request.",
         error
       );
-      // res
-      //   .status(500)
-      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 
@@ -461,15 +410,7 @@ export class EmployeeController {
             delivery_status: "cancelled",
           });
           if (order)
-            sendSuccessResponse(
-              res,
-              200,
-              true,
-              "order updated successful"
-            );
-            // res
-            //   .status(200)
-            //   .json({ statuscode: 200, message: "order updated successful" });
+            sendSuccessResponse(res, 200, true, "order updated successful");
         } else if (order.delivery_status == "delivered") {
           sendSuccessResponse(
             res,
@@ -477,10 +418,6 @@ export class EmployeeController {
             true,
             "order is already delivered cannot be modified"
           );
-          // res.status(409).json({
-          //   statuscode: 409,
-          //   message: "order is already delivered cannot be modified",
-          // });
         } else {
           sendSuccessResponse(
             res,
@@ -488,18 +425,9 @@ export class EmployeeController {
             true,
             "order is already cancelled cannot be modified"
           );
-          // res
-          //   .status(409)
-          //   .json({ statuscode: 409, message: "order is already cancelled " });
         }
       } else {
-        sendSuccessResponse(
-          res,
-          200,
-          true,
-          "order not found"
-        );
-        // res.status(404).json({ statuscode: 404, message: "order not found" });
+        sendSuccessResponse(res, 200, true, "order not found");
       }
     } catch (error) {
       sendErrorResponse(
@@ -509,9 +437,6 @@ export class EmployeeController {
         "An error occurred while processing your request.",
         error
       );
-      // res
-      //   .status(500)
-      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 }
