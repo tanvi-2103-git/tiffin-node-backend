@@ -32,7 +32,6 @@ export class OrganizationController {
     try {
       const { query } = req.query; // Accept a generic query parameter
 
-      console.log("Received query parameter:", query);
 
       if (!query) {
         res.status(400).json({
@@ -74,18 +73,14 @@ export class OrganizationController {
   public getAllOrganizations = async (req: Request, res: Response) => {
     try {
       const status = req.query.status || "true";
-      console.log(status);
       const page = parseInt(req.query.page as string) || 1;
       let limit;
       if (status == "true") {
         limit = parseInt(req.query.limit as string) || 10;
-        console.log(status);
-        console.log(limit);
       } else {
         limit = await OrganizationModel.countDocuments({ isActive: true });
       }
 
-      console.log(limit);
       if (page < 1 || limit < 1) {
         res
           .status(400)

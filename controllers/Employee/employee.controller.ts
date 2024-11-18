@@ -13,8 +13,7 @@ export class EmployeeController {
   public getAllTrendyRetailers = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
-
+      
       if (
         user?.isActive == false ||
         !user ||
@@ -141,7 +140,6 @@ export class EmployeeController {
 
           const totalPages = Math.ceil(totalItems / limit);
 
-          console.log(`Organization ID: ${organizationId}`);
           sendSuccessResponse(res, 200, true, "Retailers", Retailers, {
             currentPage: page,
             totalPages: totalPages,
@@ -209,7 +207,6 @@ export class EmployeeController {
   public getAllTiffinofOrg = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -292,7 +289,6 @@ export class EmployeeController {
     try {
       const retailerId = req.params.retailerid;
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -355,7 +351,6 @@ export class EmployeeController {
     try {
       const tifinId = req.params.tifinid;
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
         user?.isActive == false ||
@@ -396,7 +391,6 @@ export class EmployeeController {
             retailer_id: { $in: retailerIds },
           }).exec();
 
-          console.log(`Organization ID: ${organizationId}`);
 
           sendSuccessResponse(res, 200, true, "Tiffin", Tiffin);
         }
