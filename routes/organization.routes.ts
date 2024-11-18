@@ -20,10 +20,8 @@ router.put('/updateOrganization/:id',validateOrganization,validateToken,RoleBase
 
 router.delete('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 
+router.post("/upload", upload.single('recfile'), uploadToCloudinary("org_image"));
 
 // router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image"), organizationRoutes.uploadOrganizationImage)
- router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image")); 
- //organizationRoutes.uploadOrganizationImage)
 // add: validateToken,RoleBaseValidation("update_tiffin")
-
 export default router;

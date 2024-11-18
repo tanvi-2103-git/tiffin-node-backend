@@ -55,7 +55,7 @@ export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, 
           } else {
             cloudinaryUrl=result.secure_url;
             console.log("cloudinaryUrl",cloudinaryUrl);
-            return res.json(cloudinaryUrl);
+            return res.json({image:cloudinaryUrl})
               // req.body.cloudinaryUrl = cloudinaryUrl;
               // next();
             
