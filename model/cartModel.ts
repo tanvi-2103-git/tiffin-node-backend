@@ -9,7 +9,7 @@ export interface CartItem {
 export interface Cart extends Document {
     _id: mongoose.Schema.Types.ObjectId;
     retailer_id: mongoose.Schema.Types.ObjectId;                
-    user_id: mongoose.Schema.Types.ObjectId;        
+    customer_id: mongoose.Schema.Types.ObjectId;        
     items: CartItem[];               
     total_amount: number;                                   
     created_at: Date;
