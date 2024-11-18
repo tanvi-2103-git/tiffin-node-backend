@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import { CartController } from "./Employee/cart.controller";
 import { CartModel } from "../model/cartModel";
 import { OrderModel } from "../model/orderModel";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/responsesUtils";
 
 const cartController = new CartController();
 export class OrderController {
@@ -20,8 +24,6 @@ export class OrderController {
           delivery_status = "pending";
         }
         const cart = await CartModel.findById(cartId);
-        console.log(cart);
-
         if (cart) {
           const order = new OrderModel({
             cart,
@@ -30,24 +32,20 @@ export class OrderController {
             delivery_status,
           });
           await order.save();
-          res
-            .status(200)
-            .json({ statuscode: 200, message: "Order placed", data: order });
+          sendSuccessResponse(res, 200, true, "Order placed", order);
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            message: "Please add cart or add items to cart",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Please add cart or add items to cart"
+          );
         }
       } else {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Add valid payment mode" });
+        sendErrorResponse(res, 404, false, "Add valid payment mode");
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
@@ -65,7 +63,7 @@ export class OrderController {
             const cartId = order.cart._id;
 
             const destroyCart = await CartModel.findByIdAndDelete(cartId);
-            res.status(200).json({ statuscode: 200, message: "Payment done" });
+            sendSuccessResponse(res, 200, true, "Payment done");
           }
         } else {
           //in case of upi it will change after adding razorpay or neccesary payment service
@@ -74,16 +72,14 @@ export class OrderController {
             delivery_status: "pending",
           });
           if (updateOrder) {
-             res.status(200).json({ statuscode: 200, message: "Payment done" });
+            sendSuccessResponse(res, 200, true, "Payment done");
           }
         }
       } else {
-        res.status(404).json({ statuscode: 200, message: "Order not found" });
+        sendErrorResponse(res, 404, false, "Order not found");
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
@@ -92,14 +88,12 @@ export class OrderController {
       const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
       if (order) {
-        res.status(200).json({ statuscode: 200, data: order });
+        sendSuccessResponse(res, 200, true, `order of id: ${orderId}`, order);
       } else {
-        res.status(404).json({ statuscode: 404, message: "order not found" });
+        sendSuccessResponse(res, 200, false, "Order not found");
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 }

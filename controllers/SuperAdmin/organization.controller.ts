@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
 import { User, UserModel } from "../../model/userModel";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../../utils/responsesUtils";
 
 // interface Params {
 //     id: string; // Assuming you are using "id" as the parameter name
@@ -11,9 +15,15 @@ export class OrganizationController {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
-      res.status(201).json({ statuscode: 201, data: newOrganization });
+      sendSuccessResponse(
+        res,
+        200,
+        false,
+        "Creating organization",
+        newOrganization
+      );
     } catch (error) {
-      res.status(500).json({ message: "Error creating organization", error });
+      sendErrorResponse(res, 500, false, "Error creating organization", error);
     }
   };
 
@@ -102,22 +112,15 @@ export class OrganizationController {
 
         const totalPages = Math.ceil(totalItems / limit);
 
-        res.status(200).json({
-          statuscode: 200,
-          data: organizations,
-          pagination: {
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-          },
+
+        sendSuccessResponse(res, 200, false, "All organizations", {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
         });
       }
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error fetching organizations",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error fetching organizations", error);
     }
   };
 
@@ -131,18 +134,12 @@ export class OrganizationController {
     try {
       const organization = await OrganizationModel.findById(id);
       if (organization?.isActive == false || !organization) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Organization not found" });
+        sendErrorResponse(res, 404, false, "Organization not found");
       } else {
         res.status(200).json({ data: organization, statuscode: 200 });
       }
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error fetching organization",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error fetching organization", error);
     }
   };
 
@@ -166,20 +163,11 @@ export class OrganizationController {
         { $set: { isActive: false } }
       );
       if (!deletedOrg) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Organization not found" });
+        sendErrorResponse(res, 404, false, "Organization not found");
       }
-      res.status(200).json({
-        statuscode: 200,
-        message: "Organization deleted successfully",
-      });
+      sendSuccessResponse(res, 200, true, "Organization deleted successfully");
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error deleting organization",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error deleting organization");
     }
   };
 
@@ -188,8 +176,6 @@ export class OrganizationController {
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
-    // const { _id, ...organization } = req.body;
-
     try {
       const _id = req.params.id;
 
@@ -201,28 +187,24 @@ export class OrganizationController {
 
         // Check if the update was successful
         if (result.modifiedCount === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "Organization not found or no changes made",
-          });
+          sendErrorResponse(
+            res,
+            404,
+            false,
+            "Organization not found or no changes made"
+          );
         }
-
-        res.status(200).json({
-          statuscode: 200,
-          message: "Organization updated successfully",
-        });
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "Organization updated successfully"
+        );
       } else {
-        res.status(404).json({
-          statuscode: 404,
-          message: "Organization not found ",
-        });
+        sendErrorResponse(res, 404, false, "Organization not found ");
       }
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error updating organization",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error updating organization");
     }
   };
 
@@ -251,11 +233,9 @@ export class OrganizationController {
     try {
       const org_id = req.params.orgid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
-      console.log("cloudinaryUrl:", cloudinaryUrl);
 
       if (!cloudinaryUrl) {
-        console.error("No Cloudinary URLs found.");
-        res.status(500).send("Internal Server Error");
+        sendErrorResponse(res, 500, false, "Internal Server Error");
       } else {
         const org = await OrganizationModel.findByIdAndUpdate(
           org_id,
@@ -264,16 +244,13 @@ export class OrganizationController {
         );
 
         if (org) {
-          res.status(200).json({
-            statuscode: 200,
-            data: org,
-          });
+          sendSuccessResponse(res, 200, true, "image uploaded", org);
         } else {
-          res.status(404).json({ statuscode: 404, message: "org not found" });
+          sendErrorResponse(res, 404, false, "org not found");
         }
       }
     } catch (error) {
-      res.status(500).json({ error });
+      sendErrorResponse(res, 500, false, "Error uploading org image");
     }
   };
 }
