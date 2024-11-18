@@ -6,7 +6,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
   sendSuccessToken,
-} from "../utils/responsesUtil";
+} from "../utils/responsesUtils";
 
 export class TiffinItemController {
   public addTiffinItem = async (req: Request, res: Response): Promise<void> => {

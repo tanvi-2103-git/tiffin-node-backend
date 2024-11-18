@@ -3,19 +3,22 @@ import { Request, Response } from "express";
 import { TiffinItemModel } from "../model/tiffinItemModel";
 import mongoose from "mongoose";
 import { UserModel } from "../model/userModel";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/responsesUtils";
 
 export class reviewController {
   public addReview = async (req: Request, res: Response): Promise<void> => {
     try {
       const reviewData: Review = req.body;
       const newReview = await ReviewModel.create(reviewData);
-      res.status(201).json({ statuscode: 201, data: newReview });
+      sendSuccessResponse(res, 201, true, "review added", newReview);
 
       const tiffin = await TiffinItemModel.findById({
         _id: reviewData.tiffin_id,
       });
       const retailer_id = tiffin?.retailer_id;
-      console.log("retailer_id:", retailer_id);
       if (tiffin) {
         const avgRating = (await this.getTiffinItemReviewById(req)) as number;
         tiffin.tiffin_rating = avgRating;
@@ -27,7 +30,6 @@ export class reviewController {
         }).exec();
 
         const tiffinIds = Tiffins.map((tiffin) => tiffin._id);
-        console.log("tiffinIds:", tiffinIds);
         const avgRetailerRating = await TiffinItemModel.aggregate([
           {
             $match: {
@@ -43,7 +45,6 @@ export class reviewController {
             },
           },
         ]);
-        console.log(avgRetailerRating);
         const retailerRating =
           avgRetailerRating.length > 0
             ? avgRetailerRating[0].avgRetailerRating
@@ -55,9 +56,7 @@ export class reviewController {
         );
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: "Error creating review", error });
+      sendErrorResponse(res, 500, false, "Error creating review", error);
     }
   };
 
@@ -65,8 +64,6 @@ export class reviewController {
     try {
       const reviewData = req.body;
       const tiffin_id = reviewData.tiffin_id;
-
-      // const review = await ReviewModel.find({tiffin_id:tiffin_id});
 
       const avgRatingResult = await ReviewModel.aggregate([
         {
@@ -129,18 +126,12 @@ export class reviewController {
 
         const retailerRating =
           avgRatingResult.length > 0 ? avgRatingResult[0].avgRetailerRating : 0;
-
-        res.status(200).json({ statuscode: 200, data: retailerRating });
+        sendSuccessResponse(res, 200, true, "retailer Rating", retailerRating);
       } else {
-        res.status(404).json({
-          statuscode: 404,
-          message: "id not found",
-        });
+        sendErrorResponse(res, 404, false, "id not found");
       }
     } catch (error) {
-      res.status(404).json({ statuscode: 500, data: error });
+      sendErrorResponse(res, 404, false, "error finding review", error);
     }
   };
-
-  
 }
