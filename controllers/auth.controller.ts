@@ -38,11 +38,6 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-<<<<<<< Updated upstream
-        
-=======
-
->>>>>>> Stashed changes
         if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
@@ -119,11 +114,6 @@ export class AuthController {
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
         }
-<<<<<<< Updated upstream
-       
-=======
-
->>>>>>> Stashed changes
         const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
@@ -383,11 +373,7 @@ export class AuthController {
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
       if (!cloudinaryUrl) {
-<<<<<<< Updated upstream
-        res.status(500).send("Internal Server Error");
-=======
         sendErrorResponse(res, 500, false, "Internal Server Error");
->>>>>>> Stashed changes
       } else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
@@ -395,10 +381,6 @@ export class AuthController {
           { new: true, runValidators: true }
         );
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
         if (user) {
           sendSuccessResponse(res, 200, true, "image uploaded", user);
         } else {
