@@ -4,6 +4,8 @@ import { getUserFromToken } from "../admin.controller";
 import { OrganizationModel } from "../../model/organizationModel";
 import { ADMIN_ID } from "../../utils/constants";
 import mongoose from "mongoose";
+import { sendErrorResponse, sendSuccessResponse } from "../../utils/responsesUtils";
+import { send } from "process";
 
 export class ApprovalController {
   public getAllPendingAdminApprovalRequests = async (
@@ -15,7 +17,7 @@ export class ApprovalController {
      const limit = parseInt(req.query.limit as string) || 10;
 
      if(page < 1 || limit < 1){
-      res.status(400).json({ message: "Page and limit must be positive integers" });
+      sendErrorResponse(res, 400, false, "Page and limit must be positive integers" )
       return;
       
      }
@@ -38,20 +40,16 @@ export class ApprovalController {
       const newdata = await this.addOrganizationName(approvalRequests);
 
      
-
-      res.status(200).json({ statuscode: 200, data: newdata ,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-      });
+      sendSuccessResponse(res, 200, true, "All pending admin approval", newdata, {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      })
+      
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error fetching Approval Requests",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error fetching Approval Requests",
+        error)
+
     }
   };
 
@@ -63,7 +61,7 @@ export class ApprovalController {
       
 
       if(page < 1 || limit < 1){
-        res.status(400).json({ message: "Page and limit must be positive integers" });
+        sendErrorResponse(res, 400, false, "Page and limit must be positive integers" )
         return;
         
        }
@@ -71,7 +69,7 @@ export class ApprovalController {
       const skip = (page - 1) * limit;
 
       const approvalRequests = await UserModel.find({
-        role_id: ADMIN_ID, //admin
+        role_id: ADMIN_ID, 
         "role_specific_details.approval_status": "approved",
         isActive : true
       }).skip(skip).limit(limit).exec();
@@ -86,13 +84,11 @@ export class ApprovalController {
 
       const newdata = await this.addOrganizationName(approvalRequests);
 
-      res.status(200).json({ statuscode: 200, data: newdata,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-       });
+      sendSuccessResponse(res, 200, true, "All Approved admin approval", newdata, {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      })
       
     } catch (error) {
       res.status(500).json({
@@ -111,13 +107,13 @@ export class ApprovalController {
       const skip = (page - 1) * limit;
 
       if(page < 1 || limit < 1){
-        res.status(400).json({ message: "Page and limit must be positive integers" });
+        sendErrorResponse(res, 400, false, "Page and limit must be positive integers" )
         return;
         
        }
 
       const approvalRequests = await UserModel.find({
-        role_id: ADMIN_ID, //admin
+        role_id: ADMIN_ID, 
         "role_specific_details.approval_status": "rejected",
         isActive : true
       }).skip(skip).limit(limit).exec();
@@ -130,22 +126,16 @@ export class ApprovalController {
       const totalPages = Math.ceil(totalItems / limit);
 
       const newdata = await this.addOrganizationName(approvalRequests);
-
       
-      res.status(200).json({ statuscode: 200, data: newdata ,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-      });
+      sendSuccessResponse(res, 200, true, "All rejected admin", newdata, {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      })
       
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error fetching Approval Requests",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error fetching Approval requests" )
+
     }
   };
 
@@ -162,14 +152,13 @@ export class ApprovalController {
         const skip = (page - 1) * limit;
 
         if (page < 1 || limit < 1) {
-          res
-            .status(400)
-            .json({ message: "Page and limit must be positive integers" });
+          sendErrorResponse(res, 400, false, "Page and limit must be positive integers" )
+
           return;
         }
 
         const approvalRequests = await UserModel.find({
-          role_id: ADMIN_ID, //admin
+          role_id: ADMIN_ID, 
           "role_specific_details.approval_status": status,
         })
           .skip(skip)
@@ -185,15 +174,12 @@ export class ApprovalController {
 
         const newdata = await this.addOrganizationName(approvalRequests);
 
-        res.status(200).json({
-          statuscode: 200,
-          data: newdata,
-          pagination: {
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-          },
-        });
+        sendSuccessResponse(res, 200, true, "", newdata, {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        })
+ 
       } else {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
@@ -201,9 +187,8 @@ export class ApprovalController {
         const skip = (page - 1) * limit;
 
         if (page < 1 || limit < 1) {
-          res
-            .status(400)
-            .json({ message: "Page and limit must be positive integers" });
+          sendErrorResponse(res, 400, false, "Page and limit must be positive integers" )
+
           return;
         }
         admins = await UserModel.find({ role_id: ADMIN_ID })
@@ -217,20 +202,17 @@ export class ApprovalController {
 
         const totalPages = Math.ceil(totalItems / limit);
 
-        const newdata = await this.addOrganizationName(admins); //to display org name in res
+        const newdata = await this.addOrganizationName(admins); 
 
-        res.status(200).json({
-          statuscode: 200,
-          data: newdata,
-          pagination: {
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-          },
-        });
+        sendSuccessResponse(res, 200, true, "", newdata, {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        })
+
       }
     } catch (error) {
-      res.status(500).json(error);
+      sendErrorResponse(res, 500, false, "error", error)
     }
   };
 
@@ -243,14 +225,12 @@ export class ApprovalController {
     try {
       const approvalRequest = await UserModel.findById(id);
       if (approvalRequest?.isActive==false || !approvalRequest ) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Approval Request not found" });
-      }
+        sendErrorResponse(res, 404, false, "Approval Request not found")
+        }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: "Error Approval Request", error });
+
+      sendErrorResponse(res,  500, false, "Error Approval Request", error )
+
     }
   };
 
@@ -260,67 +240,53 @@ export class ApprovalController {
   ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
+
 
       if (user?.isActive==false || !user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendErrorResponse(res, 401, true,"Unauthorized or invalid user details.")
+        
       } else {
         const admin_id = req.params.admin_id;
-        console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
           { _id: admin_id, isActive:true },
           { $set: { "role_specific_details.approval_status": "approved" } }
         );
-        // console.log(result);
+
         const admin = await UserModel.findById(admin_id);
-        console.log("admin", admin);
+
 
         const orgId = admin?.role_specific_details.organization_id;
         const orgLoc = admin?.role_specific_details.org_location;
-        console.log("orgId", orgId, "orgLoc", orgLoc);
+
 
         const organization = await OrganizationModel.findById(orgId);
-        console.log("organization", organization);
+
         if (organization) {
           const itemIndex = organization.org_location.findIndex(
             (orgLocation) => orgLocation.loc == orgLoc
           );
-          console.log("itemIndex", itemIndex);
 
           if (itemIndex > -1) {
             organization.org_location[itemIndex].admin_id =
               new mongoose.Types.ObjectId(admin_id);
             await organization.save();
           } else {
-            res.status(404).json({
-              statuscode: 404,
-              message:
-                "Location of admin has no match on respective organization",
-            });
+
+            sendErrorResponse(res, 404, false, "Location of admin has no match on respective organization")
           }
         if (result.modifiedCount === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "Approval request not found or already updated.",
-          });
+
+          sendErrorResponse(res, 404, false, "Approval request not found or already updated.")
+
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            message: "Approval request aprrove successfully.",
-            data: result,
-          });
+
+          sendSuccessResponse(res, 200, true, "Approval request aprrove successfully.", result)
         }
       }}
     } catch (error) {
-      console.error("Error rejecting approval request:", error);
-      res.status(500).json({
-        statuscode: 500,
-        message: "An error occurred while rejecting the request.",
-        error,
-      });
+
+      sendErrorResponse(res, 500, false, "An error occurred while rejecting the request.",
+        error)
     }
   };
 
@@ -332,40 +298,28 @@ export class ApprovalController {
   ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (user?.isActive==false || !user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendErrorResponse(res, 401, false, "Unauthorized or invalid user details.")
+
       } else {
         const admin_id = req.params.admin_id;
         const {rejection_reason} = req.body;
-        console.log("admin_id", admin_id);
+
         const result = await UserModel.updateOne(
           { _id: admin_id , isActive:true },
           { $set: { "role_specific_details.approval_status": "rejected" , "role_specific_details.rejection_reason":rejection_reason} }
         );
-        console.log(result);
 
         if (result.modifiedCount === 0) {
-          res.status(404).json({
-            message: "Approval request not found or already updated.",
-          });
+          sendErrorResponse(res, 404, false, "Approval request not found or already updated.")
+
         } else {
-          res.status(200).json({
-            message: "Approval request rejected successfully.",
-            data: result,
-          });
+          sendSuccessResponse(res, 200, true, "Approval request rejected successfully.", result)
         }
       }
     } catch (error) {
-      console.error("Error rejecting approval request:", error);
-      res.status(500).json({
-        message: "An error occurred while rejecting the request.",
-        error,
-      });
+      sendErrorResponse(res, 500, false, "Error rejecting approval request", error)
     }
   };
 
@@ -376,7 +330,7 @@ export class ApprovalController {
         const org_id = admin.role_specific_details.organization_id;
 
         const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
+
 
         const newadmin = {
           _id: admin._id,
@@ -391,7 +345,6 @@ export class ApprovalController {
             approval_status: admin.role_specific_details.approval_status,
           },
         };
-        // console.log(newadmin);
 
         return newadmin;
       })
