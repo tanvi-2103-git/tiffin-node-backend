@@ -30,7 +30,7 @@ employeeRoutes.get("/getalltiffinoforg",validateGetRequest({isPagination:true,is
 employeeRoutes.get("/getalltiffinsbyretailer/:retailerid",validateGetRequest({isPagination:true,isIdRequired:true,idType:'retailerid'}),validateToken,RoleBaseValidation("get_tiffin_of_organization"), employeeController.getAllTiffinsByRetailer);
 employeeRoutes.get("/getTiffinofOrgById/:tifinid",validateGetRequest({isPagination:true,isIdRequired:true,idType:"tifinid"}),validateToken,RoleBaseValidation("get_tiffin_of_organization"), employeeController.getTiffinofOrgById);
 employeeRoutes.get("/getdeliveredorders",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), employeeController.getDeliveredOrders);
-employeeRoutes.get("/getpendingorders",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), employeeController.getPendngOrders);
+employeeRoutes.get("/getpendingorders",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), employeeController.getPendingOrders);
 employeeRoutes.get("/cancelorder/:orderid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'orderid'}),validateToken,RoleBaseValidation("cancel_order"), employeeController.cancelOrder);
 employeeRoutes.get("/searchretailersoforg",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,employeeController.searchRetailersOfOrg);
 
