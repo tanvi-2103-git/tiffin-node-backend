@@ -191,8 +191,8 @@ export class EmployeeController {
         if (Retailers.length === 0) {
           sendSuccessResponse(
             res,
-            404,
-            false,
+            200,
+            true,
             "No retailers found for the given organization."
           );
         } else {
@@ -291,10 +291,12 @@ export class EmployeeController {
         !user.role_specific_details ||
         !user.role_specific_details.organization_id
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
         const organizationId = user.role_specific_details.organization_id;
 
@@ -308,10 +310,13 @@ export class EmployeeController {
         }).exec();
 
         if (Retailers.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No retailers found for the given organization.",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No retailers found for the given organization."
+          );
+          
         } else {
           const retailerIds = Retailers.map((retailer) => retailer._id);
 
@@ -321,16 +326,24 @@ export class EmployeeController {
           }).exec();
 
           console.log(`Organization ID: ${organizationId}`);
-
-          res.status(200).json({ statuscode: 200, data: Tiffin });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Tiffin",
+            Tiffin
+          );
         }
       }
     } catch (error) {
       console.error("Error fetching tiffin items:", error);
-      res.status(500).json({
-        statuscode: 500,
-        message: "An error occurred while processing your request.",
-      });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
     }
   };
 
@@ -338,26 +351,49 @@ export class EmployeeController {
     try {
       const user = await getUserFromToken(req);
       if (user?.isActive == false || !user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+        
       } else {
         const orders = await OrderModel.find({
           "cart.customer_id": user._id,
           delivery_status: "delivered",
         });
         if (orders.length > 0)
-          res.status(200).json({ statuscode: 200, data: orders });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "orders",
+            orders
+          );
+          // res.status(200).json({ statuscode: 200, data: orders });
         else
-          res
-            .status(404)
-            .json({ statuscode: 404, message: "orders not found" });
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "orders not found"
+        );
+          // res
+          //   .status(404)
+          //   .json({ statuscode: 404, message: "orders not found" });
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+      // res
+      //   .status(500)
+      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 
@@ -365,26 +401,53 @@ export class EmployeeController {
     try {
       const user = await getUserFromToken(req);
       if (user?.isActive == false || !user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+        
+        // res.status(401).json({
+        //   statuscode: 401,
+        //   message: "Unauthorized or invalid user details.",
+        // });
       } else {
         const orders = await OrderModel.find({
           "cart.customer_id": user._id,
           delivery_status: "pending",
         });
         if (orders.length > 0)
-          res.status(200).json({ statuscode: 200, data: orders });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "orders",
+            orders
+          );
+          // res.status(200).json({ statuscode: 200, data: orders });
         else
-          res
-            .status(404)
-            .json({ statuscode: 404, message: "orders not found" });
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "orders not found"
+        );
+          // res
+          //   .status(404)
+          //   .json({ statuscode: 404, message: "orders not found" });
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+      // res
+      //   .status(500)
+      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 
@@ -398,26 +461,57 @@ export class EmployeeController {
             delivery_status: "cancelled",
           });
           if (order)
-            res
-              .status(200)
-              .json({ statuscode: 200, message: "order updated successful" });
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order updated successful"
+            );
+            // res
+            //   .status(200)
+            //   .json({ statuscode: 200, message: "order updated successful" });
         } else if (order.delivery_status == "delivered") {
-          res.status(409).json({
-            statuscode: 409,
-            message: "order is already delivered cannot be modified",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "order is already delivered cannot be modified"
+          );
+          // res.status(409).json({
+          //   statuscode: 409,
+          //   message: "order is already delivered cannot be modified",
+          // });
         } else {
-          res
-            .status(409)
-            .json({ statuscode: 409, message: "order is already cancelled " });
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "order is already cancelled cannot be modified"
+          );
+          // res
+          //   .status(409)
+          //   .json({ statuscode: 409, message: "order is already cancelled " });
         }
       } else {
-        res.status(404).json({ statuscode: 404, message: "order not found" });
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "order not found"
+        );
+        // res.status(404).json({ statuscode: 404, message: "order not found" });
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+      // res
+      //   .status(500)
+      //   .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
 }
