@@ -97,10 +97,7 @@ export class TiffinItemController {
       const { query } = req.query;
 
       if (!query) {
-        res.status(400).json({
-          statuscode: 400,
-          message: "Query parameter is required and must be a string.",
-        });
+        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
       } else {
         const searchFields = ["tiffin_name", "tiffin_type"];
         const user = await getUserFromToken(req);
@@ -112,7 +109,8 @@ export class TiffinItemController {
           tiffins = await TiffinItemModel.find({
             retailer_id: retailerId,
             isActive: true,
-            [field]: query,
+            [field]: { $regex: query, $options: "i" },
+            // [field]: query,
           }).exec();
 
           if (tiffins.length > 0) {
