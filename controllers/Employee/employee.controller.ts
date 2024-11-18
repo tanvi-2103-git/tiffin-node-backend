@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
-import { TiffinItemModel } from "../../model/tiffinItemModel";
+import { TiffinItem, TiffinItemModel } from "../../model/tiffinItemModel";
 import { OrderModel } from "../../model/orderModel";
 import { RETAILER_ID } from "../../utils/constants";
 import {
@@ -178,7 +178,8 @@ export class EmployeeController {
               },
             },
             isActive: true,
-            [field]: query,
+            // [field]: query,
+            [field]: { $regex: query, $options: "i" },
           }).exec();
 
           if (retailers.length > 0) {
@@ -203,6 +204,7 @@ export class EmployeeController {
       );
     }
   };
+
 
   public getAllTiffinofOrg = async (req: Request, res: Response) => {
     try {

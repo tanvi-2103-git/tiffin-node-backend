@@ -19,11 +19,7 @@ export class ApprovalController {
       const { query, approval_status } = req.query; // Accept a generic query parameter
 
       if (!query && !approval_status) {
-        res.status(400).json({
-          statuscode: 400,
-          message:
-            "Query parameter and Approval status is required and must be a string.",
-        });
+        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
       } else {
         const searchFields = ["username", "contact_number", "email", "address"];
 
@@ -34,8 +30,8 @@ export class ApprovalController {
             role_id: ADMIN_ID,
             isActive: true,
             "role_specific_details.approval_status": approval_status,
-            // [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
-            [field]: query,
+           [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
+            // [field]: query,
           }).exec();
 
           if (users.length > 0) {

@@ -34,10 +34,7 @@ export class OrganizationController {
 
 
       if (!query) {
-        res.status(400).json({
-          statuscode: 400,
-          message: "Query parameter is required and must be a string.",
-        });
+        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
       } else {
         const searchFields = ["org_name", "org_location.loc"]; // Customize as needed
 
@@ -46,7 +43,8 @@ export class OrganizationController {
         for (let field of searchFields) {
           organizations = await OrganizationModel.find({
             isActive: true,
-            [field]: query,
+            [field]: { $regex: query, $options: "i" },
+            // [field]: query,
           }).exec();
 
           if (organizations.length > 0) {

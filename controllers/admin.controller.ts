@@ -375,10 +375,7 @@ export class AdminController {
       const { query, approval_status } = req.query;
 
       if (!query) {
-        res.status(400).json({
-          statuscode: 400,
-          message: "Query parameter is required and must be a string.",
-        });
+        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
       } else {
         const searchFields = ["username", "email", "contact_number", "address"];
 
