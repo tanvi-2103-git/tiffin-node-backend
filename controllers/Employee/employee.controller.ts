@@ -162,13 +162,9 @@ export class EmployeeController {
       const user = await getUserFromToken(req);
       const { query, approval_status } = req.query;
 
-      console.log(approval_status);
       if (!query || !user || !user.role_specific_details.organization_id) {
-        res.status(400).json({
-          statuscode: 400,
-          message:
-            "Query parameter is required and must be a string Or Unauthorized or invalid user details.",
-        });
+        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
+   
       } else {
         const organizationId = user.role_specific_details.organization_id;
         const searchFields = ["username", "email", "contact_number", "address"];
@@ -192,24 +188,21 @@ export class EmployeeController {
           }
         }
         if (retailers.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No retailers found matching the search criteria",
-          });
+          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria")
+          
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            data: retailers,
-          });
+          sendSuccessResponse(res,200,true,"retailers",retailers)
+
         }
       }
     } catch (error) {
-      console.error("Error searching retailers of organizations:", error);
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error searching retailer of organizations",
-        error,
-      });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request:",
+        error
+      );
     }
   };
 
