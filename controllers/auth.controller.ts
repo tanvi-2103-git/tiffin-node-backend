@@ -12,6 +12,12 @@ import { RoleModel } from "../model/roleModel";
 import moment from "moment";
 import { getUserFromToken } from "./admin.controller";
 import { CustomRequest } from "../middleware/validateToken";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+  sendSuccessToken,
+} from "../utils/responsesUtils";
+import { upload } from "../config/cloudinaryConfig";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -32,7 +38,11 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
+<<<<<<< Updated upstream
         
+=======
+
+>>>>>>> Stashed changes
         if (matchPassword) {
           const token = jwt.sign(
             { id: user._id, role: user.role_id },
@@ -41,8 +51,7 @@ export class AuthController {
               expiresIn: "2h",
             }
           );
-         
-          ////generate refresh token
+
           const refreshToken = jwt.sign(
             { id: user._id, role: user.role_id },
             process.env.REFRESH_SECRET_KEY!,
@@ -51,36 +60,35 @@ export class AuthController {
             }
           );
 
-          
-          user.refreshToken = refreshToken 
+          user.refreshToken = refreshToken;
           await user.save();
-          
-          res.json({
-            statuscode: 200,
-            success: true,
-            message: "Authentication successful!",
-            token: token,
-            refreshToken : refreshToken,//sending access token and refresh token
-            _id: user._id,
-            role_id: user.role_id,
-          });
+
+          sendSuccessToken(
+            res,
+            200,
+            true,
+            "Authentication successful!",
+            token,
+            refreshToken
+          );
+
+          // res.json({
+          //   statuscode: 200,
+          //   success: true,
+          //   message: "Authentication successful!",
+          //   token: token,
+          //   refreshToken : refreshToken,//sending access token and refresh token
+          //   _id: user._id,
+          //   role_id: user.role_id,
+          // });
         } else {
-          res.status(401).json({
-            statuscode: 401,
-            success: false,
-            message: "Invalid username or password",
-          });
+          sendErrorResponse(res, 401, false, "Invalid username or password");
         }
       } else {
-        res.status(404).json({
-          statuscode: 404,
-          success: false,
-          message: "User not found",
-        });
+        sendErrorResponse(res, 404, false, "User not found");
       }
     } catch (error) {
-      console.error(error);
-      res.status(400).json({ statuscode: 400, error: "User Login failed" });
+      sendErrorResponse(res, 404, false, "User login failed");
     }
   };
 
@@ -100,9 +108,7 @@ export class AuthController {
 
       const roleDoc = await RoleModel.findById(role_id);
       if (!roleDoc) {
-        res
-          .status(400)
-          .json({ statuscode: 400, error: "Invalid role ID provided" });
+        sendErrorResponse(res, 400, false, "Invalid role ID provided");
       } else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
@@ -113,11 +119,15 @@ export class AuthController {
           role_specific_details[fieldName] =
             inputRoleSpecificDetails[fieldName];
         }
+<<<<<<< Updated upstream
        
+=======
+
+>>>>>>> Stashed changes
         const newEmail = email.toLowerCase();
         const user = new UserModel({
           username,
-          email:newEmail,
+          email: newEmail,
           password: hash,
           contact_number,
           address,
@@ -135,136 +145,119 @@ export class AuthController {
           }
         );
 
-        res.status(201).json({
-          statuscode: 201,
-          message: "User registered successfully",
-          token,
-          _id: userData._id,
-          role_id: userData.role_id,
-        });
+        sendErrorResponse(
+          res,
+          201,
+          true,
+          "User registered successfully",
+          token
+        );
+        // res.status(201).json({
+        //   statuscode: 201,
+        //   message: "User registered successfully",
+        //   token,
+        //   _id: userData._id,
+        //   role_id: userData.role_id,
+        // });
       }
     } catch (error) {
-      console.error(error);
-      res
-        .status(400)
-        .json({ statuscode: 400, error: `User registration failed ${error}` });
+      sendErrorResponse(res, 400, false, `User registration failed ${error}`);
     }
   };
 
- 
-
-  public logoutUser = async (req: Request, res: Response) : Promise<undefined> =>{
+  public logoutUser = async (
+    req: Request,
+    res: Response
+  ): Promise<undefined> => {
     try {
-      
       const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        console.error("No token provided");
         return undefined;
       }
-  
+
       const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
         id: string;
         role: string;
       };
-     
+
       const updatedUser = await UserModel.findByIdAndUpdate(
         decoded.id,
         { $set: { refreshToken: undefined } }, // Reset the refresh token on logout
-        { new: true } 
-    );
-  
+        { new: true }
+      );
+
       if (!updatedUser) {
-         res.status(404).json({ statuscode: 404, message: "User not found" });
-         return undefined;
-      }else{
-             
-      res.json({
-        statuscode: 200,
-        success: true,
-        message: "User logged out successfully",
-      });
+        sendErrorResponse(res, 404, false, "User not found");
+        // return undefined;
+      } else {
+        sendSuccessResponse(res, 200, true, "User logged out successfully");
       }
-  
-
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ statuscode: 500, error: "Server error while logging out" });
+      sendErrorResponse(res, 500, false, "Server error while logging out");
     }
-  }
+  };
 
-  
-
-  public refreshAccessToken = async (req: Request, res: Response) : Promise<void> => {
+  public refreshAccessToken = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
       const incomingRefreshToken = req.body.refreshToken;
 
       if (!incomingRefreshToken) {
-           res
-          .status(401)
-          .json({ statuscode: 401, error: "Refresh token is required" });
+        sendErrorResponse(res, 401, false, "Refresh token is required");
       }
-  
-      const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_SECRET_KEY!) as { id: string, role: string };
-  
+
+      const decodedToken = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_SECRET_KEY!
+      ) as { id: string; role: string };
+
       const user = await UserModel.findById(decodedToken.id);
-  
-     
+
       if (!user) {
-           res
-          .status(401)
-          .json({ statuscode: 401, error: "Invalid refresh token" });
-      }else{
+        sendErrorResponse(res, 401, false, "Invalid refresh token");
+      } else {
         if (incomingRefreshToken !== user?.refreshToken) {
-          res
-         .status(401)
-         .json({ statuscode: 401, error: "Invalid refresh token" });
-     }
- 
-    
-     const newAccessToken = jwt.sign(
-       { id: user?._id, role: user?.role_id },
-       process.env.SECRET_KEY!,
-       {
-         expiresIn: "2h", 
-       }
-     );
- 
-     const newRefreshToken = jwt.sign(
-       { id: user?._id, role: user?.role_id },
-       process.env.REFRESH_SECRET_KEY!,
-       { expiresIn: "7h" } 
-     );
- 
-    
-       user.refreshToken = newRefreshToken;
-       await user.save(); 
-     
-    
- 
-    
-       res.json({
-       statuscode: 200,
-       success: true,
-       message: "Access token refreshed successfully",
-       token: newAccessToken,
-       refreshToken: newRefreshToken,
-     });
-    }
-  
-      
-      
-  
+          sendErrorResponse(res, 401, false, "Invalid refresh token");
+        }
+
+        const newAccessToken = jwt.sign(
+          { id: user?._id, role: user?.role_id },
+          process.env.SECRET_KEY!,
+          {
+            expiresIn: "2h",
+          }
+        );
+
+        const newRefreshToken = jwt.sign(
+          { id: user?._id, role: user?.role_id },
+          process.env.REFRESH_SECRET_KEY!,
+          { expiresIn: "7h" }
+        );
+
+        user.refreshToken = newRefreshToken;
+        await user.save();
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "Access token refreshed successfully",
+          newAccessToken,
+          newRefreshToken
+        );
+      }
     } catch (error) {
-      console.error(error);
-        res.status(400).json({
-        statuscode: 400,
-        error: "Something went wrong while refreshing the access token",
-      });
+      sendErrorResponse(
+        res,
+        400,
+        false,
+        "Something went wrong while refreshing the access token"
+      );
     }
   };
 
-  
   public forgotPassword = async (req: Request, res: Response) => {
     // todo:
     // 1.get user based on posted email
@@ -274,9 +267,7 @@ export class AuthController {
       const emailId = req.body.email;
       const user = await this.getUserByEmail(emailId);
       if (!user) {
-        res
-          .status(404)
-          .json({ statuscode: 404, error: "Invalid email ID provided" });
+        sendErrorResponse(res, 400, false, "Invalid email ID provided");
       }
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -315,19 +306,18 @@ export class AuthController {
           html: message,
         });
 
-        res.json({
-          success: true,
-          message: "Password reset link sent to your email",
-          token: resetToken,
-        });
+        sendSuccessToken(
+          res,
+          200,
+          true,
+          "Password reset link sent to your email",
+          resetToken
+        );
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Error sending reset email" });
+      sendErrorResponse(res, 500, false, "Error sending reset email", error);
     }
   };
-
 
   public resetPassword = async (req: Request, res: Response) => {
     try {
@@ -346,24 +336,19 @@ export class AuthController {
         });
 
         if (!user) {
-          res
-            .status(400)
-            .json({ success: false, message: "Invalid or expired token" });
+          sendErrorResponse(res, 404, true, "Invalid or expired token");
         } else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
           await user.save();
-
-          res.json({ success: true, message: "Password reset successful" });
+          sendSuccessResponse(res, 200, true, "Password reset successful");
         }
       } else {
-        res.json({ success: false, message: "Token not found" });
+        sendErrorResponse(res, 404, true, "Token not found");
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to reset password" });
+      sendErrorResponse(res, 500, false, "Token not found");
     }
   };
 
@@ -372,8 +357,7 @@ export class AuthController {
       const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        res.json("No token provided");
-        res.status(404).json({ statuscode: 404, message: `No token provided` });
+        sendErrorResponse(res, 404, false, `No token provided`);
       } else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
@@ -384,12 +368,12 @@ export class AuthController {
         }).exec()) as User;
 
         if (!user) {
-          res.status(404).json({ statuscode: 404, message: `User not found` });
+          sendErrorResponse(res, 404, false, `User not found`);
         }
-        res.status(200).json({ statuscode: 200, data: user });
+        sendSuccessResponse(res, 200, true, "user", user);
       }
     } catch (error) {
-      res.status(500).json({ statuscode: 500, message: ` ${error}` });
+      sendErrorResponse(res, 500, false, ` ${error}`);
     }
   };
 
@@ -399,7 +383,11 @@ export class AuthController {
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
       if (!cloudinaryUrl) {
+<<<<<<< Updated upstream
         res.status(500).send("Internal Server Error");
+=======
+        sendErrorResponse(res, 500, false, "Internal Server Error");
+>>>>>>> Stashed changes
       } else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
@@ -407,33 +395,37 @@ export class AuthController {
           { new: true, runValidators: true }
         );
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         if (user) {
-          res.status(200).json({ statuscode: 200, data: user });
+          sendSuccessResponse(res, 200, true, "image uploaded", user);
         } else {
-          res.status(404).json({ statuscode: 404, message: "user not found" });
+          sendErrorResponse(res, 404, false, "user not found");
         }
       }
     } catch (error) {
-      res.status(500).json({ error, message: "error in the catch" });
+      sendErrorResponse(res, 500, false, "error in the catch");
     }
   };
 
-public updateLoc = async (req: Request, res: Response) => {
-  try {
-    const org_location = req.query.org_location;
-    const user = await getUserFromToken(req) as User;
-    const updateloc = await UserModel.updateOne({
-      _id : user._id
-    },{ $set: { "role_specific_details.org_location": org_location } })
+  public updateLoc = async (req: Request, res: Response) => {
+    try {
+      const org_location = req.query.org_location;
+      const user = (await getUserFromToken(req)) as User;
+      const updateloc = await UserModel.updateOne(
+        {
+          _id: user._id,
+        },
+        { $set: { "role_specific_details.org_location": org_location } }
+      );
 
-    
-   res.status(200).json({statuscode:200, data:updateloc})
-  }catch(error){
-    res
-    .status(500)
-    .json({ statuscode: 500, message: `Internal server error ${error}` });
-
-  }
-}
+      sendSuccessResponse(res, 200, true, "updated loc", updateloc);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `Internal server error ${error}` });
+    }
+  };
 }
