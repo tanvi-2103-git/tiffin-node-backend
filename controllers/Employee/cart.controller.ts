@@ -64,7 +64,7 @@ export class CartController {
               cart.items[itemIndex].quantity += quantity;
             } else {
               cart.items.push({
-                tiffin_id: new mongoose.Schema.Types.ObjectId(tiffinId),
+                tiffin_id: new mongoose.Types.ObjectId(tiffinId),
                 quantity,
                 price,
               });

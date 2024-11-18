@@ -103,11 +103,14 @@ export class TiffinItemController {
         });
       } else {
         const searchFields = ["tiffin_name", "tiffin_type"];
+        const user = await getUserFromToken(req);
+        const retailerId = user?._id;
 
         let tiffins: TiffinItem[] = [];
 
         for (let field of searchFields) {
           tiffins = await TiffinItemModel.find({
+            retailer_id: retailerId,
             isActive: true,
             [field]: query,
           }).exec();
