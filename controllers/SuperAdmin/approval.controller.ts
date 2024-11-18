@@ -3,6 +3,7 @@ import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { OrganizationModel } from "../../model/organizationModel";
 import { ADMIN_ID } from "../../utils/constants";
+import moment from "moment";
 
 export class ApprovalController {
   public getAllPendingAdminApprovalRequests = async (
@@ -383,5 +384,207 @@ export class ApprovalController {
       })
     );
     return newdata;
+  };
+
+  public getWeeklyRequest = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let requests;
+        let data;
+        if (status && year) {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: ADMIN_ID,
+                "role_specific_details.approval_status": status,
+                created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
+                },
+                count: { $sum: 1 }
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
+        } else {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: ADMIN_ID,
+                created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
+                },
+                count: { $sum: 1 }, 
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
+        }
+        if (requests) {
+          data = requests.map((item) => {
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+
+              const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
+            
+            return {
+              startOfWeek: startOfWeek,
+              endOfWeek:endOfWeek,
+              requestcount: item.count
+            };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
+          res
+            .status(404)
+            .json({ statuscode: 404, message: "request not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
+  };
+
+  public getMonthlylyRequest = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let requests;
+        let data;
+        if (status && year) {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: ADMIN_ID,
+                "role_specific_details.approval_status": status,
+               created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$created_at" },     
+                  month: { $month: "$created_at" }    
+                },
+                count: { $sum: 1 },              
+                            }
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1
+              }
+            }
+          ])	
+          
+          
+          
+        } else {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: ADMIN_ID,
+                created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$created_at" },     
+                  month: { $month: "$created_at" }    
+                },
+                count: { $sum: 1 },                    
+              }
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1
+              }
+            }
+          ])	
+        }
+        if (requests) {
+          data = requests.map((item) => {
+            const startOfmonth = moment().month(item._id.month-1).format('YYYY-MM');
+      
+    
+        //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+         return { month: startOfmonth,
+          requestcount: item.count
+
+            };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
+          res
+            .status(404)
+            .json({ statuscode: 404, message: "orders not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
   };
 }
