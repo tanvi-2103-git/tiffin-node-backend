@@ -19,7 +19,11 @@ router.get('/searchOrganizations',validateGetRequest({isPagination:false,isIdReq
 router.put('/updateOrganization/:id',validateOrganization,validateToken,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
 
 router.delete('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
-export default router;
 
-router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image"), organizationRoutes.uploadOrganizationImage)
+
+// router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image"), organizationRoutes.uploadOrganizationImage)
+ router.post("/upload/:orgid", upload.single('recfile'), uploadToCloudinary("org_image")); 
+ //organizationRoutes.uploadOrganizationImage)
 // add: validateToken,RoleBaseValidation("update_tiffin")
+
+export default router;
