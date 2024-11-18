@@ -17,54 +17,50 @@ export class OrganizationController {
     }
   };
 
-  public searchOrganizations = async (req: Request, res: Response): Promise<void> => {
+  public searchOrganizations = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
-      const { query } = req.query;  // Accept a generic query parameter
+      const { query } = req.query; // Accept a generic query parameter
 
-      console.log('Received query parameter:', query);
-  
+      console.log("Received query parameter:", query);
+
       if (!query) {
         res.status(400).json({
           statuscode: 400,
-          message: "Query parameter is required and must be a string."
+          message: "Query parameter is required and must be a string.",
         });
-        
-      }else{
-        
-      const searchFields = ['org_name','org_location.loc']; // Customize as needed
+      } else {
+        const searchFields = ["org_name", "org_location.loc"]; // Customize as needed
 
-      let organizations: Organization[] = [];
+        let organizations: Organization[] = [];
 
-      for(let field of searchFields){
-        organizations = await OrganizationModel.find({
-          isActive:true,
-          [field]: query,
-        }).exec();
+        for (let field of searchFields) {
+          organizations = await OrganizationModel.find({
+            isActive: true,
+            [field]: query,
+          }).exec();
 
-        if(organizations.length > 0){
-          break;
+          if (organizations.length > 0) {
+            break;
+          }
         }
 
+        if (organizations.length === 0) {
+          res.status(404).json({
+            statuscode: 404,
+            message: "No organizations found matching the search criteria",
+          });
+        } else {
+          res.status(200).json({
+            statuscode: 200,
+            data: organizations,
+          });
+        }
       }
-  
-      if (organizations.length === 0) {
-        res.status(404).json({
-          statuscode: 404,
-          message: "No organizations found matching the search criteria"
-        });
-        
-      }else{
-        res.status(200).json({
-          statuscode: 200,
-          data: organizations,
-        });
-      }
-  
-    }
-  
-      
     } catch (error) {
-      console.error('Error searching organizations:', error);
+      console.error("Error searching organizations:", error);
       res.status(500).json({
         statuscode: 500,
         message: "Error searching organizations",
@@ -72,52 +68,51 @@ export class OrganizationController {
       });
     }
   };
-  
-  
-  public getAllOrganizations = async (req: Request, res: Response) =>{
+
+  public getAllOrganizations = async (req: Request, res: Response) => {
     try {
-    const status = req.query.status || 'true';  
-    console.log(status);
-    const page = parseInt(req.query.page as string) || 1; 
-    let limit;
-    if(status == 'true'){
-       limit = parseInt(req.query.limit as string) || 10;
-       console.log(status);
-       console.log(limit);
-    }else{
-      limit = await OrganizationModel.countDocuments({isActive:true});
-    }
-   
-    console.log(limit);
-    if(page < 1 || limit < 1){
-      res.status(400).json({ message: "Page and limit must be positive integers" });
-      //return;
-      
-    }else{
-      const skip = (page - 1) * limit;
+      const status = req.query.status || "true";
+      console.log(status);
+      const page = parseInt(req.query.page as string) || 1;
+      let limit;
+      if (status == "true") {
+        limit = parseInt(req.query.limit as string) || 10;
+        console.log(status);
+        console.log(limit);
+      } else {
+        limit = await OrganizationModel.countDocuments({ isActive: true });
+      }
 
-      const organizations = await OrganizationModel.find({isActive:true})
-      .skip(skip)
-      .limit(limit);
+      console.log(limit);
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+        //return;
+      } else {
+        const skip = (page - 1) * limit;
 
-      const totalItems = await OrganizationModel.countDocuments({
-        isActive : true
-      })
+        const organizations = await OrganizationModel.find({ isActive: true })
+          .skip(skip)
+          .limit(limit);
 
-      const totalPages = Math.ceil(totalItems / limit);
+        const totalItems = await OrganizationModel.countDocuments({
+          isActive: true,
+        });
 
-      res.status(200).json({ 
-        statuscode: 200, 
-        data: organizations,
-        pagination: {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalItems,
-        },
-      });
-    }
+        const totalPages = Math.ceil(totalItems / limit);
 
-  } catch (error) {
+        res.status(200).json({
+          statuscode: 200,
+          data: organizations,
+          pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          },
+        });
+      }
+    } catch (error) {
       res.status(500).json({
         statuscode: 500,
         message: "Error fetching organizations",
@@ -125,10 +120,6 @@ export class OrganizationController {
       });
     }
   };
-
-
-
-  
 
   //getting a specific org
   //as of now not required, but banake rakha hai (;
@@ -139,11 +130,11 @@ export class OrganizationController {
     const { id } = req.params;
     try {
       const organization = await OrganizationModel.findById(id);
-      if (organization?.isActive==false || !organization) {
+      if (organization?.isActive == false || !organization) {
         res
           .status(404)
           .json({ statuscode: 404, message: "Organization not found" });
-      }else{
+      } else {
         res.status(200).json({ data: organization, statuscode: 200 });
       }
     } catch (error) {
@@ -162,12 +153,18 @@ export class OrganizationController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const deletedOrg = await OrganizationModel.findByIdAndUpdate({_id:id},{
-        isActive:false
-      });
-      const deleteEmployees = await UserModel.updateMany({
-        "role_specific_details.organization_id": id
-      },{ $set: { isActive: false } });
+      const deletedOrg = await OrganizationModel.findByIdAndUpdate(
+        { _id: id },
+        {
+          isActive: false,
+        }
+      );
+      const deleteEmployees = await UserModel.updateMany(
+        {
+          "role_specific_details.organization_id": id,
+        },
+        { $set: { isActive: false } }
+      );
       if (!deletedOrg) {
         res
           .status(404)
@@ -186,48 +183,40 @@ export class OrganizationController {
     }
   };
 
-
-
   // Update org
   public updateOrganization = async (
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
     // const { _id, ...organization } = req.body;
-    
+
     try {
       const _id = req.params.id;
 
+      const { ...organization } = req.body;
+      const org = await OrganizationModel.findById(_id);
+      if (org?.isActive == true) {
+        // Update the organization
+        const result = await OrganizationModel.updateOne({ _id }, organization);
 
-    const {...organization } = req.body;
-    const org = await OrganizationModel.findById(_id);
-    if(org?.isActive==true){
-
-      // Update the organization
-      const result = await OrganizationModel.updateOne({ _id }, organization);
-
-      // Check if the update was successful
-      if (result.modifiedCount === 0) {
-        res.status(404).json({
-          statuscode: 404,
-          message: "Organization not found or no changes made",
-        });
-      }
-
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization updated successfully",
-        });}
-        else{
-          res
-          .status(404)
-          .json({
+        // Check if the update was successful
+        if (result.modifiedCount === 0) {
+          res.status(404).json({
             statuscode: 404,
-            message: "Organization not found ",
+            message: "Organization not found or no changes made",
           });
         }
+
+        res.status(200).json({
+          statuscode: 200,
+          message: "Organization updated successfully",
+        });
+      } else {
+        res.status(404).json({
+          statuscode: 404,
+          message: "Organization not found ",
+        });
+      }
     } catch (error) {
       res.status(500).json({
         statuscode: 500,
