@@ -124,7 +124,7 @@ export class AdminController {
               .skip(skip)
               .limit(limit)
               .exec();
-            // console.log(result);
+         
 
             totalItems = await UserModel.countDocuments({
               role_id: RETAILER_ID, //retailer:roleid
@@ -135,7 +135,7 @@ export class AdminController {
                 },
               },
             });
-            // console.log(result);
+           
             totalPages = Math.ceil(totalItems / limit);
 
             sendSuccessResponse(res, 200, true, "All retailer requests", result,
@@ -404,24 +404,20 @@ export class AdminController {
           }
         }
         if (retailers.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No retailers found matching the search criteria",
-          });
+          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria")
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            data: retailers,
-          });
+          sendSuccessResponse(res,200,true,"data",retailers)
         }
       }
     } catch (error) {
-      console.error("Error searching retailer:", error);
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error searching retailer",
-        error,
-      });
+      
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching retailer:",
+        error
+      );
     }
   };
 
@@ -671,76 +667,5 @@ export class AdminController {
     }
   };
 
-  // public rejectRetailer = async (req: Request, res: Response) => {
-  //   try {
-  //     const user = await getUserFromToken(req);
-
-  //     if (
-  //       !user ||
-  //       !user.role_specific_details ||
-  //       !user.role_specific_details.subadmin
-  //     ) {
-  //       res
-  //         .status(401)
-  //         .json({
-  //           statuscode: 401,
-  //           message: "Unauthorized or invalid user details.",
-  //         });
-  //     }
-
-  //     const retailer_id = req.params.retailer_id;
-  //     console.log("retailer_id", retailer_id);
-
-  //     const organization_id =
-  //     user?.role_specific_details.approval.organization_id;
-  //     console.log("organization_id", organization_id);
-  //     // const retailer = await UserModel.findOne({
-  //     //   _id: retailer_id,
-  //     //   role: "Retailer",
-
-  //     //   "role_specific_details.approval": {
-  //     //     $elemMatch: {
-  //     //       // approval_status: "pending",
-  //     //       organization_id: organization_id,
-  //     //     },
-  //     //   },
-  //     // }).exec();
-  //     // console.log("retailer", retailer);
-  //     // res.json(retailer)
-  //     // if (!retailer) {
-  //     //   res
-  //     //     .status(404)
-  //     //     .json({ statuscode: 404, message: "Retailer not found " });
-  //     // }
-
-  //     const result = await UserModel.updateOne(
-  //       { _id: retailer_id },
-  //       {
-  //         $set: {
-  //           "role_specific_details.retailer.approval.$[elem].approval_status":
-  //             "rejected",
-  //         },
-  //       },
-  //       {
-  //         arrayFilters: [{ "elem.organization_id": organization_id }],
-  //       }
-  //     );
-  //     console.log(result);
-
-  //     // if (result.modifiedCount === 0) {
-  //     //    res
-  //     //     .status(400)
-  //     //     .json({ message: "Failed to update approval status." });
-  //     // }
-
-  //     res.status(200).json({ statuscode: 200, result });
-  //   } catch (error) {
-  //     console.error("Error approving retailer:", error);
-  //     res
-  //       .status(500)
-  //       .json({ statuscode: 500, message: `Internal server error: ${error}` });
-  //   }
-  // };
-
-  //ADD TO RETAILER
+ 
 }

@@ -44,10 +44,7 @@ export class ApprovalController {
         }
 
         if (users.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No users found matching the search criteria",
-          });
+          sendSuccessResponse(res,200,true,"No admin found matching the search criteria")
         } else {
           const result = await Promise.all(
             users.map(async (user) => {
@@ -69,18 +66,17 @@ export class ApprovalController {
               };
             })
           );
-          res.status(200).json({
-            statuscode: 200,
-            data: result,
-          });
+          sendSuccessResponse(res,200,true,"data",result)
         }
       }
     } catch (error) {
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error searching admin approval",
-        error,
-      });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching admin approval :",
+        error
+      );
     }
   };
 

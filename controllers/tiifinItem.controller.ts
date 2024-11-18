@@ -117,24 +117,19 @@ export class TiffinItemController {
           }
         }
         if (tiffins.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No tiffin found matching the search criteria",
-          });
+          sendSuccessResponse(res,200,true,"No tiffin found matching the search criteria")
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            data: tiffins,
-          });
+          sendSuccessResponse(res,200,true,"data",tiffins)
         }
       }
     } catch (error) {
-      console.error("Error searching tiffin:", error);
-      res.status(500).json({
-        statuscode: 500,
-        message: "Error searching tiffin",
-        error,
-      });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching request:",
+        error
+      );
     }
   };
 

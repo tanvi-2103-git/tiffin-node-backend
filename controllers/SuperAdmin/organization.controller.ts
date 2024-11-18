@@ -6,9 +6,7 @@ import {
   sendSuccessResponse,
 } from "../../utils/responsesUtils";
 
-// interface Params {
-//     id: string; // Assuming you are using "id" as the parameter name
-// }
+
 
 export class OrganizationController {
   public addOrganization = async (req: Request, res: Response) => {
@@ -58,15 +56,9 @@ export class OrganizationController {
         }
 
         if (organizations.length === 0) {
-          res.status(404).json({
-            statuscode: 404,
-            message: "No organizations found matching the search criteria",
-          });
+          sendSuccessResponse(res,200,true,"No organizations found matching the search criteria")
         } else {
-          res.status(200).json({
-            statuscode: 200,
-            data: organizations,
-          });
+          sendSuccessResponse(res,200,true,"data",organizations)
         }
       }
     } catch (error) {
