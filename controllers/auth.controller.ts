@@ -135,20 +135,13 @@ export class AuthController {
           }
         );
 
-        sendErrorResponse(
+        sendSuccessToken(
           res,
           201,
           true,
           "User registered successfully",
           token
         );
-        // res.status(201).json({
-        //   statuscode: 201,
-        //   message: "User registered successfully",
-        //   token,
-        //   _id: userData._id,
-        //   role_id: userData.role_id,
-        // });
       }
     } catch (error) {
       sendErrorResponse(res, 400, false, `User registration failed ${error}`);

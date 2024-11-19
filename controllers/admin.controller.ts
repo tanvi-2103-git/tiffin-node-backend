@@ -383,7 +383,7 @@ export class AdminController {
 
         for (let field of searchFields) {
           retailers = await UserModel.find({
-            role_id: "6723475f74b32cfe39e5d0a2", //retailer id
+            //role_id: "6723475f74b32cfe39e5d0a2", //retailer id
             "role_specific_details.approval.approval_status": approval_status,
             //  [field] : query,
             [field]: { $regex: query, $options: "i" },
