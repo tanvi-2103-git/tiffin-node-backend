@@ -56,18 +56,25 @@ export class RetailerController {
     try {
       const user = await getUserFromToken(req);
       if (user?.isActive == false || !user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+        
       } else {
         const status = req.query.status;
         const page = parseInt(req.query.page as string) || 1;  
         const limit = parseInt(req.query.limit as string) || 10;  
 
         if(page < 1 || limit < 1){
-          res.status(400).json({ message: "Page and limit must be positive integers" });
-          
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );          
         }else{
         const skip = (page - 1) * limit;  
         let orders;
@@ -103,13 +110,14 @@ export class RetailerController {
           
         }
         if (orders.length > 0)
-          res.status(200).json({ statuscode: 200, data: newdata,
-            pagination: {
+          sendSuccessResponse(res, 200,true,"all users",newdata,
+            {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
-          },
-        });
+            },
+          );
+          
         else
           res
             .status(404)
@@ -119,9 +127,7 @@ export class RetailerController {
 
        
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
