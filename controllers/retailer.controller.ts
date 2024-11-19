@@ -62,72 +62,132 @@ export class RetailerController {
           false,
           "Unauthorized or invalid user details."
         );
-        
       } else {
         const status = req.query.status;
-        const page = parseInt(req.query.page as string) || 1;  
-        const limit = parseInt(req.query.limit as string) || 10;  
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-        if(page < 1 || limit < 1){
+        if (page < 1 || limit < 1) {
           sendSuccessResponse(
             res,
             400,
             false,
             "Page and limit must be positive integers"
-          );          
-        }else{
-        const skip = (page - 1) * limit;  
-        let orders;
-        let totalItems;
-        let totalPages;
-        let newdata;
-
-        if (status) {
-          orders = await OrderModel.find({
-            "cart.retailer_id": user._id,
-            delivery_status: status,
-          }).skip(skip).limit(limit).exec();
-
-            totalItems = await OrderModel.countDocuments({
-            "cart.retailer_id": user._id,
-            delivery_status: status,
-          });
-
-           totalPages = Math.ceil(totalItems / limit);
-
-            newdata = await this.addUserName(orders);
-
+          );
         } else {
-          orders = await OrderModel.find({ "cart.retailer_id": user._id })
-          .skip(skip).limit(limit).exec();
-        
-            totalItems = await OrderModel.countDocuments({
-            "cart.retailer_id": user._id,
-          });
+          const skip = (page - 1) * limit;
+          let orders;
+          let totalItems;
+          let totalPages;
+          let newdata;
 
-           totalPages = Math.ceil(totalItems / limit);
+          if (status) {
+            orders = await OrderModel.find({
+              "cart.retailer_id": user._id,
+              delivery_status: status,
+            })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await OrderModel.countDocuments({
+              "cart.retailer_id": user._id,
+              delivery_status: status,
+            });
+
+            totalPages = Math.ceil(totalItems / limit);
+
             newdata = await this.addUserName(orders);
-          
-        }
-        if (orders.length > 0)
-          sendSuccessResponse(res, 200,true,"all users",newdata,
-            {
+          } else {
+            orders = await OrderModel.find({ "cart.retailer_id": user._id })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await OrderModel.countDocuments({
+              "cart.retailer_id": user._id,
+            });
+
+            totalPages = Math.ceil(totalItems / limit);
+            newdata = await this.addUserName(orders);
+          }
+          if (orders.length > 0)
+            sendSuccessResponse(res, 200, true, "all users", newdata, {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
-            },
-          );
-          
-        else
-          res
-            .status(404)
-            .json({ statuscode: 404, message: "orders not found" });
+            });
+          else
+            res
+              .status(404)
+              .json({ statuscode: 404, message: "orders not found" });
+        }
       }
-    }
-
-       
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
+    }
+  };
+
+  public searchOrders = async (req: Request, res: Response): Promise<void> => {
+    try {
+      let newdata: any;
+      const user = await getUserFromToken(req);
+      //  console.log(user);
+      const { query } = req.query;
+      if (!query && !user) {
+        sendErrorResponse(res, 400, false, "Query parameter is required ");
+      } else {
+        const searchFields = [
+          "cart.retailer_id",
+          "cart.customer_id",
+          "cart.items.tiffin_id",
+        ];
+        let orders: Order[] = [];
+        const user = await UserModel.find({
+          username: { $regex: query, $options: "i" },
+        });
+        const userIds = user.map((user) => user._id);
+
+        const tiffin = await TiffinItemModel.find({
+          tiffin_name: { $regex: query, $options: "i" },
+        });
+
+        const tiffinIds = tiffin.map((tiffin) => tiffin._id);
+        
+        for (let field of searchFields) {
+
+          if (user.length>0){
+            
+            
+            orders = await OrderModel.find({
+              [field]: { $in: userIds },
+            }).exec();}
+          else{
+           
+
+            orders = await OrderModel.find({
+              [field]: { $in: tiffinIds },
+            }).exec();
+          newdata = await this.addUserName(orders);}
+
+          if (orders.length > 0) {
+            break;
+          }
+        }
+
+        if (orders.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No orders found matching the search criteria"
+          );
+        } else {
+          sendSuccessResponse(res, 200, true, "data", orders);
+        }
+      }
+    } catch (error) {
+      //  console.log(error);
     }
   };
 
@@ -137,47 +197,43 @@ export class RetailerController {
         let updatedOrder;
         const retailer_id = order.cart.retailer_id;
         const customer_id = order.cart.customer_id;
-        const tiffinitems  = order.cart.items;
-        
-        const tiffindata = await Promise.all( 
-          tiffinitems.map(async(tiffinitem)=>{
-          const tiffin_id = tiffinitem.tiffin_id;
-        
+        const tiffinitems = order.cart.items;
 
-          const tiffin = await TiffinItemModel.findById(tiffin_id).exec();
+        const tiffindata = await Promise.all(
+          tiffinitems.map(async (tiffinitem) => {
+            const tiffin_id = tiffinitem.tiffin_id;
 
-          const tiffin_name = tiffin?.tiffin_name;
-          const tiffin_type = tiffin?.tiffin_type;
-          updatedOrder = (order as Document).toObject(); 
-          const tiffinItem= (tiffinitem as Document).toObject();
-          tiffinItem.tiffin_name=tiffin_name;
-          tiffinItem.tiffin_type=tiffin_type;
-          
-          return tiffinItem
-        }));
-       
-     
+            const tiffin = await TiffinItemModel.findById(tiffin_id).exec();
+
+            const tiffin_name = tiffin?.tiffin_name;
+            const tiffin_type = tiffin?.tiffin_type;
+            updatedOrder = (order as Document).toObject();
+            const tiffinItem = (tiffinitem as Document).toObject();
+            tiffinItem.tiffin_name = tiffin_name;
+            tiffinItem.tiffin_type = tiffin_type;
+
+            return tiffinItem;
+          })
+        );
+
         const retailer = await UserModel.findById(retailer_id).exec();
-        const retailer_name = retailer?.username; 
-  
-       
-       const customer = await UserModel.findById(customer_id).exec();
-       const customer_name = customer?.username;
-       
+        const retailer_name = retailer?.username;
 
-         updatedOrder = (order as Document).toObject(); 
-        
-         updatedOrder.cart.retailer_name = retailer_name;
-         updatedOrder.cart.customer_name = customer_name;
-         updatedOrder.cart.items = tiffindata;
-       
-         return updatedOrder;
+        const customer = await UserModel.findById(customer_id).exec();
+        const customer_name = customer?.username;
+
+        updatedOrder = (order as Document).toObject();
+
+        updatedOrder.cart.retailer_name = retailer_name;
+        updatedOrder.cart.customer_name = customer_name;
+        updatedOrder.cart.items = tiffindata;
+
+        return updatedOrder;
       })
     );
-   // console.log(newdata);
+    // console.log(newdata);
     return newdata;
   };
-  
 
   public getWeeklyOrders = async (req: Request, res: Response) => {
     try {

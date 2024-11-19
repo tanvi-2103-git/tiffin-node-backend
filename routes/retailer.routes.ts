@@ -12,6 +12,6 @@ retailerRoutes.put("/addRequest/:organization_id",validateToken,RoleBaseValidati
 retailerRoutes.get("/getallorders",validateGetRequest({isPagination: true,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), retailerController.getAllOrders);
 retailerRoutes.get("/getweeklyorders",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), retailerController.getWeeklyOrders);
 retailerRoutes.get("/getmonthlyorders",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), retailerController.getMonthlylyOrders);
-
+retailerRoutes.get("/searchorders",validateGetRequest({isPagination: false,isIdRequired:false}),validateToken, retailerController.searchOrders);
 
 export default retailerRoutes;
