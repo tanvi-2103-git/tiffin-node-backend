@@ -149,7 +149,10 @@ export class RetailerController {
         const userIds = user.map((user) => user._id);
 
         const tiffin = await TiffinItemModel.find({
-          tiffin_name: { $regex: query, $options: "i" },
+          $or: [
+            { tiffin_name: { $regex: query, $options: "i" } },
+            { tiffin_type: { $regex: query, $options: "i" } }
+          ]
         });
 
         const tiffinIds = tiffin.map((tiffin) => tiffin._id);
@@ -183,7 +186,7 @@ export class RetailerController {
             "No orders found matching the search criteria"
           );
         } else {
-          sendSuccessResponse(res, 200, true, "data", orders);
+          sendSuccessResponse(res, 200, true, "data", newdata);
         }
       }
     } catch (error) {
