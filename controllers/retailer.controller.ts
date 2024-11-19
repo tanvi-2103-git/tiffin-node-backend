@@ -187,7 +187,7 @@ export class RetailerController {
         }
       }
     } catch (error) {
-      //  console.log(error);
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
