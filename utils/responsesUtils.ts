@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
 export const sendSuccessResponse = (
   res: Response,
@@ -25,8 +26,9 @@ export const sendSuccessToken = (
   message: string,
   token: string,
   refreshToken?: string,
-  role_id?:string,
-  _id?:string,
+   _id?:mongoose.Schema.Types.ObjectId,
+  role_id?:mongoose.Schema.Types.ObjectId,
+ 
 ) => {
   return res.status(statusCode).json({
     statusCode,

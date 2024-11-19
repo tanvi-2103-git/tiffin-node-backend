@@ -7,7 +7,7 @@ export interface Approval {
 }
 
 export interface User extends Document {
-
+    _id:mongoose.Schema.Types.ObjectId;
     user_image: string;
     username: string;
     password: string;

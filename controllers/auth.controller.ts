@@ -57,8 +57,8 @@ export class AuthController {
 
           user.refreshToken = refreshToken;
           await user.save();
-          const _id = user._id as string;
-          const role_id = JSON.stringify(user.role_id) ;
+          const _id = user._id ;
+          const role_id = user.role_id ;
           sendSuccessToken(
             res,
             200,
