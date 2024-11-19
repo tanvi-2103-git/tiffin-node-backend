@@ -20,6 +20,7 @@ authRoutes.post("/forgotpassword", authController.forgotPassword);
 // authRoutes.post("/resetpassword?token=<resetToken>&id=<userId>", authController.resetPassword);
 authRoutes.post("/resetpassword", authController.resetPassword);
 authRoutes.post("/uploaduserimage", upload.single('recfile'), uploadToCloudinary("user_image"));
+authRoutes.put("/updateprofile/:id", validateToken,authController.updateProfile);
 
 // authRoutes.post("/uploaduserimage/:userid", upload.single('recfile'), uploadToCloudinary("user_image"), authController.uploadUserImage);
 authRoutes.get("/updateloc",validateToken, authController.updateLoc);

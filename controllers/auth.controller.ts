@@ -384,7 +384,7 @@ export class AuthController {
         }
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, "error in the catch");
+      sendErrorResponse(res, 500, false, "error in the catch",error);
     }
   };
 
@@ -401,10 +401,25 @@ export class AuthController {
 
       sendSuccessResponse(res, 200, true, "updated loc", updateloc);
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error ${error}` });
+      sendErrorResponse(res, 500, false, "error in the catch",error);
+
     }
   };
+
+  public updateProfile = async (req: Request, res: Response) => {
+    try{
+      const id = req.params.id;
+      const {...user}= req.body;
+      if (!id) throw "user id is not provided"
+      else{
+        const updateUser = await UserModel.updateOne({_id:id},user);
+        sendSuccessResponse(res, 200, true, "profile updated", updateUser);
+
+      }
+    }catch(error){
+      sendErrorResponse(res, 500, false, "error in the catch",error);
+
+    }
+  }
 }
   
