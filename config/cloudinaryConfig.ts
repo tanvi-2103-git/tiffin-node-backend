@@ -48,16 +48,16 @@ export const uploadToCloudinary =(folder:string)=>{ return async (req: Request, 
         (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
           if (err) {
             console.error('Cloudinary upload error:', err);
-            next(err);
+            // next(err);
           } else if (!result) {
             console.error('Cloudinary upload error: Result is undefined');
-            next(new Error('Cloudinary upload result is undefined'));
+            // next(new Error('Cloudinary upload result is undefined'));
           } else {
             cloudinaryUrl=result.secure_url;
             console.log("cloudinaryUrl",cloudinaryUrl);
-            
-              req.body.cloudinaryUrl = cloudinaryUrl;
-              next();
+            return res.json({image:cloudinaryUrl})
+              // req.body.cloudinaryUrl = cloudinaryUrl;
+              // next();
             
           }
         }

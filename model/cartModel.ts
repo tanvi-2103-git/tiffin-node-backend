@@ -1,7 +1,7 @@
 import mongoose, { ObjectId } from 'mongoose';
 
 export interface CartItem {
-    tiffin_id: mongoose.Schema.Types.ObjectId;              
+    tiffin_id: mongoose.Types.ObjectId;              
     quantity: number;                
     price: number;                   
 }

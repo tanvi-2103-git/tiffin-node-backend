@@ -98,7 +98,7 @@ export class OrganizationController {
         const totalPages = Math.ceil(totalItems / limit);
 
 
-        sendSuccessResponse(res, 200, false, "All organizations", {
+        sendSuccessResponse(res, 200, false, "All organizations",organizations, {
           currentPage: page,
           totalPages: totalPages,
           totalItems: totalItems,
