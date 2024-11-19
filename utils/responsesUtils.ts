@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { ObjectId } from "mongodb";
 
 export const sendSuccessResponse = (
   res: Response,
@@ -23,7 +24,9 @@ export const sendSuccessToken = (
   success: boolean,
   message: string,
   token: string,
-  refreshToken?: string
+  refreshToken?: string,
+  role_id?:string,
+  _id?:string,
 ) => {
   return res.status(statusCode).json({
     statusCode,
@@ -31,6 +34,8 @@ export const sendSuccessToken = (
     message,
     token,
     refreshToken,
+    _id,
+    role_id
   });
 };
 
