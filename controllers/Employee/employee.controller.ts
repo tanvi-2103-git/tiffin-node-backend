@@ -733,7 +733,7 @@ export class EmployeeController {
             newdata = await retailerController.addUserName(orders);
           }
           if (orders.length > 0)
-            sendSuccessResponse(res, 200, true, "all users", newdata, {
+            sendSuccessResponse(res, 200, true, "all orders", newdata, {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
