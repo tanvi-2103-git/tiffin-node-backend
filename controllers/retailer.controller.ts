@@ -540,4 +540,53 @@ export class RetailerController {
 
     }
   }
+
+  public cancelOrder = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+      const orderId = req.params.orderid;
+      const order = await OrderModel.findOne({_id:orderId, 'cart.retailer_id':user._id});
+      if (order) {
+        if (order.delivery_status == "pending") {
+          const order = await OrderModel.findByIdAndUpdate(orderId, {
+            delivery_status: "cancelled",
+          });
+          if (order)
+            sendSuccessResponse(res, 200, true, "order updated successful");
+        } else if (order.delivery_status == "delivered") {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "order is already delivered cannot be modified"
+          );
+        } else {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "order is already cancelled cannot be modified"
+          );
+        }
+      } else {
+        sendSuccessResponse(res, 200, true, "order not found");
+      }}
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
 }

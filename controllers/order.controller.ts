@@ -64,6 +64,7 @@ export class OrderController {
     try {
       const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
+      if(order?.delivery_status=='cancelled') throw 'order is already cancelled'
       if (order) {
         if (order.payment_mode == "CoD") {
           const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {

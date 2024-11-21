@@ -28,7 +28,7 @@ const TiffinItemSchema = new mongoose.Schema({
   },
   tiffin_type: { type: String, enum: ["veg", "non-veg"], required: true },
   tiffin_price: { type: Number, required: true },
-  tiffin_rating: { type: Number, required: true },
+  tiffin_rating: { type: Number, required: true, default:0},
   tiffin_isavailable: { type: Boolean, required: true },
   tiffin_created_at: { type: Date, required: true, timestamps: true},
   tiffin_updated_at: { type: Date, required: true, timestamps: true},
