@@ -72,8 +72,9 @@ export class TiffinItemController {
     req: Request,
     res: Response
   ): Promise<void> => {
-    const _id = new ObjectId(req.params.tiffinid);
     try {
+      const _id = new ObjectId(req.params.tiffinid);
+    
       const TiffinItem = await TiffinItemModel.findOne({
         _id: _id,
         isActive: true,
