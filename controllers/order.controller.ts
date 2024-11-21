@@ -6,6 +6,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../utils/responsesUtils";
+import { TiffinItemModel } from "../model/tiffinItemModel";
 
 const cartController = new CartController();
 export class OrderController {
@@ -25,6 +26,16 @@ export class OrderController {
         }
         const cart = await CartModel.findById(cartId);
         if (cart) {
+          const tiffinQuantityUpdated = await Promise.all(
+            cart.items.map(async (item) => {
+              return TiffinItemModel.updateOne(
+                { _id: item.tiffin_id },
+                { $inc: { tiffin_available_quantity: -item.quantity } } 
+              );
+            })
+          );
+          
+
           const order = new OrderModel({
             cart,
             payment_mode,

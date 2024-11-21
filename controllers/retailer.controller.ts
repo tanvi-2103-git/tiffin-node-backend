@@ -130,6 +130,7 @@ export class RetailerController {
 
   public searchOrders = async (req: Request, res: Response): Promise<void> => {
     try {
+      let retailer = await getUserFromToken(req);
       let newdata: any;
       const user = await getUserFromToken(req);
       //  console.log(user);
@@ -147,7 +148,8 @@ export class RetailerController {
           username: { $regex: query, $options: "i" },
         });
         const userIds = user.map((user) => user._id);
-
+        console.log("userIds",userIds);
+        
         const tiffin = await TiffinItemModel.find({
           $or: [
             { tiffin_name: { $regex: query, $options: "i" } },
@@ -164,14 +166,18 @@ export class RetailerController {
             
             orders = await OrderModel.find({
               [field]: { $in: userIds },
-            }).exec();}
+              "cart.retailer_id":retailer?._id
+            }).exec();
+
+            console.log("orders",orders);
+            }
           else{
            
 
             orders = await OrderModel.find({
               [field]: { $in: tiffinIds },
-            }).exec();
-          newdata = await this.addUserName(orders);}
+            }).exec();}
+          newdata = await this.addUserName(orders);
 
           if (orders.length > 0) {
             break;
@@ -260,7 +266,7 @@ export class RetailerController {
             {
               $match: {
                 delivery_status: status,
-                org_created_at: {
+                created_at: {
                   $gte: startOfYear,
                   $lt: endOfYear,
                 },
@@ -269,8 +275,8 @@ export class RetailerController {
             {
               $group: {
                 _id: {
-                  week: { $week: "$org_created_at" }, // Group by week number
-                  year: { $year: "$org_created_at" },
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
                 },
                 totalOrders: { $sum: 1 },
                 totalAmount: { $sum: "$cart.total_amount" },
@@ -287,7 +293,7 @@ export class RetailerController {
           orders = await OrderModel.aggregate([
             {
               $match: {
-                org_created_at: {
+                created_at: {
                   $gte: startOfYear,
                   $lt: endOfYear,
                 },
@@ -296,8 +302,8 @@ export class RetailerController {
             {
               $group: {
                 _id: {
-                  week: { $week: "$org_created_at" }, // Group by week number
-                  year: { $year: "$org_created_at" },
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
                 },
                 totalOrders: { $sum: 1 },
                 totalAmount: { $sum: "$cart.total_amount" },
@@ -354,9 +360,14 @@ export class RetailerController {
         );
       } else {
         const status = req.query.status;
+        console.log("status",status);
+        
         const year = parseInt(req.query.year as string);
+        console.log("year",year);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
+        console.log("year",year,"status",status,"startOfYear",startOfYear,"endOfYear",endOfYear);
+        
         let orders;
         let data;
         if (status && year) {
@@ -364,7 +375,7 @@ export class RetailerController {
             {
               $match: {
                 delivery_status: status,
-                org_created_at: {
+                created_at: {
                   $gte: startOfYear,
                   $lte: endOfYear,
                 },
@@ -373,8 +384,8 @@ export class RetailerController {
             {
               $group: {
                 _id: {
-                  year: { $year: "$org_created_at" },
-                  month: { $month: "$org_created_at" },
+                  year: { $year: "$created_at" },
+                  month: { $month: "$created_at" },
                 },
                 totalOrders: { $sum: 1 },
                 totalAmount: { $sum: "$cart.total_amount" },
@@ -391,7 +402,7 @@ export class RetailerController {
           orders = await OrderModel.aggregate([
             {
               $match: {
-                org_created_at: {
+                created_at: {
                   $gte: startOfYear,
                   $lte: endOfYear,
                 },
@@ -400,8 +411,8 @@ export class RetailerController {
             {
               $group: {
                 _id: {
-                  year: { $year: "$org_created_at" },
-                  month: { $month: "$org_created_at" },
+                  year: { $year: "$created_at" },
+                  month: { $month: "$created_at" },
                 },
                 totalOrders: { $sum: 1 },
                 totalAmount: { $sum: "$cart.total_amount" },
@@ -414,6 +425,8 @@ export class RetailerController {
               },
             },
           ]);
+          console.log(orders);
+          
         }
         if (orders) {
           data = orders.map((item) => {
