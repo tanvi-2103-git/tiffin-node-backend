@@ -261,7 +261,7 @@ export class RetailerController {
         const endOfYear = moment().year(year).endOf("year").toDate();
         let orders;
         let data;
-        if (status && year) {
+        if (status ) {
           orders = await OrderModel.aggregate([
             {
               $match: {
@@ -359,18 +359,15 @@ export class RetailerController {
           "Unauthorized or invalid user details."
         );
       } else {
-        const status = req.query.status;
-        console.log("status",status);
-        
+        const status = req.query.status;        
         const year = parseInt(req.query.year as string);
-        console.log("year",year);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
         console.log("year",year,"status",status,"startOfYear",startOfYear,"endOfYear",endOfYear);
         
         let orders;
         let data;
-        if (status && year) {
+        if (status) {
           orders = await OrderModel.aggregate([
             {
               $match: {
@@ -450,4 +447,97 @@ export class RetailerController {
       sendErrorResponse(res, 404, false, `internal server error ${error}`);
     }
   };
+
+  public getMonthlyWeeklyOrders = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendErrorResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const status = req.query.status;        
+        const year = parseInt(req.query.year as string);
+        const filter = req.query.filter as string;
+        if(!filter) throw "Add Monthly or Weekly filter"
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        const orders = await OrderModel.aggregate([
+          {
+            $match: {
+              created_at: {
+                $gte: startOfYear,
+                $lte: endOfYear,
+              },
+              ...(status && { delivery_status: status }), 
+            },
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$created_at" },
+                ...(filter.toLowerCase() === "month" && { month: { $month: "$created_at" } }),
+                ...(filter.toLowerCase() === "week" && { week: { $week: "$created_at" } }),
+                
+              },
+              totalOrders: { $sum: 1 },
+              totalAmount: { $sum: "$cart.total_amount" },
+            },
+          },
+          {
+            $sort: {
+              "_id.year": 1,
+              ...(filter.toLowerCase() === "week" && { "_id.week": 1 }),
+              ...(filter.toLowerCase() === "month" && { "_id.month": 1 }),
+            },
+          },
+        ]);
+        if (orders) {
+         const  data = orders.map((item) => {
+          
+            const startOfmonth = moment()
+              .month(item._id.month - 1)
+              .format("YYYY-MM");
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+            const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
+  
+            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+           
+              if(filter.toLowerCase() === "week"){
+             return  {startOfWeek: startOfWeek,
+              endOfWeek: endOfWeek,
+              totalOrders: item.totalOrders,
+              totalAmount: item.totalAmount,}
+            }
+              else{
+              return {month: startOfmonth,
+              totalOrders: item.totalOrders,
+              totalAmount: item.totalAmount}
+            }
+            }
+          );
+          
+          sendSuccessResponse(res, 200, true, `${filter}ly orders`,data);
+
+        } else {
+          sendErrorResponse(res, 404, false, "orders not found");
+        }
+
+      }
+    }catch(error){
+      sendErrorResponse(res, 404, false, `internal server error`,error);
+
+    }
+  }
 }
