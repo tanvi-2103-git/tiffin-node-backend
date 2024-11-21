@@ -9,6 +9,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../../utils/responsesUtils";
+import { ObjectId } from "mongodb";
 
 export class ApprovalController {
   public searchAdminApproval = async (
@@ -497,7 +498,7 @@ export class ApprovalController {
           requests = await UserModel.aggregate([
             {
               $match: {
-                role_id: ADMIN_ID,
+                role_id: new ObjectId(ADMIN_ID),
                 "role_specific_details.approval_status": status,
                 created_at: {
                   $gte: startOfYear,
@@ -521,11 +522,14 @@ export class ApprovalController {
               },
             },
           ]);
+
+          console.log(requests);
+          
         } else {
           requests = await UserModel.aggregate([
             {
               $match: {
-                role_id: ADMIN_ID,
+                role_id: new ObjectId(ADMIN_ID),
                 created_at: {
                   $gte: startOfYear,
                   $lt: endOfYear,
@@ -548,6 +552,7 @@ export class ApprovalController {
               },
             },
           ]);
+          console.log(requests);
         }
         if (requests) {
           data = requests.map((item) => {
@@ -601,7 +606,7 @@ export class ApprovalController {
           requests = await UserModel.aggregate([
             {
               $match: {
-                role_id: ADMIN_ID,
+                role_id: new ObjectId(ADMIN_ID),
                 "role_specific_details.approval_status": status,
                 created_at: {
                   $gte: startOfYear,
@@ -629,7 +634,7 @@ export class ApprovalController {
           requests = await UserModel.aggregate([
             {
               $match: {
-                role_id: ADMIN_ID,
+                role_id: new ObjectId(ADMIN_ID),
                 created_at: {
                   $gte: startOfYear,
                   $lte: endOfYear,
@@ -674,4 +679,95 @@ export class ApprovalController {
         .json({ statuscode: 500, message: `internal server error ${error}` });
     }
   };
+
+  public getWeeklyMonthlyRequest = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendErrorResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const status = req.query.status;        
+        const year = parseInt(req.query.year as string);
+        const filter = req.query.filter as string;
+        if(!filter) throw "Add Monthly or Weekly filter"
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        const requests = await UserModel.aggregate([
+          {
+            $match: {
+              role_id: new ObjectId(ADMIN_ID),
+              created_at: {
+                $gte: startOfYear,
+                $lte: endOfYear,
+              },
+              ...(status && { "role_specific_details.approval_status": status }), 
+            },
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$created_at" },
+                ...(filter.toLowerCase() === "month" && { month: { $month: "$created_at" } }),
+                ...(filter.toLowerCase() === "week" && { week: { $week: "$created_at" } }),
+                
+              },
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $sort: {
+              "_id.year": 1,
+              ...(filter.toLowerCase() === "week" && { "_id.week": 1 }),
+              ...(filter.toLowerCase() === "month" && { "_id.month": 1 }),
+            },
+          },
+        ]);
+        if (requests) {
+         const  data = requests.map((item) => {
+          
+            const startOfmonth = moment()
+              .month(item._id.month - 1)
+              .format("YYYY-MM");
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+            const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
+  
+            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+           
+              if(filter.toLowerCase() === "week"){
+             return  {startOfWeek: startOfWeek,
+              endOfWeek: endOfWeek,
+              requestcount: item.count,}
+            }
+              else{
+              return {month: startOfmonth,
+                requestcount: item.count,}
+            }
+            }
+          );
+          
+          sendSuccessResponse(res, 200, true, `${filter}ly request`,data);
+
+        } else {
+          sendErrorResponse(res, 404, false, "request not found");
+        }
+
+      }
+    }catch(error){
+
+    }
+  }
+
 }

@@ -27,6 +27,7 @@ superAdminRoutes.put("/rejectadmin/:admin_id",validateToken,RoleBaseValidation('
 superAdminRoutes.put("/approveadmin/:admin_id",validateToken,RoleBaseValidation('approve_admin_request'), approval.approveAdminRequest);
 superAdminRoutes.get("/getweeklyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyRequest);
 superAdminRoutes.get("/getmonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getMonthlylyRequest);
+superAdminRoutes.get("/getweeklymonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyMonthlyRequest);
 
 
 
