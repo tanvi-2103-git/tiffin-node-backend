@@ -19,9 +19,8 @@ export class ApprovalController {
     try {
       const { query, approval_status } = req.query; // Accept a generic query parameter
 
-      if (!query && !approval_status) {
-        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
-      } else {
+      if (!query && !approval_status) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
         const searchFields = ["username", "contact_number", "email", "address"];
 
         let users: User[] = [];
@@ -312,9 +311,7 @@ export class ApprovalController {
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
-      if (approvalRequest?.isActive == false || !approvalRequest) {
-        sendErrorResponse(res, 404, false, "Approval Request not found");
-      }
+      if (approvalRequest?.isActive == false || !approvalRequest) throw "Approval Request not found"
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error Approval Request", error);
     }
@@ -327,14 +324,8 @@ export class ApprovalController {
     try {
       const user = await getUserFromToken(req);
 
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          true,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
+       else {
         const admin_id = req.params.admin_id;
         const result = await UserModel.updateOne(
           { _id: admin_id, isActive: true },
@@ -357,22 +348,10 @@ export class ApprovalController {
             organization.org_location[itemIndex].admin_id =
               new mongoose.Types.ObjectId(admin_id);
             await organization.save();
-          } else {
-            sendErrorResponse(
-              res,
-              404,
-              false,
-              "Location of admin has no match on respective organization"
-            );
-          }
-          if (result.modifiedCount === 0) {
-            sendErrorResponse(
-              res,
-              404,
-              false,
-              "Approval request not found or already updated."
-            );
-          } else {
+          } else throw  "Location of admin has no match on respective organization"
+            
+          if (result.modifiedCount === 0) throw "Approval request not found or already updated."
+          else {
             sendSuccessResponse(
               res,
               200,
@@ -401,14 +380,8 @@ export class ApprovalController {
     try {
       const user = await getUserFromToken(req);
 
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          false,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
+       else {
         const admin_id = req.params.admin_id;
         const { rejection_reason } = req.body;
 
@@ -422,14 +395,8 @@ export class ApprovalController {
           }
         );
 
-        if (result.modifiedCount === 0) {
-          sendErrorResponse(
-            res,
-            404,
-            false,
-            "Approval request not found or already updated."
-          );
-        } else {
+        if (result.modifiedCount === 0) throw "Approval request not found or already updated."
+           else {
           sendSuccessResponse(
             res,
             200,
@@ -577,8 +544,8 @@ export class ApprovalController {
           res.status(200).json({ statuscode: 200, data: data });
         } else
           res
-            .status(404)
-            .json({ statuscode: 404, message: "request not found" });
+            .status(200)
+            .json({ statuscode: 200, message: "request not found" });
       }
     } catch (error) {
       res
@@ -670,8 +637,8 @@ export class ApprovalController {
           res.status(200).json({ statuscode: 200, data: data });
         } else
           res
-            .status(404)
-            .json({ statuscode: 404, message: "orders not found" });
+            .status(200)
+            .json({ statuscode: 200, message: "orders not found" });
       }
     } catch (error) {
       res
@@ -683,14 +650,8 @@ export class ApprovalController {
   public getWeeklyMonthlyRequest = async (req: Request, res: Response) => {
     try{
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          false,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
+       else {
         const status = req.query.status;        
         const year = parseInt(req.query.year as string);
         const filter = req.query.filter as string;
@@ -761,12 +722,18 @@ export class ApprovalController {
           sendSuccessResponse(res, 200, true, `${filter}ly request`,data);
 
         } else {
-          sendErrorResponse(res, 404, false, "request not found");
+          sendSuccessResponse(res, 200, true, "request not found");
         }
 
       }
     }catch(error){
-
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request",
+        error
+      );
     }
   }
 

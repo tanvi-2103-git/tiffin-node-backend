@@ -14,19 +14,12 @@ export class RoleController {
         !role_name ||
         !Array.isArray(role_permission) ||
         !role_specific_details
-      ) {
-        sendErrorResponse(res, 400, false, "Invalid role data provided");
-      }
+      ) throw "Invalid role data provided"
+      
 
       for (const detail of role_specific_details) {
-        if (!detail.name || !detail.type) {
-          sendErrorResponse(
-            res,
-            400,
-            false,
-            "Each role-specific detail must include 'name' and 'type' fields"
-          );
-        }
+        if (!detail.name || !detail.type) throw "Each role-specific detail must include 'name' and 'type' fields"
+         
       }
 
       const role = new RoleModel({

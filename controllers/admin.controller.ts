@@ -374,9 +374,8 @@ export class AdminController {
     try {
       const { query, approval_status } = req.query;
 
-      if (!query) {
-        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
-      } else {
+      if (!query) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
         const searchFields = ["username", "email", "contact_number", "address"];
 
         let retailers: User[] = [];

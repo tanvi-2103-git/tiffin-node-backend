@@ -80,10 +80,7 @@ export class TiffinItemController {
         isActive: true,
       });
 
-      if (!TiffinItem) {
-        sendErrorResponse(res, 404, true, "Tiffin Item not found");
-        return;
-      }
+      if (!TiffinItem) throw "Tiffin Item not found"
       sendSuccessResponse(res, 200, true, "tiffin Items", TiffinItem);
     } catch (error) {
       sendSuccessResponse(res, 500, false, "Error fetching Tiffin Item", error);
@@ -97,9 +94,8 @@ export class TiffinItemController {
     try {
       const { query } = req.query;
 
-      if (!query) {
-        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
-      } else {
+      if (!query) throw  "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
         const searchFields = ["tiffin_name", "tiffin_type"];
         const user = await getUserFromToken(req);
         const retailerId = user?._id;
@@ -145,9 +141,7 @@ export class TiffinItemController {
         { _id: tiffinid },
         { isActive: false }
       );
-      if (!deleteTiffin) {
-        sendErrorResponse(res, 404, false, "Tiffin Item not found");
-      }
+      if (!deleteTiffin) throw "Tiffin Item not found";
       sendSuccessResponse(res, 200, true, "Tiffin Item deleted successfully");
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error deleting Tiffin Item", error);
@@ -170,10 +164,7 @@ export class TiffinItemController {
         }
       );
 
-      if (!updatedTiffinItem) {
-        sendErrorResponse(res, 404, false, "Tiffin Item not found");
-        return;
-      }
+      if (!updatedTiffinItem) throw "Tiffin Item not found";
 
       sendSuccessResponse(
         res,
@@ -224,9 +215,8 @@ export class TiffinItemController {
       const tifinId = req.params.tifinid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
-      if (!cloudinaryUrl) {
-        sendErrorResponse(res, 500, false, "Internal Server Error");
-      } else {
+      if (!cloudinaryUrl) throw "cloudinaryUrl is not available";
+       else {
         const tiffin = await TiffinItemModel.findByIdAndUpdate(
           tifinId,
           { tiffin_image_url: cloudinaryUrl },
@@ -240,9 +230,7 @@ export class TiffinItemController {
             "Tiffin Item image updated successfully",
             tiffin
           );
-        } else {
-          sendErrorResponse(res, 400, false, "tiffin not found");
-        }
+        } else throw "tiffin not found"
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error uploading image");

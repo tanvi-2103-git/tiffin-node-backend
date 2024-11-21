@@ -79,14 +79,11 @@ export class AuthController {
           //   _id: user._id,
           //   role_id: user.role_id,
           // });
-        } else {
-          sendErrorResponse(res, 401, false, "Invalid username or password");
-        }
-      } else {
-        sendErrorResponse(res, 404, false, "User not found");
-      }
+        } else throw"Invalid username or password"
+      } else throw"User not found";
+      
     } catch (error) {
-      sendErrorResponse(res, 404, false, "User login failed");
+      sendErrorResponse(res, 500, false, "User login failed",error);
     }
   };
 
@@ -105,9 +102,8 @@ export class AuthController {
       const hash = await bcrypt.hash(password, 10);
 
       const roleDoc = await RoleModel.findById(role_id);
-      if (!roleDoc) {
-        sendErrorResponse(res, 400, false, "Invalid role ID provided");
-      } else {
+      if (!roleDoc) throw"Invalid role ID provided"
+       else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
 
@@ -147,7 +143,7 @@ export class AuthController {
         );
       }
     } catch (error) {
-      sendErrorResponse(res, 400, false, `User registration failed ${error}`);
+      sendErrorResponse(res, 400, false, `User registration failed ${error}`,error);
     }
   };
 
@@ -173,14 +169,12 @@ export class AuthController {
         { new: true }
       );
 
-      if (!updatedUser) {
-        sendErrorResponse(res, 404, false, "User not found");
-        // return undefined;
-      } else {
+      if (!updatedUser) throw"User not found"
+       else {
         sendSuccessResponse(res, 200, true, "User logged out successfully");
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Server error while logging out");
+      sendErrorResponse(res, 500, false, "Server error while logging out",error);
     }
   };
 
@@ -191,9 +185,7 @@ export class AuthController {
     try {
       const incomingRefreshToken = req.body.refreshToken;
 
-      if (!incomingRefreshToken) {
-        sendErrorResponse(res, 401, false, "Refresh token is required");
-      }
+      if (!incomingRefreshToken) throw "Refresh token is required"
 
       const decodedToken = jwt.verify(
         incomingRefreshToken,
@@ -202,12 +194,9 @@ export class AuthController {
 
       const user = await UserModel.findById(decodedToken.id);
 
-      if (!user) {
-        sendErrorResponse(res, 401, false, "Invalid refresh token");
-      } else {
-        if (incomingRefreshToken !== user?.refreshToken) {
-          sendErrorResponse(res, 401, false, "Invalid refresh token");
-        }
+      if (!user) throw "Invalid refresh token";
+       else {
+        if (incomingRefreshToken !== user?.refreshToken)  throw "Invalid refresh token";
 
         const newAccessToken = jwt.sign(
           { id: user?._id, role: user?.role_id },
@@ -239,7 +228,7 @@ export class AuthController {
         res,
         400,
         false,
-        "Something went wrong while refreshing the access token"
+        "Something went wrong while refreshing the access token",error
       );
     }
   };
@@ -252,9 +241,7 @@ export class AuthController {
     try {
       const emailId = req.body.email;
       const user = await this.getUserByEmail(emailId);
-      if (!user) {
-        sendErrorResponse(res, 400, false, "Invalid email ID provided");
-      }
+      if (!user) throw"Invalid email ID provided"
 
       const resetToken = crypto.randomBytes(32).toString("hex");
       const hashedToken = crypto
@@ -321,20 +308,17 @@ export class AuthController {
           resetPasswordTokenExpires: { $gte: moment().toDate() },
         });
 
-        if (!user) {
-          sendErrorResponse(res, 404, true, "Invalid or expired token");
-        } else {
+        if (!user) throw"Invalid or expired token"
+         else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
           await user.save();
           sendSuccessResponse(res, 200, true, "Password reset successful");
         }
-      } else {
-        sendErrorResponse(res, 404, true, "Token not found");
-      }
+      } else throw "Token not found";
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Token not found");
+      sendErrorResponse(res, 500, false, "Token not found",error);
     }
   };
 
@@ -342,9 +326,8 @@ export class AuthController {
     try {
       const token = req.headers.authorization?.split(" ")[1];
 
-      if (!token) {
-        sendErrorResponse(res, 404, false, `No token provided`);
-      } else {
+      if (!token) throw`No token provided`
+       else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
           role: string;
@@ -353,13 +336,11 @@ export class AuthController {
           _id: decoded.id,
         }).exec()) as User;
 
-        if (!user) {
-          sendErrorResponse(res, 404, false, `User not found`);
-        }
+        if (!user) throw `User not found`
         sendSuccessResponse(res, 200, true, "user", user);
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, ` ${error}`);
+      sendErrorResponse(res, 500, false, `Internal server error`,error);
     }
   };
 
@@ -368,9 +349,8 @@ export class AuthController {
       const user_id = req.params.userid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
-      if (!cloudinaryUrl) {
-        sendErrorResponse(res, 500, false, "Internal Server Error");
-      } else {
+      if (!cloudinaryUrl) throw "Internal Server Error"
+       else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
           { user_image: cloudinaryUrl },
@@ -379,12 +359,10 @@ export class AuthController {
 
         if (user) {
           sendSuccessResponse(res, 200, true, "image uploaded", user);
-        } else {
-          sendErrorResponse(res, 404, false, "user not found");
-        }
+        } else throw "user not found"
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, "error in the catch",error);
+      sendErrorResponse(res, 500, false, "Internal server error",error);
     }
   };
 
@@ -401,7 +379,7 @@ export class AuthController {
 
       sendSuccessResponse(res, 200, true, "updated loc", updateloc);
     } catch (error) {
-      sendErrorResponse(res, 500, false, "error in the catch",error);
+      sendErrorResponse(res, 500, false, "Internal server error",error);
 
     }
   };
@@ -417,7 +395,7 @@ export class AuthController {
 
       }
     }catch(error){
-      sendErrorResponse(res, 500, false, "error in the catch",error);
+      sendErrorResponse(res, 500, false, "Internal server error",error);
 
     }
   }

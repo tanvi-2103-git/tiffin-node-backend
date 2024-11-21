@@ -23,7 +23,7 @@ export class CartController {
       ).exec()) as TiffinItem;
 
       if (tiffin.isActive == false || !tiffin) {
-        sendSuccessResponse(res, 404, false, "Tiffin item not found");
+        sendSuccessResponse(res, 200, true, "Tiffin item not found");
       } else {
         if(quantity>tiffin.tiffin_available_quantity) throw `only ${tiffin.tiffin_available_quantity} tiffins are available`;
         const retailerId = tiffin.retailer_id;
@@ -98,7 +98,7 @@ export class CartController {
         tiffinId
       ).exec()) as TiffinItem;
       if (tiffin.isActive == false || !tiffin) {
-        sendSuccessResponse(res, 404, false, "Tiffin item not found");
+        sendSuccessResponse(res, 200, true, "Tiffin item not found");
       }
 
       const retailerId = tiffin.retailer_id;

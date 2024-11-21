@@ -230,10 +230,12 @@ export class EmployeeController {
         const limit = parseInt(req.query.limit as string) || 10;
 
         if (page < 1 || limit < 1) {
-          res.status(400).json({
-            statuscode: 400,
-            message: "Page and limit must be positive integers.",
-          });
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
         } else {
           const Retailers = await UserModel.find({
             role_id: RETAILER_ID, // retailer role ID
@@ -739,9 +741,8 @@ export class EmployeeController {
               totalItems: totalItems,
             });
           else
-            res
-              .status(404)
-              .json({ statuscode: 404, message: "orders not found" });
+          sendSuccessResponse(res, 200, true, "orders not found");
+          
         }
       }
     } catch (error) {

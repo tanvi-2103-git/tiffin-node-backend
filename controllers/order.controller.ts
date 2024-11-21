@@ -52,9 +52,7 @@ export class OrderController {
             "Please add cart or add items to cart"
           );
         }
-      } else {
-        sendErrorResponse(res, 404, false, "Add valid payment mode");
-      }
+      } else throw "Add valid payment mode"
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
@@ -87,9 +85,7 @@ export class OrderController {
             sendSuccessResponse(res, 200, true, "Payment done");
           }
         }
-      } else {
-        sendErrorResponse(res, 404, false, "Order not found");
-      }
+      } else throw "Order not found"
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }

@@ -33,9 +33,8 @@ export class OrganizationController {
       const { query } = req.query; // Accept a generic query parameter
 
 
-      if (!query) {
-        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
-      } else {
+      if (!query) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
         const searchFields = ["org_name", "org_location.loc"]; // Customize as needed
 
         let organizations: Organization[] = [];
@@ -118,9 +117,8 @@ export class OrganizationController {
     const { id } = req.params;
     try {
       const organization = await OrganizationModel.findById(id);
-      if (organization?.isActive == false || !organization) {
-        sendErrorResponse(res, 404, false, "Organization not found");
-      } else {
+      if (organization?.isActive == false || !organization) throw "Organization not found"
+       else {
         res.status(200).json({ data: organization, statuscode: 200 });
       }
     } catch (error) {
@@ -147,9 +145,8 @@ export class OrganizationController {
         },
         { $set: { isActive: false } }
       );
-      if (!deletedOrg) {
-        sendErrorResponse(res, 404, false, "Organization not found");
-      }
+      if (!deletedOrg) throw "Organization not found"
+
       sendSuccessResponse(res, 200, true, "Organization deleted successfully");
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error deleting organization");
@@ -171,23 +168,15 @@ export class OrganizationController {
         const result = await OrganizationModel.updateOne({ _id }, organization);
 
         // Check if the update was successful
-        if (result.modifiedCount === 0) {
-          sendErrorResponse(
-            res,
-            404,
-            false,
-            "Organization not found or no changes made"
-          );
-        }
+        if (result.modifiedCount === 0) throw  "Organization not found or no changes made"
+        
         sendSuccessResponse(
           res,
           200,
           true,
           "Organization updated successfully"
         );
-      } else {
-        sendErrorResponse(res, 404, false, "Organization not found ");
-      }
+      } else throw "Organization not found "
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error updating organization");
     }
@@ -219,9 +208,8 @@ export class OrganizationController {
       const org_id = req.params.orgid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
-      if (!cloudinaryUrl) {
-        sendErrorResponse(res, 500, false, "Internal Server Error");
-      } else {
+      if (!cloudinaryUrl) throw "Internal Server Error"
+       else {
         const org = await OrganizationModel.findByIdAndUpdate(
           org_id,
           { org_image_url: cloudinaryUrl },
@@ -230,9 +218,7 @@ export class OrganizationController {
 
         if (org) {
           sendSuccessResponse(res, 200, true, "image uploaded", org);
-        } else {
-          sendErrorResponse(res, 404, false, "org not found");
-        }
+        } else throw "org not found"
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error uploading org image");
