@@ -29,9 +29,7 @@ export class RetailerController {
           _id: decoded.id,
         }).exec()) as User;
 
-        if (!user) {
-          sendErrorResponse(res, 404, false, "User not found");
-        }
+        if (!user) throw "User not found"
 
         const data = await UserModel.updateOne(
           { _id: decoded.id },
@@ -118,9 +116,7 @@ export class RetailerController {
               totalItems: totalItems,
             });
           else
-            res
-              .status(404)
-              .json({ statuscode: 404, message: "orders not found" });
+            throw "orders not found" ;
         }
       }
     } catch (error) {
@@ -135,9 +131,8 @@ export class RetailerController {
       const user = await getUserFromToken(req);
       //  console.log(user);
       const { query } = req.query;
-      if (!query && !user) {
-        sendErrorResponse(res, 400, false, "Query parameter is required ");
-      } else {
+      if (!query && !user) throw "Query parameter is required "
+       else {
         const searchFields = [
           "cart.retailer_id",
           "cart.customer_id",
@@ -230,11 +225,14 @@ export class RetailerController {
 
         const customer = await UserModel.findById(customer_id).exec();
         const customer_name = customer?.username;
-
+        const customer_contact = customer?.contact_number;
+        const customer_email = customer?.email;
         updatedOrder = (order as Document).toObject();
 
         updatedOrder.cart.retailer_name = retailer_name;
         updatedOrder.cart.customer_name = customer_name;
+        updatedOrder.cart.customer_contact = customer_contact;
+        updatedOrder.cart.customer_email = customer_email;
         updatedOrder.cart.items = tiffindata;
 
         return updatedOrder;
@@ -247,14 +245,9 @@ export class RetailerController {
   public getWeeklyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          false,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
+       
+       else {
         const status = req.query.status;
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
@@ -339,9 +332,7 @@ export class RetailerController {
             };
           });
           sendSuccessResponse(res, 200, true, " ", data);
-        } else {
-          sendErrorResponse(res, 404, false, "orders not found");
-        }
+        } else throw "orders not found"
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -351,14 +342,8 @@ export class RetailerController {
   public getMonthlylyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          false,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
+       else {
         const status = req.query.status;        
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
@@ -439,26 +424,18 @@ export class RetailerController {
             };
           });
           res.status(200).json({ statuscode: 200, data: data });
-        } else {
-          sendErrorResponse(res, 404, false, "orders not found");
-        }
+        } else throw "orders not found"
       }
     } catch (error) {
-      sendErrorResponse(res, 404, false, `internal server error ${error}`);
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
   public getMonthlyWeeklyOrders = async (req: Request, res: Response) => {
     try{
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) {
-        sendErrorResponse(
-          res,
-          401,
-          false,
-          "Unauthorized or invalid user details."
-        );
-      } else {
+      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
+      else {
         const status = req.query.status;        
         const year = parseInt(req.query.year as string);
         const filter = req.query.filter as string;
@@ -530,13 +507,12 @@ export class RetailerController {
           
           sendSuccessResponse(res, 200, true, `${filter}ly orders`,data);
 
-        } else {
-          sendErrorResponse(res, 404, false, "orders not found");
-        }
+        } else throw "orders not found"
+        
 
       }
     }catch(error){
-      sendErrorResponse(res, 404, false, `internal server error`,error);
+      sendErrorResponse(res, 500, false, `internal server error`,error);
 
     }
   }
