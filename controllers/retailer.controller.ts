@@ -17,7 +17,7 @@ export class RetailerController {
   public addRequest = async (req: Request, res: Response) => {
     try {
       const organization_id = req.params.organization_id;
-
+      const orgloc = req.query.org_location;
       const token = req.headers.authorization?.split(" ")[1];
       if (token) {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
@@ -38,6 +38,7 @@ export class RetailerController {
               "role_specific_details.approval": {
                 approval_status: "pending",
                 organization_id: organization_id,
+                org_loc:orgloc
               },
             },
           }
