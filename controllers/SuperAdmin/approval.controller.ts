@@ -40,7 +40,7 @@ export class ApprovalController {
         }
 
         if (users.length === 0) {
-          sendSuccessResponse(res,200,true,"No admin found matching the search criteria")
+          sendSuccessResponse(res,200,true,"No admin found matching the search criteria",users)
         } else {
           const result = await Promise.all(
             users.map(async (user) => {
@@ -255,7 +255,8 @@ export class ApprovalController {
 
           const totalItems = await UserModel.countDocuments({
             role_id: ADMIN_ID,
-            "role_specific_details.approval_status": status,
+            "role_specific_details.approval_status": status
+            ,isActive:true
           });
 
           const totalPages = Math.ceil(totalItems / limit);
@@ -279,7 +280,7 @@ export class ApprovalController {
             .status(400)
             .json({ message: "Page and limit must be positive integers" });
         } else {
-          admins = await UserModel.find({ role_id: ADMIN_ID })
+          admins = await UserModel.find({ role_id: ADMIN_ID ,isActive:true})
             .skip(skip)
             .limit(limit)
             .exec();

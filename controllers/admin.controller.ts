@@ -352,7 +352,7 @@ export class AdminController {
 
           const totalPages = Math.ceil(totalItems / limit);
 
-          sendSuccessResponse(res, 200, true, "All rejected Retailers", getDefaultResultOrder
+          sendSuccessResponse(res, 200, true, "All rejected Retailers", result
             ,{
               currentPage: page,
               totalPages: totalPages,
@@ -409,7 +409,7 @@ export class AdminController {
           }
         }
         if (retailers.length === 0) {
-          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria")
+          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria",retailers)
         } else {
           sendSuccessResponse(res,200,true,"data",retailers)
         }
