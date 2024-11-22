@@ -372,18 +372,34 @@ export class AdminController {
     res: Response
   ): Promise<void> => {
     try {
-      const { query, approval_status } = req.query;
+      const user = await getUserFromToken(req);
 
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+      const { query, approval_status } = req.query;
+      
       if (!query) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
        else {
         const searchFields = ["username", "email", "contact_number", "address"];
 
         let retailers: User[] = [];
-
+        const organization_id=user.role_specific_details.organization_id;
         for (let field of searchFields) {
           retailers = await UserModel.find({
-            //role_id: "6723475f74b32cfe39e5d0a2", //retailer id
+            role_id: RETAILER_ID, //retailer id
             "role_specific_details.approval.approval_status": approval_status,
+            "role_specific_details.approval.organization_id":organization_id,
             //  [field] : query,
             [field]: { $regex: query, $options: "i" },
           }).exec();
@@ -398,6 +414,7 @@ export class AdminController {
           sendSuccessResponse(res,200,true,"data",retailers)
         }
       }
+    }
     } catch (error) {
       
       sendErrorResponse(
