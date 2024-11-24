@@ -52,7 +52,7 @@ export class OrganizationController {
         }
 
         if (organizations.length === 0) {
-          sendSuccessResponse(res,200,true,"No organizations found matching the search criteria")
+          sendSuccessResponse(res,200,true,"No organizations found matching the search criteria",organizations)
         } else {
           sendSuccessResponse(res,200,true,"data",organizations)
         }
