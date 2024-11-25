@@ -7,6 +7,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../../utils/responsesUtils";
+import { log } from "console";
 
 export class CartController {
   public addTiffinToCart = async (req: Request, res: Response) => {
@@ -31,6 +32,10 @@ export class CartController {
         const tiffin_name = tiffin.tiffin_name;
         const tiffin_image_url = tiffin.tiffin_image_url;
         const price = tiffin.tiffin_price;
+        console.log("retailerId", retailerId);
+        console.log("tiffin_name", tiffin_name);
+        console.log("tiffin_image_url", tiffin_image_url);
+        console.log("price", price);
 
         let customerCart = await CartModel.findOne({ customer_id });
 
@@ -45,12 +50,17 @@ export class CartController {
             "You can add tiffin from a single retailer only"
           );
         } else {
+          console.log("inside else tiffin_name", tiffin_name);
+          console.log("inside else tiffin_name", tiffin_image_url);
           let cart = await CartModel.findOne({
             retailer_id: retailerId,
             customer_id,
           });
 
           if (!cart) {
+            console.log("inside log tiffin_name", tiffin_name);
+            console.log("inside log tiffin_name", tiffin_image_url);
+
             cart = new CartModel({
               retailer_id: retailerId,
               customer_id,
@@ -83,6 +93,8 @@ export class CartController {
                 tiffin_id: new mongoose.Types.ObjectId(tiffinId),
                 quantity,
                 price,
+                tiffin_name,
+                tiffin_image_url,
               });
             }
 
