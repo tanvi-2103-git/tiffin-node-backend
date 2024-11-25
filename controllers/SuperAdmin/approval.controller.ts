@@ -19,8 +19,9 @@ export class ApprovalController {
     try {
       const { query, approval_status } = req.query; // Accept a generic query parameter
 
-      if (!query && !approval_status) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
-       else {
+      if (!query && !approval_status)
+        throw "Query parameter is required and must be a string Or Unauthorized or invalid user details.";
+      else {
         const searchFields = ["username", "contact_number", "email", "address"];
 
         let users: User[] = [];
@@ -30,7 +31,7 @@ export class ApprovalController {
             role_id: ADMIN_ID,
             isActive: true,
             "role_specific_details.approval_status": approval_status,
-           [field]: { $regex: query, $options: "i" },  // Using regex for case-insensitive search
+            [field]: { $regex: query, $options: "i" }, // Using regex for case-insensitive search
             // [field]: query,
           }).exec();
 
@@ -40,7 +41,13 @@ export class ApprovalController {
         }
 
         if (users.length === 0) {
-          sendSuccessResponse(res,200,true,"No admin found matching the search criteria",users)
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No admin found matching the search criteria",
+            users
+          );
         } else {
           const result = await Promise.all(
             users.map(async (user) => {
@@ -62,7 +69,7 @@ export class ApprovalController {
               };
             })
           );
-          sendSuccessResponse(res,200,true,"data",result)
+          sendSuccessResponse(res, 200, true, "data", result);
         }
       }
     } catch (error) {
@@ -248,6 +255,7 @@ export class ApprovalController {
           const approvalRequests = await UserModel.find({
             role_id: ADMIN_ID, //admin
             "role_specific_details.approval_status": status,
+            isActive: true
           })
             .skip(skip)
             .limit(limit)
@@ -255,8 +263,8 @@ export class ApprovalController {
 
           const totalItems = await UserModel.countDocuments({
             role_id: ADMIN_ID,
-            "role_specific_details.approval_status": status
-            ,isActive:true
+            "role_specific_details.approval_status": status,
+            isActive: true,
           });
 
           const totalPages = Math.ceil(totalItems / limit);
@@ -280,12 +288,13 @@ export class ApprovalController {
             .status(400)
             .json({ message: "Page and limit must be positive integers" });
         } else {
-          admins = await UserModel.find({ role_id: ADMIN_ID ,isActive:true})
+          admins = await UserModel.find({ role_id: ADMIN_ID, isActive: true })
             .skip(skip)
             .limit(limit)
             .exec();
 
           const totalItems = await UserModel.countDocuments({
+            isActive: true,
             role_id: ADMIN_ID,
           });
 
@@ -312,7 +321,8 @@ export class ApprovalController {
     const { id } = req.params;
     try {
       const approvalRequest = await UserModel.findById(id);
-      if (approvalRequest?.isActive == false || !approvalRequest) throw "Approval Request not found"
+      if (approvalRequest?.isActive == false || !approvalRequest)
+        throw "Approval Request not found";
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error Approval Request", error);
     }
@@ -325,8 +335,9 @@ export class ApprovalController {
     try {
       const user = await getUserFromToken(req);
 
-      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
-       else {
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
         const admin_id = req.params.admin_id;
         const result = await UserModel.updateOne(
           { _id: admin_id, isActive: true },
@@ -349,9 +360,11 @@ export class ApprovalController {
             organization.org_location[itemIndex].admin_id =
               new mongoose.Types.ObjectId(admin_id);
             await organization.save();
-          } else throw  "Location of admin has no match on respective organization"
-            
-          if (result.modifiedCount === 0) throw "Approval request not found or already updated."
+          } else
+            throw "Location of admin has no match on respective organization";
+
+          if (result.modifiedCount === 0)
+            throw "Approval request not found or already updated.";
           else {
             sendSuccessResponse(
               res,
@@ -381,8 +394,9 @@ export class ApprovalController {
     try {
       const user = await getUserFromToken(req);
 
-      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
-       else {
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
         const admin_id = req.params.admin_id;
         const { rejection_reason } = req.body;
 
@@ -396,8 +410,9 @@ export class ApprovalController {
           }
         );
 
-        if (result.modifiedCount === 0) throw "Approval request not found or already updated."
-           else {
+        if (result.modifiedCount === 0)
+          throw "Approval request not found or already updated.";
+        else {
           sendSuccessResponse(
             res,
             200,
@@ -425,7 +440,6 @@ export class ApprovalController {
         const org_id = admin.role_specific_details.organization_id;
 
         const org_name = await OrganizationModel.findById(org_id).exec();
-       
 
         const newadmin = {
           _id: admin._id,
@@ -440,7 +454,7 @@ export class ApprovalController {
             approval_status: admin.role_specific_details.approval_status,
           },
         };
-       
+
         return newadmin;
       })
     );
@@ -492,7 +506,6 @@ export class ApprovalController {
           ]);
 
           console.log(requests);
-          
         } else {
           requests = await UserModel.aggregate([
             {
@@ -649,14 +662,15 @@ export class ApprovalController {
   };
 
   public getWeeklyMonthlyRequest = async (req: Request, res: Response) => {
-    try{
+    try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
-       else {
-        const status = req.query.status;        
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
+        const status = req.query.status;
         const year = parseInt(req.query.year as string);
         const filter = req.query.filter as string;
-        if(!filter) throw "Add Monthly or Weekly filter"
+        if (!filter) throw "Add Monthly or Weekly filter";
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
         const requests = await UserModel.aggregate([
@@ -667,16 +681,21 @@ export class ApprovalController {
                 $gte: startOfYear,
                 $lte: endOfYear,
               },
-              ...(status && { "role_specific_details.approval_status": status }), 
+              ...(status && {
+                "role_specific_details.approval_status": status,
+              }),
             },
           },
           {
             $group: {
               _id: {
                 year: { $year: "$created_at" },
-                ...(filter.toLowerCase() === "month" && { month: { $month: "$created_at" } }),
-                ...(filter.toLowerCase() === "week" && { week: { $week: "$created_at" } }),
-                
+                ...(filter.toLowerCase() === "month" && {
+                  month: { $month: "$created_at" },
+                }),
+                ...(filter.toLowerCase() === "week" && {
+                  week: { $week: "$created_at" },
+                }),
               },
               count: { $sum: 1 },
             },
@@ -690,8 +709,7 @@ export class ApprovalController {
           },
         ]);
         if (requests) {
-         const  data = requests.map((item) => {
-          
+          const data = requests.map((item) => {
             const startOfmonth = moment()
               .month(item._id.month - 1)
               .format("YYYY-MM");
@@ -705,29 +723,26 @@ export class ApprovalController {
               .isoWeek(item._id.week + 1)
               .endOf("isoWeek")
               .format("MMM Do YY");
-  
-            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
-           
-              if(filter.toLowerCase() === "week"){
-             return  {startOfWeek: startOfWeek,
-              endOfWeek: endOfWeek,
-              requestcount: item.count,}
-            }
-              else{
-              return {month: startOfmonth,
-                requestcount: item.count,}
-            }
-            }
-          );
-          
-          sendSuccessResponse(res, 200, true, `${filter}ly request`,data);
 
+            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+
+            if (filter.toLowerCase() === "week") {
+              return {
+                startOfWeek: startOfWeek,
+                endOfWeek: endOfWeek,
+                requestcount: item.count,
+              };
+            } else {
+              return { month: startOfmonth, requestcount: item.count };
+            }
+          });
+
+          sendSuccessResponse(res, 200, true, `${filter}ly request`, data);
         } else {
           sendSuccessResponse(res, 200, true, "request not found");
         }
-
       }
-    }catch(error){
+    } catch (error) {
       sendErrorResponse(
         res,
         500,
@@ -736,6 +751,5 @@ export class ApprovalController {
         error
       );
     }
-  }
-
+  };
 }
