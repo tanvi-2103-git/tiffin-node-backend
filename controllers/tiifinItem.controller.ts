@@ -115,7 +115,7 @@ export class TiffinItemController {
           }
         }
         if (tiffins.length === 0) {
-          sendSuccessResponse(res,200,true,"No tiffin found matching the search criteria")
+          sendSuccessResponse(res,200,true,"No tiffin found matching the search criteria",tiffins)
         } else {
           sendSuccessResponse(res,200,true,"data",tiffins)
         }
