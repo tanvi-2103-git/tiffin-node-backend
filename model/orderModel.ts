@@ -10,8 +10,8 @@ export interface Order extends Document {
   payment_date: Date;
 
   delivery_status: string;
-  order_created_at: Date;
-  order_updated_at: Date;
+  created_at: Date;
+  updated_at: Date;
   isActive: Boolean;
   //add more if kuch yaad aya
 }

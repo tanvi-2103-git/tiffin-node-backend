@@ -84,7 +84,7 @@ export class RetailerController {
             orders = await OrderModel.find({
               "cart.retailer_id": user._id,
               delivery_status: status,
-            })
+            }).sort({ created_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -98,7 +98,7 @@ export class RetailerController {
 
             newdata = await this.addUserName(orders);
           } else {
-            orders = await OrderModel.find({ "cart.retailer_id": user._id })
+            orders = await OrderModel.find({ "cart.retailer_id": user._id }).sort({ created_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();

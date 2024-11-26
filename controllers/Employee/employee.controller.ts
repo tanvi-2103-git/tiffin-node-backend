@@ -536,7 +536,7 @@ export class EmployeeController {
           const orders = await OrderModel.find({
             "cart.customer_id": user._id,
             delivery_status: "delivered",
-          })
+          }).sort({ created_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
