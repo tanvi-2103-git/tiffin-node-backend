@@ -50,6 +50,7 @@ export class CartController {
             "You can add tiffin from a single retailer only"
           );
         } else {
+
           console.log("inside else tiffin_name", tiffin_name);
           console.log("inside else tiffin_name", tiffin_image_url);
           let cart = await CartModel.findOne({
@@ -112,6 +113,74 @@ export class CartController {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
+
+  updateQuantity = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+      const customer_id = user?._id;
+      const tiffinId = req.params.tiffinid;
+      const quantity = req.body.quantity;
+      const status = req.body.status;
+      let cart = await CartModel.findOne({customer_id:customer_id});
+      const tiffin = await TiffinItemModel.findById(tiffinId)
+      
+      if(cart && tiffin ){
+        const price= tiffin?.tiffin_price;
+      const tiffin_name = tiffin?.tiffin_name;
+      const tiffin_image_url = tiffin?.tiffin_image_url;
+        const itemIndex = cart.items.findIndex(
+          (item) =>
+            JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
+        );
+        console.log("itemIndex",itemIndex);
+        
+        if (itemIndex >=0 ) {
+          console.log("status",status);
+          console.log(cart.items[itemIndex].quantity);
+
+          if(status=='add'){
+          cart.items[itemIndex].quantity += quantity;
+          console.log(cart.items[itemIndex].quantity);
+          
+        }
+          else if(status.toLowerCase()=='dec'){
+            cart.items[itemIndex].quantity -= quantity;
+            console.log(cart.items[itemIndex].quantity);
+            if(cart.items[itemIndex].quantity==0) {
+              cart.items.splice(itemIndex, 1);
+            }
+          }
+          if (
+            cart.items[itemIndex].quantity >
+            tiffin.tiffin_available_quantity
+          )
+            throw `only ${tiffin.tiffin_available_quantity} tiffins are available`;
+        } else {
+           
+          cart.items.push({
+            tiffin_id: new mongoose.Types.ObjectId(tiffinId),
+            quantity,
+            price,
+            tiffin_name,
+            tiffin_image_url,
+          });
+        }
+
+        cart.total_amount = cart.items.reduce(
+          (sum, item) => sum + item.quantity * item.price,
+          0
+        );
+        // console.log(cart);
+        
+        await cart.save();
+          sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
+
+      }
+    }catch(error){
+      sendErrorResponse(res, 500, false, "Internal server error", error);
+
+    }
+  }
 
   public removeTiffinFromCart = async (req: Request, res: Response) => {
     try {
