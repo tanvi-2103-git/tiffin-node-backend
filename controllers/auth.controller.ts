@@ -214,7 +214,7 @@ export class AuthController {
 
         user.refreshToken = newRefreshToken;
         await user.save();
-        sendSuccessResponse(
+        sendSuccessToken(
           res,
           200,
           true,
