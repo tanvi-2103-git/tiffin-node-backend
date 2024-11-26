@@ -49,8 +49,9 @@ export class EmployeeController {
               $elemMatch: {
                 organization_id: organizationId,
                 istrendy: true,
+                
               },
-            },
+            },isActive:true
           })
             .skip(skip)
             .limit(limit)
@@ -124,8 +125,9 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
+                
               },
-            },
+            },isActive:true
           })
             .skip(skip)
             .limit(limit)
@@ -177,6 +179,7 @@ export class EmployeeController {
               $elemMatch: {
                 organization_id: organizationId,
                 approval_status: approval_status || { $exists: true },
+                
               },
             },
             isActive: true,
@@ -242,8 +245,9 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
+                
               },
-            },
+            },isActive:true
           }).exec();
 
           if (Retailers.length === 0) {
@@ -260,6 +264,7 @@ export class EmployeeController {
 
             const Tiffins = await TiffinItemModel.find({
               retailer_id: { $in: retailerIds },
+              isActive:true
             })
               .skip(skip)
               .limit(limit)
@@ -324,8 +329,10 @@ export class EmployeeController {
         "role_specific_details.approval": {
           $elemMatch: {
             organization_id: organizationId,
+            
           },
-        },
+          
+        },isActive:true
       }).exec();
   
       if (retailers.length === 0) {
@@ -340,6 +347,7 @@ export class EmployeeController {
   
       const tiffins = (await TiffinItemModel.find({
         retailer_id: { $in: retailerIds },
+        isActive:true
       })
         .skip(skip)
         .limit(limit)
@@ -421,6 +429,7 @@ export class EmployeeController {
         } else {
           const Tiffins = await TiffinItemModel.find({
             retailer_id: retailerId,
+            isActive:true
           })
             .skip(skip)
             .limit(limit)
@@ -453,8 +462,10 @@ export class EmployeeController {
   public getTiffinofOrgById = async (req: Request, res: Response) => {
     try {
       const tifinId = req.params.tifinid;
+      console.log(tifinId);
+      
       const user = await getUserFromToken(req);
-
+     
       if (
         user?.isActive == false ||
         !user ||
@@ -469,7 +480,8 @@ export class EmployeeController {
         );
       } else {
         const organizationId = user.role_specific_details.organization_id;
-
+        console.log("organizationId",organizationId);
+        
         const Retailers = await UserModel.find({
           role_id: RETAILER_ID, // retailer role ID
           "role_specific_details.approval": {
@@ -477,6 +489,7 @@ export class EmployeeController {
               organization_id: organizationId,
             },
           },
+          // isActive:true
         }).exec();
 
         if (Retailers.length === 0) {
@@ -488,10 +501,12 @@ export class EmployeeController {
           );
         } else {
           const retailerIds = Retailers.map((retailer) => retailer._id);
-
+          console.log(retailerIds);
+          
           const Tiffin = await TiffinItemModel.find({
-            id: tifinId,
+            _id: tifinId,
             retailer_id: { $in: retailerIds },
+            isActive:true
           }).exec();
 
 

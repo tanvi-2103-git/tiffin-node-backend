@@ -33,7 +33,7 @@ employeeRoutes.get("/getdeliveredorders",validateGetRequest({isPagination:true,i
 employeeRoutes.get("/getpendingorders",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), employeeController.getPendingOrders);
 employeeRoutes.get("/cancelorder/:orderid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'orderid'}),validateToken,RoleBaseValidation("cancel_order"), employeeController.cancelOrder);
 employeeRoutes.get("/searchretailersoforg",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,employeeController.searchRetailersOfOrg);
-
+employeeRoutes.get("/getallretailerswithtiffin",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_tiffin_of_organization"), employeeController.getAllRetailersWithTiffin);
 
 
 
