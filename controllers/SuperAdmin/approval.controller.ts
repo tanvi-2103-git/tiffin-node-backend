@@ -316,15 +316,31 @@ export class ApprovalController {
    
   public getAdminRequestCount = async (req: Request, res: Response) => {
     try{
-      const status = req.query.status;
-      const totalItems = await UserModel.countDocuments({
-        role_id: ADMIN_ID,
-        isActive: true,
-        ...(status && { "role_specific_details.approval_status": status }),
-
-      });
+  const totalItems = await UserModel.aggregate([
+        {
+          $match: {
+            role_id: new ObjectId(ADMIN_ID),
+            isActive: true
+          }
+        },
+        {
+          $group: {
+            _id: "$role_specific_details.approval_status",
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            approval_status: "$_id",
+            count: 1
+          }
+        }
+      ]);
+      
       if(totalItems)
       sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
+      else throw "error in fetching count"
     }catch(error){
       sendErrorResponse(res, 500, false, "error", error);
 
