@@ -17,6 +17,7 @@ router.get('/getallOrganization', validateGetRequest({isPagination: true,isIdReq
 router.get('/getOrganization/:id',validateGetRequest({ isPagination:false,isIdRequired:true,idType: 'id'}),validateToken,RoleBaseValidation('get_organization'), organizationRoutes.getOrganizationById);
 router.get('/searchOrganizations',validateGetRequest({isPagination:false,isIdRequired:false}),organizationRoutes.searchOrganizations);
 router.put('/updateOrganization/:id',validateOrganization,validateToken,RoleBaseValidation('edit_organization'), organizationRoutes.updateOrganization);
+router.get('/getallOrganizationname',organizationRoutes.getallOrganizationName);
 
 router.delete('/deleteOrganization/:id',validateToken,RoleBaseValidation('delete_organization'), organizationRoutes.deleteOrganization);
 
