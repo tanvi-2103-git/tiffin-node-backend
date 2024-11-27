@@ -313,6 +313,23 @@ export class ApprovalController {
       sendErrorResponse(res, 500, false, "error", error);
     }
   };
+   
+  public getAdminRequestCount = async (req: Request, res: Response) => {
+    try{
+      const status = req.query.status;
+      const totalItems = await UserModel.countDocuments({
+        role_id: ADMIN_ID,
+        isActive: true,
+        ...(status && { "role_specific_details.approval_status": status }),
+
+      });
+      if(totalItems)
+      sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
+    }catch(error){
+      sendErrorResponse(res, 500, false, "error", error);
+
+    }
+  }
 
   public getApprovalRequestById = async (
     req: Request,
