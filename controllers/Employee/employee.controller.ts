@@ -30,6 +30,8 @@ export class EmployeeController {
         );
       } else {
         const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
 
@@ -48,6 +50,7 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
+                org_loc:org_location,
                 istrendy: true,
                 
               },
@@ -106,6 +109,7 @@ export class EmployeeController {
         );
       } else {
         const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
 
         let page = parseInt(req.query.page as string) || 1;
         let limit = parseInt(req.query.limit as string) || 10;
@@ -125,7 +129,8 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                
+                org_loc:org_location
+
               },
             },isActive:true
           })
@@ -169,6 +174,8 @@ export class EmployeeController {
    
       } else {
         const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
         const searchFields = ["username", "email", "contact_number", "address"];
 
         let retailers: User[] = [];
@@ -178,6 +185,7 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
+                org_loc:org_location,
                 approval_status: approval_status || { $exists: true },
                 
               },
@@ -229,6 +237,7 @@ export class EmployeeController {
         );
       } else {
         const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
 
@@ -245,7 +254,7 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                
+                org_loc:org_location
               },
             },isActive:true
           }).exec();
@@ -413,12 +422,14 @@ export class EmployeeController {
       }
   
       const organizationId = user.role_specific_details.organization_id;
-      
+      const org_location = user.role_specific_details.org_location;
+
       const retailers = await UserModel.find({
         role_id: RETAILER_ID, 
         "role_specific_details.approval": {
           $elemMatch: {
             organization_id: organizationId,
+            org_loc:org_location
           },
         },
       }).exec();
@@ -563,6 +574,8 @@ export class EmployeeController {
         );
       } else {
         const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
         console.log("organizationId",organizationId);
         
         const Retailers = await UserModel.find({
@@ -570,6 +583,7 @@ export class EmployeeController {
           "role_specific_details.approval": {
             $elemMatch: {
               organization_id: organizationId,
+              org_loc:org_location
             },
           },
           // isActive:true
