@@ -214,7 +214,7 @@ export class EmployeeController {
   public getAllTiffinofOrg = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-
+      const type = req.query.type as string;
       if (
         user?.isActive == false ||
         !user ||
@@ -264,14 +264,17 @@ export class EmployeeController {
 
             const Tiffins = await TiffinItemModel.find({
               retailer_id: { $in: retailerIds },
-              isActive:true
-            })
+              isActive:true,
+              ...(type && {tiffin_type:type.toLowerCase()})
+            }).sort({ tiffin_rating: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
 
             const totalTiffins = await TiffinItemModel.countDocuments({
               retailer_id: { $in: retailerIds },
+              isActive:true,
+              ...(type && {tiffin_type:type.toLowerCase()})
             });
 
             const totalPages = Math.ceil(totalTiffins / limit);

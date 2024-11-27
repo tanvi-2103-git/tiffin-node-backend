@@ -6,8 +6,8 @@ export interface TiffinItem extends Document {
   tiffin_available_quantity: number;
   tiffin_description: string;
   retailer_id: mongoose.Types.ObjectId;
-  tiffin_type: ["veg", "non-veg"];
-  // tiffin_category: ['chinese', '']
+  tiffin_type:string
+    // tiffin_category: ['chinese', '']
   tiffin_price: number;
   tiffin_rating: number;
   tiffin_isavailable: boolean;
