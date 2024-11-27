@@ -108,6 +108,21 @@ export class OrganizationController {
     }
   };
 
+  public getallOrganizationName = async (req: Request, res: Response) => {
+    try{
+      const organizations = await OrganizationModel.find({ isActive: true },
+        { org_name: 1,'org_location.loc':1})
+
+        if(!organizations) throw "oranization not found"
+        else{
+          sendSuccessResponse(res,200,true,"organizations",organizations);
+        }
+      
+
+    }catch(error){
+
+    }
+  }
   //getting a specific org
   //as of now not required, but banake rakha hai (;
   public getOrganizationById = async (
