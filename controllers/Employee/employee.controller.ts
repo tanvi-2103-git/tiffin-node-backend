@@ -296,11 +296,109 @@ export class EmployeeController {
     }
   };
 
+  // public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
+  //   try {
+  //     const user = await getUserFromToken(req); // Assuming getUserFromToken retrieves the user from token
+  
+  //     // Step 1: Check for valid user & organization
+  //     if (
+  //       !user ||
+  //       user.isActive === false ||
+  //       !user.role_specific_details ||
+  //       !user.role_specific_details.organization_id
+  //     ) {
+  //        sendSuccessResponse(res, 401, false, "Unauthorized or invalid user details.");
+  //        return;
+  //     }
+  
+  //     const organizationId = user.role_specific_details.organization_id;
+  //     const page = parseInt(req.query.page as string) || 1;
+  //     const limit = parseInt(req.query.limit as string) || 10;
+  
+  //     if (page < 1 || limit < 1) {
+  //        res.status(400).json({
+  //         statuscode: 400,
+  //         message: "Page and limit must be positive integers.",
+  //       });
+  //       return;
+  //     }
+  
+  //     // Step 2: Fetch retailers linked to the organization
+  //     const retailers = await UserModel.find({
+  //       role_id: RETAILER_ID, // Assuming you have a constant or string for retailer role
+  //       "role_specific_details.approval": {
+  //         $elemMatch: {
+  //           organization_id: organizationId,
+            
+  //         },
+          
+  //       },isActive:true
+  //     }).exec();
+  
+  //     if (retailers.length === 0) {
+  //        sendSuccessResponse(res, 200, true, "No retailers found for the given organization.",retailers);
+  //        return;
+  //     }
+  
+  //     const retailerIds = retailers.map((retailer) => retailer._id); // Extract retailer IDs
+  
+  //     // Step 3: Fetch tiffins with retailer details populated
+  //     const skip = (page - 1) * limit;
+  
+  //     const tiffins = (await TiffinItemModel.find({
+  //       retailer_id: { $in: retailerIds },
+  //       isActive:true
+  //     }).populate("retailer_id", "username")         // Populate retailer's name from the User model
+
+  //       .skip(skip)
+  //       .limit(limit)
+  //       .exec()) as TiffinItem[];
+  
+  //     const totalTiffins = await TiffinItemModel.countDocuments({
+  //       retailer_id: { $in: retailerIds },
+  //     });
+  
+  //     const totalPages = Math.ceil(totalTiffins / limit);
+  
+  //     const groupedTiffins = tiffins.reduce((group: { retailerName: string; tiffins: TiffinItem[] }[], tiffin: TiffinItem) => {
+  
+  //       const retailerName = (tiffin.retailer_id as unknown as User).username;
+  //       // Find the existing group for this retailer
+  //       let retailerGroup = group.find((g) => g.retailerName === retailerName);
+      
+  //       if (!retailerGroup) {
+  //         // If not found, create a new group
+  //         retailerGroup = { retailerName, tiffins: [] };
+  //         group.push(retailerGroup);
+  //       }
+      
+  //       // Add the current tiffin to the group's tiffins array
+  //       retailerGroup.tiffins.push(tiffin);
+      
+  //       return group;
+  //     }, []);
+      
+  //     // Step 5: Send the grouped tiffins response with pagination
+  //     sendSuccessResponse(
+  //       res,
+  //       200,
+  //       true,
+  //       "Tiffins grouped by retailer.",
+  //       groupedTiffins,
+  //       {
+  //         currentPage: page,
+  //         totalPages: totalPages,
+  //         totalItems: totalTiffins,
+  //       }
+  //     );
+  //     return;
+  //   } catch (error) {
+  //     sendErrorResponse(res, 500, false, "Internal server error", error);
+  //   }
+  // };
   public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
     try {
-      const user = await getUserFromToken(req); // Assuming getUserFromToken retrieves the user from token
-  
-      // Step 1: Check for valid user & organization
+      const user = await getUserFromToken(req); 
       if (
         !user ||
         user.isActive === false ||
@@ -312,90 +410,72 @@ export class EmployeeController {
       }
   
       const organizationId = user.role_specific_details.organization_id;
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-  
-      if (page < 1 || limit < 1) {
-         res.status(400).json({
-          statuscode: 400,
-          message: "Page and limit must be positive integers.",
-        });
-        return;
-      }
-  
-      // Step 2: Fetch retailers linked to the organization
+      
       const retailers = await UserModel.find({
-        role_id: RETAILER_ID, // Assuming you have a constant or string for retailer role
+        role_id: RETAILER_ID, 
         "role_specific_details.approval": {
           $elemMatch: {
             organization_id: organizationId,
-            
           },
-          
-        },isActive:true
+        },
       }).exec();
   
       if (retailers.length === 0) {
-         sendSuccessResponse(res, 200, true, "No retailers found for the given organization.",retailers);
+         sendSuccessResponse(res, 200, true, "No retailers found for the given organization.");
          return;
       }
   
-      const retailerIds = retailers.map((retailer) => retailer._id); // Extract retailer IDs
+      const retailerIds = retailers.map((retailer) => retailer._id); 
   
-      // Step 3: Fetch tiffins with retailer details populated
-      const skip = (page - 1) * limit;
   
       const tiffins = (await TiffinItemModel.find({
         retailer_id: { $in: retailerIds },
-        isActive:true
+        isActive: true
       })
-        .skip(skip)
-        .limit(limit)
-        .populate("retailer_id", "username") // Populate retailer's name from the User model
+        .populate("retailer_id", "username") 
         .exec()) as TiffinItem[];
   
       const totalTiffins = await TiffinItemModel.countDocuments({
         retailer_id: { $in: retailerIds },
+        isActive: true
       });
   
-      const totalPages = Math.ceil(totalTiffins / limit);
-  
+     
       const groupedTiffins = tiffins.reduce((group: { retailerName: string; tiffins: TiffinItem[] }[], tiffin: TiffinItem) => {
   
         const retailerName = (tiffin.retailer_id as unknown as User).username;
-        // Find the existing group for this retailer
+        
         let retailerGroup = group.find((g) => g.retailerName === retailerName);
       
         if (!retailerGroup) {
-          // If not found, create a new group
+         
           retailerGroup = { retailerName, tiffins: [] };
           group.push(retailerGroup);
         }
       
-        // Add the current tiffin to the group's tiffins array
+       
         retailerGroup.tiffins.push(tiffin);
       
         return group;
       }, []);
       
-      // Step 5: Send the grouped tiffins response with pagination
+     
       sendSuccessResponse(
         res,
         200,
         true,
         "Tiffins grouped by retailer.",
         groupedTiffins,
-        {
-          currentPage: page,
-          totalPages: totalPages,
-          totalItems: totalTiffins,
-        }
+      
       );
       return;
     } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
+  
+  
+  
   public getAllTiffinsByRetailer = async (req: Request, res: Response) => {
     try {
       const retailerId = req.params.retailerid;
