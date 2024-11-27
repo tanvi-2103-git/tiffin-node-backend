@@ -32,6 +32,7 @@ export class CartController {
         const tiffin_name = tiffin.tiffin_name;
         const tiffin_image_url = tiffin.tiffin_image_url;
         const price = tiffin.tiffin_price;
+        const tiffin_available_quantity = tiffin.tiffin_available_quantity;
         console.log("retailerId", retailerId);
         console.log("tiffin_name", tiffin_name);
         console.log("tiffin_image_url", tiffin_image_url);
@@ -71,6 +72,7 @@ export class CartController {
                   tiffin_image_url,
                   tiffin_name,
                   quantity,
+                  tiffin_available_quantity,
                   price,
                 },
               ],
@@ -120,6 +122,7 @@ export class CartController {
       const customer_id = user?._id;
       const tiffinId = req.params.tiffinid;
       const quantity = req.body.quantity;
+      if(!quantity) throw  "quantity please add quantity"
       const status = req.body.status;
       let cart = await CartModel.findOne({customer_id:customer_id});
       const tiffin = await TiffinItemModel.findById(tiffinId)
@@ -164,10 +167,10 @@ export class CartController {
           (sum, item) => sum + item.quantity * item.price,
           0
         );
-        // console.log(cart);
+        console.log(cart);
         
         await cart.save();
-          sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
+        sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
 
       }
     }catch(error){
@@ -187,7 +190,7 @@ export class CartController {
       ).exec()) as TiffinItem;
       if (tiffin.isActive == false || !tiffin) {
         sendSuccessResponse(res, 200, true, "Tiffin item not found");
-      }
+      }else{
 
       const retailerId = tiffin.retailer_id;
       let cart = await CartModel.findOne({
@@ -222,7 +225,7 @@ export class CartController {
           true,
           "Cart not found for this retailer and customer"
         );
-      }
+      }}
     } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
