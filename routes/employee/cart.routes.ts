@@ -19,5 +19,5 @@ cartRoutes.delete("/removecart/:cartid",validateGetRequest({isPagination:false,i
 
 cartRoutes.get("/getcart",validateToken,RoleBaseValidation("get_cart"), cartController.getCart);
 
-cartRoutes.put("/updatetiffinquantity/:tiffinid",validateCart,validateToken,RoleBaseValidation("add_to_cart"), cartController.updateQuantity);
+cartRoutes.put("/updatetiffinquantity/:tiffinid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'tiffinid'}),validateCart,validateToken,RoleBaseValidation("add_to_cart"), cartController.updateQuantity);
 
