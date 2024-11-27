@@ -132,24 +132,18 @@ export class CartController {
           (item) =>
             JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
         );
-        console.log("itemIndex",itemIndex);
         
         if (itemIndex >=0 ) {
-          console.log("status",status);
-          console.log(cart.items[itemIndex].quantity);
-
-          if(status=='add'){
-          cart.items[itemIndex].quantity += quantity;
-          console.log(cart.items[itemIndex].quantity);
           
-        }
-          else if(status.toLowerCase()=='dec'){
-            cart.items[itemIndex].quantity -= quantity;
-            console.log(cart.items[itemIndex].quantity);
+          
+          cart.items[itemIndex].quantity = quantity;
+          
+        
+          
             if(cart.items[itemIndex].quantity==0) {
               cart.items.splice(itemIndex, 1);
             }
-          }
+          
           if (
             cart.items[itemIndex].quantity >
             tiffin.tiffin_available_quantity
