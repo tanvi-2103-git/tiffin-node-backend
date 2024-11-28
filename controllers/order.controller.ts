@@ -52,7 +52,10 @@ export class OrderController {
             "Please add cart or add items to cart"
           );
         }
-      } else throw "Add valid payment mode"
+      } else  sendSuccessResponse(
+        res,
+        200,
+        true, "Add valid payment mode")
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
@@ -62,8 +65,11 @@ export class OrderController {
     try {
       const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
-      if(order?.delivery_status=='cancelled') throw 'order is already cancelled'
-      if (order) {
+      if(order?.delivery_status=='cancelled')  sendSuccessResponse(
+        res,
+        200,
+        true, 'order is already cancelled');
+     else{ if (order) {
         if (order.payment_mode == "CoD") {
           const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
             payment_status: "paid",
@@ -85,7 +91,10 @@ export class OrderController {
             sendSuccessResponse(res, 200, true, "Payment done");
           }
         }
-      } else throw "Order not found"
+      } else  sendSuccessResponse(
+        res,
+        200,
+        true, "Order not found")}
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
