@@ -127,7 +127,7 @@ export class reviewController {
         const retailerRating =
           avgRatingResult.length > 0 ? avgRatingResult[0].avgRetailerRating : 0;
         sendSuccessResponse(res, 200, true, "retailer Rating", retailerRating);
-      } else throw "id not found"
+      } else sendSuccessResponse(res, 200, true, "id not found");
     } catch (error) {
       sendErrorResponse(res, 500, false, "error finding review", error);
     }
