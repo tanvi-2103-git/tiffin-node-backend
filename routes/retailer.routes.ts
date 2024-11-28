@@ -15,7 +15,7 @@ retailerRoutes.get("/getmonthlyorders",validateGetRequest({isPagination:false,is
 retailerRoutes.get("/searchorders",validateGetRequest({isPagination: false,isIdRequired:false}),validateToken, retailerController.searchOrders);
 retailerRoutes.get("/getweeklymonthlyorders",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_order"), retailerController.getMonthlyWeeklyOrders);
 retailerRoutes.get("/cancelorder/:orderid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'orderid'}),validateToken,RoleBaseValidation("cancel_order"), retailerController.cancelOrder);
-retailerRoutes.get("/getOrderCount",validateToken,RoleBaseValidation("get_order"), retailerController.getOrderCount);
+retailerRoutes.get("/getordercount",validateToken,RoleBaseValidation("get_order"), retailerController.getOrderCount);
 
 
 export default retailerRoutes;
