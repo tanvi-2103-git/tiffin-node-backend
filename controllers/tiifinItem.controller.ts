@@ -80,8 +80,8 @@ export class TiffinItemController {
         isActive: true,
       });
 
-      if (!TiffinItem) throw "Tiffin Item not found"
-      sendSuccessResponse(res, 200, true, "tiffin Items", TiffinItem);
+      if (!TiffinItem) sendSuccessResponse(res, 200, true, "Tiffin Item not found")
+      else sendSuccessResponse(res, 200, true, "tiffin Items", TiffinItem);
     } catch (error) {
       sendSuccessResponse(res, 500, false, "Error fetching Tiffin Item", error);
     }
@@ -141,8 +141,8 @@ export class TiffinItemController {
         { _id: tiffinid },
         { isActive: false }
       );
-      if (!deleteTiffin) throw "Tiffin Item not found";
-      sendSuccessResponse(res, 200, true, "Tiffin Item deleted successfully");
+      if (!deleteTiffin) sendSuccessResponse(res, 200, true, "Tiffin Item not found");
+      else sendSuccessResponse(res, 200, true, "Tiffin Item deleted successfully");
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error deleting Tiffin Item", error);
     }
@@ -164,8 +164,8 @@ export class TiffinItemController {
         }
       );
 
-      if (!updatedTiffinItem) throw "Tiffin Item not found";
-
+      if (!updatedTiffinItem) sendSuccessResponse(res, 200, true, "Tiffin Item not found");
+      else
       sendSuccessResponse(
         res,
         200,
@@ -215,7 +215,10 @@ export class TiffinItemController {
       const tifinId = req.params.tifinid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
-      if (!cloudinaryUrl) throw "cloudinaryUrl is not available";
+      if (!cloudinaryUrl) sendSuccessResponse(
+        res,
+        200,
+        true, "cloudinaryUrl is not available");
        else {
         const tiffin = await TiffinItemModel.findByIdAndUpdate(
           tifinId,
@@ -230,7 +233,10 @@ export class TiffinItemController {
             "Tiffin Item image updated successfully",
             tiffin
           );
-        } else throw "tiffin not found"
+        } else sendSuccessResponse(
+          res,
+          200,
+          true, "tiffin not found")
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error uploading image");
