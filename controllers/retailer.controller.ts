@@ -241,6 +241,50 @@ export class RetailerController {
     return newdata;
   };
 
+  public getOrderCount = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const userId = user._id;
+  const totalItems = await OrderModel.aggregate([
+        {
+          $match: {
+            'cart.retailer_id':userId,
+            // role_id: new ObjectId(ADMIN_ID),
+            isActive: true
+          }
+        },
+        {
+          $group: {
+            _id: "$delivery_status",
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            delivery_status: "$_id",
+            count: 1
+          }
+        }
+      ]);
+      
+      if(totalItems)
+      sendSuccessResponse(res, 200, true, "count of order", totalItems)
+      else throw "error in fetching count"
+}
+    }catch(error){
+      sendErrorResponse(res, 500, false, "error", error);
+
+    }
+  }
   public getWeeklyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
