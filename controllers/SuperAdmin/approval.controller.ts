@@ -353,9 +353,10 @@ export class ApprovalController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const approvalRequest = await UserModel.findById(id);
-      if (approvalRequest?.isActive == false || !approvalRequest)
-        throw "Approval Request not found";
+      const approvalRequest = await UserModel.findOne({_id:id,isActive:true});
+      if (!approvalRequest)
+        sendSuccessResponse(res,200,true,"Approval Request not found",approvalRequest) ;
+      else sendSuccessResponse(res,200,true,"Approval Request",approvalRequest)
     } catch (error) {
       sendErrorResponse(res, 500, false, "Error Approval Request", error);
     }
@@ -394,10 +395,17 @@ export class ApprovalController {
               new mongoose.Types.ObjectId(admin_id);
             await organization.save();
           } else
-            throw "Location of admin has no match on respective organization";
+          sendSuccessResponse(
+            res,
+            200,
+            true, "Location of admin has no match on respective organization");
 
           if (result.modifiedCount === 0)
-            throw "Approval request not found or already updated.";
+            sendSuccessResponse(
+              res,
+              200,
+              true, "Approval request not found or already updated."
+            );
           else {
             sendSuccessResponse(
               res,
@@ -444,7 +452,11 @@ export class ApprovalController {
         );
 
         if (result.modifiedCount === 0)
-          throw "Approval request not found or already updated.";
+          sendSuccessResponse(
+            res,
+            200,
+            true, "Approval request not found or already updated."
+          );
         else {
           sendSuccessResponse(
             res,
