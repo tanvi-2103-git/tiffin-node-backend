@@ -113,12 +113,12 @@ export class RetailerController {
             newdata = await this.addUserName(orders);
           }
           if (orders.length > 0)
-            sendSuccessResponse(res, 200, true, "all users", newdata, {
+            sendSuccessResponse(res, 200, true, "all orders", newdata, {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
             });
-          else throw "orders not found";
+          else sendSuccessResponse(res, 200, true, "orders not found", newdata) ;
         }
       }
     } catch (error) {
@@ -330,8 +330,8 @@ export class RetailerController {
               totalAmount: item.totalAmount,
             };
           });
-          sendSuccessResponse(res, 200, true, " ", data);
-        } else throw "orders not found";
+          sendSuccessResponse(res, 200, true, "weeklydata", data);
+        } else sendSuccessResponse(res, 200, true,"weeklydata not found", data) ;
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -431,8 +431,10 @@ export class RetailerController {
               totalAmount: item.totalAmount,
             };
           });
-          res.status(200).json({ statuscode: 200, data: data });
-        } else throw "orders not found";
+          sendSuccessResponse(res, 200, true, "monthlydata", data);
+
+          // res.status(200).json({ statuscode: 200, data: data });
+        } else sendSuccessResponse(res, 200, true, "monthlydata not found", data);
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -519,7 +521,7 @@ export class RetailerController {
           });
 
           sendSuccessResponse(res, 200, true, `${filter}ly orders`, data);
-        } else throw "orders not found";
+        } else  sendSuccessResponse(res, 200, true, `${filter}ly orders not found`);
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error`, error);
