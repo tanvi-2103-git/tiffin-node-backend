@@ -29,7 +29,7 @@ export class RetailerController {
           _id: decoded.id,
         }).exec()) as User;
 
-        if (!user) throw "User not found"
+        if (!user) throw "User not found";
 
         const data = await UserModel.updateOne(
           { _id: decoded.id },
@@ -38,7 +38,7 @@ export class RetailerController {
               "role_specific_details.approval": {
                 approval_status: "pending",
                 organization_id: organization_id,
-                org_loc:orgloc
+                org_loc: orgloc,
               },
             },
           }
@@ -84,7 +84,8 @@ export class RetailerController {
             orders = await OrderModel.find({
               "cart.retailer_id": user._id,
               delivery_status: status,
-            }).sort({ created_at: -1 })
+            })
+              .sort({ created_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -98,7 +99,8 @@ export class RetailerController {
 
             newdata = await this.addUserName(orders);
           } else {
-            orders = await OrderModel.find({ "cart.retailer_id": user._id }).sort({ created_at: -1 })
+            orders = await OrderModel.find({ "cart.retailer_id": user._id })
+              .sort({ created_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -116,8 +118,7 @@ export class RetailerController {
               totalPages: totalPages,
               totalItems: totalItems,
             });
-          else
-            throw "orders not found" ;
+          else throw "orders not found";
         }
       }
     } catch (error) {
@@ -132,8 +133,8 @@ export class RetailerController {
       const user = await getUserFromToken(req);
       //  console.log(user);
       const { query } = req.query;
-      if (!query && !user) throw "Query parameter is required "
-       else {
+      if (!query && !user) throw "Query parameter is required ";
+      else {
         const searchFields = [
           "cart.retailer_id",
           "cart.customer_id",
@@ -144,35 +145,32 @@ export class RetailerController {
           username: { $regex: query, $options: "i" },
         });
         const userIds = user.map((user) => user._id);
-        console.log("userIds",userIds);
-        
+        console.log("userIds", userIds);
+
         const tiffin = await TiffinItemModel.find({
           $or: [
             { tiffin_name: { $regex: query, $options: "i" } },
-            { tiffin_type: { $regex: query, $options: "i" } }
-          ]
+            { tiffin_type: { $regex: query, $options: "i" } },
+          ],
         });
 
         const tiffinIds = tiffin.map((tiffin) => tiffin._id);
-        
-        for (let field of searchFields) {
+        console.log("tiffinIds", tiffinIds);
 
-          if (user.length>0){
-            
-            
+        for (let field of searchFields) {
+          if (user.length > 0) {
             orders = await OrderModel.find({
-              [field]: { $in: userIds },
-              "cart.retailer_id":retailer?._id
+              "cart.retailer_id": retailer?._id,
+              [field]: { $in: userIds }
             }).exec();
 
-            console.log("orders",orders);
-            }
-          else{
-           
-
+          } else if (tiffin.length > 0) {
             orders = await OrderModel.find({
               [field]: { $in: tiffinIds },
-            }).exec();}
+            }).exec();
+          } else {
+            orders = await OrderModel.find({ _id: query });
+          }
           newdata = await this.addUserName(orders);
 
           if (orders.length > 0) {
@@ -246,16 +244,16 @@ export class RetailerController {
   public getWeeklyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
-       
-       else {
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
         const status = req.query.status;
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
         let orders;
         let data;
-        if (status ) {
+        if (status) {
           orders = await OrderModel.aggregate([
             {
               $match: {
@@ -333,7 +331,7 @@ export class RetailerController {
             };
           });
           sendSuccessResponse(res, 200, true, " ", data);
-        } else throw "orders not found"
+        } else throw "orders not found";
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -343,14 +341,24 @@ export class RetailerController {
   public getMonthlylyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) throw "Unauthorized or invalid user details."
-       else {
-        const status = req.query.status;        
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
+        const status = req.query.status;
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
-        console.log("year",year,"status",status,"startOfYear",startOfYear,"endOfYear",endOfYear);
-        
+        console.log(
+          "year",
+          year,
+          "status",
+          status,
+          "startOfYear",
+          startOfYear,
+          "endOfYear",
+          endOfYear
+        );
+
         let orders;
         let data;
         if (status) {
@@ -409,7 +417,6 @@ export class RetailerController {
             },
           ]);
           console.log(orders);
-          
         }
         if (orders) {
           data = orders.map((item) => {
@@ -425,7 +432,7 @@ export class RetailerController {
             };
           });
           res.status(200).json({ statuscode: 200, data: data });
-        } else throw "orders not found"
+        } else throw "orders not found";
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -433,14 +440,15 @@ export class RetailerController {
   };
 
   public getMonthlyWeeklyOrders = async (req: Request, res: Response) => {
-    try{
+    try {
       const user = await getUserFromToken(req);
-      if (user?.isActive == false || !user) throw  "Unauthorized or invalid user details."
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
       else {
-        const status = req.query.status;        
+        const status = req.query.status;
         const year = parseInt(req.query.year as string);
         const filter = req.query.filter as string;
-        if(!filter) throw "Add Monthly or Weekly filter"
+        if (!filter) throw "Add Monthly or Weekly filter";
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
         const orders = await OrderModel.aggregate([
@@ -450,16 +458,19 @@ export class RetailerController {
                 $gte: startOfYear,
                 $lte: endOfYear,
               },
-              ...(status && { delivery_status: status }), 
+              ...(status && { delivery_status: status }),
             },
           },
           {
             $group: {
               _id: {
                 year: { $year: "$created_at" },
-                ...(filter.toLowerCase() === "month" && { month: { $month: "$created_at" } }),
-                ...(filter.toLowerCase() === "week" && { week: { $week: "$created_at" } }),
-                
+                ...(filter.toLowerCase() === "month" && {
+                  month: { $month: "$created_at" },
+                }),
+                ...(filter.toLowerCase() === "week" && {
+                  week: { $week: "$created_at" },
+                }),
               },
               totalOrders: { $sum: 1 },
               totalAmount: { $sum: "$cart.total_amount" },
@@ -474,8 +485,7 @@ export class RetailerController {
           },
         ]);
         if (orders) {
-         const  data = orders.map((item) => {
-          
+          const data = orders.map((item) => {
             const startOfmonth = moment()
               .month(item._id.month - 1)
               .format("YYYY-MM");
@@ -489,34 +499,32 @@ export class RetailerController {
               .isoWeek(item._id.week + 1)
               .endOf("isoWeek")
               .format("MMM Do YY");
-  
+
             //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
-           
-              if(filter.toLowerCase() === "week"){
-             return  {startOfWeek: startOfWeek,
-              endOfWeek: endOfWeek,
-              totalOrders: item.totalOrders,
-              totalAmount: item.totalAmount,}
-            }
-              else{
-              return {month: startOfmonth,
-              totalOrders: item.totalOrders,
-              totalAmount: item.totalAmount}
-            }
-            }
-          );
-          
-          sendSuccessResponse(res, 200, true, `${filter}ly orders`,data);
 
-        } else throw "orders not found"
-        
+            if (filter.toLowerCase() === "week") {
+              return {
+                startOfWeek: startOfWeek,
+                endOfWeek: endOfWeek,
+                totalOrders: item.totalOrders,
+                totalAmount: item.totalAmount,
+              };
+            } else {
+              return {
+                month: startOfmonth,
+                totalOrders: item.totalOrders,
+                totalAmount: item.totalAmount,
+              };
+            }
+          });
 
+          sendSuccessResponse(res, 200, true, `${filter}ly orders`, data);
+        } else throw "orders not found";
       }
-    }catch(error){
-      sendErrorResponse(res, 500, false, `internal server error`,error);
-
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `internal server error`, error);
     }
-  }
+  };
 
   public cancelOrder = async (req: Request, res: Response) => {
     try {
@@ -529,33 +537,37 @@ export class RetailerController {
           "Unauthorized or invalid user details."
         );
       } else {
-      const orderId = req.params.orderid;
-      const order = await OrderModel.findOne({_id:orderId, 'cart.retailer_id':user._id});
-      if (order) {
-        if (order.delivery_status == "pending") {
-          const order = await OrderModel.findByIdAndUpdate(orderId, {
-            delivery_status: "cancelled",
-          });
-          if (order)
-            sendSuccessResponse(res, 200, true, "order updated successful");
-        } else if (order.delivery_status == "delivered") {
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "order is already delivered cannot be modified"
-          );
+        const orderId = req.params.orderid;
+        const order = await OrderModel.findOne({
+          _id: orderId,
+          "cart.retailer_id": user._id,
+        });
+        if (order) {
+          if (order.delivery_status == "pending") {
+            const order = await OrderModel.findByIdAndUpdate(orderId, {
+              delivery_status: "cancelled",
+            });
+            if (order)
+              sendSuccessResponse(res, 200, true, "order updated successful");
+          } else if (order.delivery_status == "delivered") {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already delivered cannot be modified"
+            );
+          } else {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already cancelled cannot be modified"
+            );
+          }
         } else {
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "order is already cancelled cannot be modified"
-          );
+          sendSuccessResponse(res, 200, true, "order not found");
         }
-      } else {
-        sendSuccessResponse(res, 200, true, "order not found");
-      }}
+      }
     } catch (error) {
       sendErrorResponse(
         res,

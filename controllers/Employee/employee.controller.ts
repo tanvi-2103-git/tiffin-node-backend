@@ -15,7 +15,7 @@ export class EmployeeController {
   public getAllTrendyRetailers = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      
+
       if (
         user?.isActive == false ||
         !user ||
@@ -50,11 +50,11 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                org_loc:org_location,
+                org_loc: org_location,
                 istrendy: true,
-                
               },
-            },isActive:true
+            },
+            isActive: true,
           })
             .skip(skip)
             .limit(limit)
@@ -129,10 +129,10 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                org_loc:org_location
-
+                org_loc: org_location,
               },
-            },isActive:true
+            },
+            isActive: true,
           })
             .skip(skip)
             .limit(limit)
@@ -170,8 +170,12 @@ export class EmployeeController {
       const { query, approval_status } = req.query;
 
       if (!query || !user || !user.role_specific_details.organization_id) {
-        sendErrorResponse(res,400,false, "Query parameter is required and must be a string Or Unauthorized or invalid user details.")
-   
+        sendErrorResponse(
+          res,
+          400,
+          false,
+          "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+        );
       } else {
         const organizationId = user.role_specific_details.organization_id;
         const org_location = user.role_specific_details.org_location;
@@ -185,9 +189,8 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                org_loc:org_location,
+                org_loc: org_location,
                 approval_status: approval_status || { $exists: true },
-                
               },
             },
             isActive: true,
@@ -200,11 +203,15 @@ export class EmployeeController {
           }
         }
         if (retailers.length === 0) {
-          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria",retailers)
-          
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No retailers found matching the search criteria",
+            retailers
+          );
         } else {
-          sendSuccessResponse(res,200,true,"retailers",retailers)
-
+          sendSuccessResponse(res, 200, true, "retailers", retailers);
         }
       }
     } catch (error) {
@@ -217,7 +224,6 @@ export class EmployeeController {
       );
     }
   };
-
 
   public getAllTiffinofOrg = async (req: Request, res: Response) => {
     try {
@@ -254,9 +260,10 @@ export class EmployeeController {
             "role_specific_details.approval": {
               $elemMatch: {
                 organization_id: organizationId,
-                org_loc:org_location
+                org_loc: org_location,
               },
-            },isActive:true
+            },
+            isActive: true,
           }).exec();
 
           if (Retailers.length === 0) {
@@ -264,7 +271,8 @@ export class EmployeeController {
               res,
               200,
               true,
-              "No retailers found for the given organization.",Retailers
+              "No retailers found for the given organization.",
+              Retailers
             );
           } else {
             const retailerIds = Retailers.map((retailer) => retailer._id);
@@ -273,17 +281,19 @@ export class EmployeeController {
 
             const Tiffins = await TiffinItemModel.find({
               retailer_id: { $in: retailerIds },
-              isActive:true,
-              ...(type && {tiffin_type:type.toLowerCase()})
-            }).populate("retailer_id", "username").sort({ tiffin_rating: -1 })
+              isActive: true,
+              ...(type && { tiffin_type: type.toLowerCase() }),
+            })
+              .populate("retailer_id", "username")
+              .sort({ tiffin_rating: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
 
             const totalTiffins = await TiffinItemModel.countDocuments({
               retailer_id: { $in: retailerIds },
-              isActive:true,
-              ...(type && {tiffin_type:type.toLowerCase()})
+              isActive: true,
+              ...(type && { tiffin_type: type.toLowerCase() }),
             });
 
             const totalPages = Math.ceil(totalTiffins / limit);
@@ -311,7 +321,7 @@ export class EmployeeController {
   // public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
   //   try {
   //     const user = await getUserFromToken(req); // Assuming getUserFromToken retrieves the user from token
-  
+
   //     // Step 1: Check for valid user & organization
   //     if (
   //       !user ||
@@ -322,11 +332,11 @@ export class EmployeeController {
   //        sendSuccessResponse(res, 401, false, "Unauthorized or invalid user details.");
   //        return;
   //     }
-  
+
   //     const organizationId = user.role_specific_details.organization_id;
   //     const page = parseInt(req.query.page as string) || 1;
   //     const limit = parseInt(req.query.limit as string) || 10;
-  
+
   //     if (page < 1 || limit < 1) {
   //        res.status(400).json({
   //         statuscode: 400,
@@ -334,29 +344,29 @@ export class EmployeeController {
   //       });
   //       return;
   //     }
-  
+
   //     // Step 2: Fetch retailers linked to the organization
   //     const retailers = await UserModel.find({
   //       role_id: RETAILER_ID, // Assuming you have a constant or string for retailer role
   //       "role_specific_details.approval": {
   //         $elemMatch: {
   //           organization_id: organizationId,
-            
+
   //         },
-          
+
   //       },isActive:true
   //     }).exec();
-  
+
   //     if (retailers.length === 0) {
   //        sendSuccessResponse(res, 200, true, "No retailers found for the given organization.",retailers);
   //        return;
   //     }
-  
+
   //     const retailerIds = retailers.map((retailer) => retailer._id); // Extract retailer IDs
-  
+
   //     // Step 3: Fetch tiffins with retailer details populated
   //     const skip = (page - 1) * limit;
-  
+
   //     const tiffins = (await TiffinItemModel.find({
   //       retailer_id: { $in: retailerIds },
   //       isActive:true
@@ -365,31 +375,31 @@ export class EmployeeController {
   //       .skip(skip)
   //       .limit(limit)
   //       .exec()) as TiffinItem[];
-  
+
   //     const totalTiffins = await TiffinItemModel.countDocuments({
   //       retailer_id: { $in: retailerIds },
   //     });
-  
+
   //     const totalPages = Math.ceil(totalTiffins / limit);
-  
+
   //     const groupedTiffins = tiffins.reduce((group: { retailerName: string; tiffins: TiffinItem[] }[], tiffin: TiffinItem) => {
-  
+
   //       const retailerName = (tiffin.retailer_id as unknown as User).username;
   //       // Find the existing group for this retailer
   //       let retailerGroup = group.find((g) => g.retailerName === retailerName);
-      
+
   //       if (!retailerGroup) {
   //         // If not found, create a new group
   //         retailerGroup = { retailerName, tiffins: [] };
   //         group.push(retailerGroup);
   //       }
-      
+
   //       // Add the current tiffin to the group's tiffins array
   //       retailerGroup.tiffins.push(tiffin);
-      
+
   //       return group;
   //     }, []);
-      
+
   //     // Step 5: Send the grouped tiffins response with pagination
   //     sendSuccessResponse(
   //       res,
@@ -410,86 +420,95 @@ export class EmployeeController {
   // };
   public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
     try {
-      const user = await getUserFromToken(req); 
+      const user = await getUserFromToken(req);
       if (
         !user ||
         user.isActive === false ||
         !user.role_specific_details ||
         !user.role_specific_details.organization_id
       ) {
-         sendSuccessResponse(res, 401, false, "Unauthorized or invalid user details.");
-         return;
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+        return;
       }
-  
+
       const organizationId = user.role_specific_details.organization_id;
       const org_location = user.role_specific_details.org_location;
 
       const retailers = await UserModel.find({
-        role_id: RETAILER_ID, 
+        role_id: RETAILER_ID,
         "role_specific_details.approval": {
           $elemMatch: {
             organization_id: organizationId,
-            org_loc:org_location
+            org_loc: org_location,
           },
         },
       }).exec();
-  
+
       if (retailers.length === 0) {
-         sendSuccessResponse(res, 200, true, "No retailers found for the given organization.");
-         return;
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "No retailers found for the given organization."
+        );
+        return;
       }
-  
-      const retailerIds = retailers.map((retailer) => retailer._id); 
-  
-  
+
+      const retailerIds = retailers.map((retailer) => retailer._id);
+
       const tiffins = (await TiffinItemModel.find({
         retailer_id: { $in: retailerIds },
-        isActive: true
+        isActive: true,
       })
-        .populate("retailer_id", "username") 
+        .populate("retailer_id", "username")
         .exec()) as TiffinItem[];
-  
+
       const totalTiffins = await TiffinItemModel.countDocuments({
         retailer_id: { $in: retailerIds },
-        isActive: true
+        isActive: true,
       });
-  
-     
-      const groupedTiffins = tiffins.reduce((group: { retailerName: string; tiffins: TiffinItem[] }[], tiffin: TiffinItem) => {
-  
-        const retailerName = (tiffin.retailer_id as unknown as User).username;
-        
-        let retailerGroup = group.find((g) => g.retailerName === retailerName);
-      
-        if (!retailerGroup) {
-         
-          retailerGroup = { retailerName, tiffins: [] };
-          group.push(retailerGroup);
-        }
-      
-       
-        retailerGroup.tiffins.push(tiffin);
-      
-        return group;
-      }, []);
-      
-     
+
+      const groupedTiffins = tiffins.reduce(
+        (
+          group: { retailerName: string; tiffins: TiffinItem[] }[],
+          tiffin: TiffinItem
+        ) => {
+          const retailerName = (tiffin.retailer_id as unknown as User).username;
+
+          let retailerGroup = group.find(
+            (g) => g.retailerName === retailerName
+          );
+
+          if (!retailerGroup) {
+            retailerGroup = { retailerName, tiffins: [] };
+            group.push(retailerGroup);
+          }
+
+          retailerGroup.tiffins.push(tiffin);
+
+          return group;
+        },
+        []
+      );
+
       sendSuccessResponse(
         res,
         200,
         true,
         "Tiffins grouped by retailer.",
-        groupedTiffins,
-      
+        groupedTiffins
       );
       return;
     } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
-  
-  
-  
+
   public getAllTiffinsByRetailer = async (req: Request, res: Response) => {
     try {
       const retailerId = req.params.retailerid;
@@ -523,7 +542,7 @@ export class EmployeeController {
         } else {
           const Tiffins = await TiffinItemModel.find({
             retailer_id: retailerId,
-            isActive:true
+            isActive: true,
           })
             .skip(skip)
             .limit(limit)
@@ -557,9 +576,9 @@ export class EmployeeController {
     try {
       const tifinId = req.params.tifinid;
       console.log(tifinId);
-      
+
       const user = await getUserFromToken(req);
-     
+
       if (
         user?.isActive == false ||
         !user ||
@@ -576,14 +595,14 @@ export class EmployeeController {
         const organizationId = user.role_specific_details.organization_id;
         const org_location = user.role_specific_details.org_location;
 
-        console.log("organizationId",organizationId);
-        
+        console.log("organizationId", organizationId);
+
         const Retailers = await UserModel.find({
           role_id: RETAILER_ID, // retailer role ID
           "role_specific_details.approval": {
             $elemMatch: {
               organization_id: organizationId,
-              org_loc:org_location
+              org_loc: org_location,
             },
           },
           // isActive:true
@@ -599,13 +618,12 @@ export class EmployeeController {
         } else {
           const retailerIds = Retailers.map((retailer) => retailer._id);
           console.log(retailerIds);
-          
+
           const Tiffin = await TiffinItemModel.find({
             _id: tifinId,
             retailer_id: { $in: retailerIds },
-            isActive:true
+            isActive: true,
           }).exec();
-
 
           sendSuccessResponse(res, 200, true, "Tiffin", Tiffin);
         }
@@ -648,7 +666,8 @@ export class EmployeeController {
           const orders = await OrderModel.find({
             "cart.customer_id": user._id,
             delivery_status: "delivered",
-          }).sort({ created_at: -1 })
+          })
+            .sort({ created_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -665,7 +684,7 @@ export class EmployeeController {
               totalPages: totalPages,
               totalItems: totalOrders,
             });
-          else sendSuccessResponse(res, 200, true, "orders not found",orders);
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
         }
       }
     } catch (error) {
@@ -722,7 +741,7 @@ export class EmployeeController {
               totalPages: totalPages,
               totalItems: totalOrders,
             });
-          else sendSuccessResponse(res, 200, true, "orders not found",orders);
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
         }
       }
     } catch (error) {
@@ -747,33 +766,37 @@ export class EmployeeController {
           "Unauthorized or invalid user details."
         );
       } else {
-      const orderId = req.params.orderid;
-      const order = await OrderModel.findOne({_id:orderId, 'cart.customer_id':user._id});
-      if (order) {
-        if (order.delivery_status == "pending") {
-          const order = await OrderModel.findByIdAndUpdate(orderId, {
-            delivery_status: "cancelled",
-          });
-          if (order)
-            sendSuccessResponse(res, 200, true, "order updated successful");
-        } else if (order.delivery_status == "delivered") {
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "order is already delivered cannot be modified"
-          );
+        const orderId = req.params.orderid;
+        const order = await OrderModel.findOne({
+          _id: orderId,
+          "cart.customer_id": user._id,
+        });
+        if (order) {
+          if (order.delivery_status == "pending") {
+            const order = await OrderModel.findByIdAndUpdate(orderId, {
+              delivery_status: "cancelled",
+            });
+            if (order)
+              sendSuccessResponse(res, 200, true, "order updated successful");
+          } else if (order.delivery_status == "delivered") {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already delivered cannot be modified"
+            );
+          } else {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already cancelled cannot be modified"
+            );
+          }
         } else {
-          sendSuccessResponse(
-            res,
-            200,
-            true,
-            "order is already cancelled cannot be modified"
-          );
+          sendSuccessResponse(res, 200, true, "order not found");
         }
-      } else {
-        sendSuccessResponse(res, 200, true, "order not found");
-      }}
+      }
     } catch (error) {
       sendErrorResponse(
         res,
@@ -850,9 +873,7 @@ export class EmployeeController {
               totalPages: totalPages,
               totalItems: totalItems,
             });
-          else
-          sendSuccessResponse(res, 200, true, "orders not found",orders);
-          
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
         }
       }
     } catch (error) {
