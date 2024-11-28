@@ -4,9 +4,12 @@ import mongoose, { ObjectId } from "mongoose";
 export interface CartItem {
   tiffin_id: mongoose.Types.ObjectId;
   quantity: number;
+  tiffin_available_quantity:number;
   price: number;
   tiffin_name: string;
   tiffin_image_url: string;
+  
+
 }
 
 export interface Cart extends Document {
@@ -38,6 +41,7 @@ export const CartSchema = new mongoose.Schema({
         required: true,
       },
       quantity: { type: Number, required: true, min: 1 },
+      tiffin_available_quantity: { type: Number},
       price: { type: Number, required: true },
       tiffin_name: { type: String, required: true },
       tiffin_image_url: { type: String, },
