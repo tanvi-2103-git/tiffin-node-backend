@@ -26,142 +26,151 @@ export class CartController {
       if (tiffin.isActive == false || !tiffin) {
         sendSuccessResponse(res, 200, true, "Tiffin item not found");
       } else {
-        if (quantity > tiffin.tiffin_available_quantity){
-          sendSuccessResponse(res, 200, true, `only ${tiffin.tiffin_available_quantity} tiffins are available`);
-
-          }
-        else{const retailerId = tiffin.retailer_id;
-        const tiffin_name = tiffin.tiffin_name;
-        const tiffin_image_url = tiffin.tiffin_image_url;
-        const price = tiffin.tiffin_price;
-        const tiffin_available_quantity = tiffin.tiffin_available_quantity;
-        console.log("retailerId", retailerId);
-        console.log("tiffin_name", tiffin_name);
-        console.log("tiffin_image_url", tiffin_image_url);
-        console.log("price", price);
-
-        let customerCart = await CartModel.findOne({ customer_id });
-
-        if (
-          customerCart &&
-          JSON.stringify(customerCart.retailer_id) != JSON.stringify(retailerId)
-        ) {
+        if (quantity > tiffin.tiffin_available_quantity) {
           sendSuccessResponse(
             res,
-            400,
-            false,
-            "You can add tiffin from a single retailer only"
+            200,
+            true,
+            `only ${tiffin.tiffin_available_quantity} tiffins are available`
           );
         } else {
+          const retailerId = tiffin.retailer_id;
+          const tiffin_name = tiffin.tiffin_name;
+          const tiffin_image_url = tiffin.tiffin_image_url;
+          const price = tiffin.tiffin_price;
+          const tiffin_available_quantity = tiffin.tiffin_available_quantity;
+          console.log("retailerId", retailerId);
+          console.log("tiffin_name", tiffin_name);
+          console.log("tiffin_image_url", tiffin_image_url);
+          console.log("price", price);
 
-          console.log("inside else tiffin_name", tiffin_name);
-          console.log("inside else tiffin_name", tiffin_image_url);
-          let cart = await CartModel.findOne({
-            retailer_id: retailerId,
-            customer_id,
-          });
+          let customerCart = await CartModel.findOne({ customer_id });
 
-          if (!cart) {
-            console.log("inside log tiffin_name", tiffin_name);
-            console.log("inside log tiffin_name", tiffin_image_url);
-
-            cart = new CartModel({
+          if (
+            customerCart &&
+            JSON.stringify(customerCart.retailer_id) !=
+              JSON.stringify(retailerId)
+          ) {
+            sendSuccessResponse(
+              res,
+              400,
+              false,
+              "You can add tiffin from a single retailer only"
+            );
+          } else {
+            console.log("inside else tiffin_name", tiffin_name);
+            console.log("inside else tiffin_name", tiffin_image_url);
+            let cart = await CartModel.findOne({
               retailer_id: retailerId,
               customer_id,
-              items: [
-                {
-                  tiffin_id: tiffinId,
-                  tiffin_image_url,
-                  tiffin_name,
-                  quantity,
-                  tiffin_available_quantity,
-                  price,
-                },
-              ],
-              total_amount: price * quantity,
             });
-          } else {
-            const itemIndex = cart.items.findIndex(
-              (item) =>
-                JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
-            );
 
-            if (itemIndex > -1) {
-              cart.items[itemIndex].quantity += quantity;
-              if (
-                cart.items[itemIndex].quantity >
-                tiffin.tiffin_available_quantity
-              ){
-              sendSuccessResponse(res, 200, true, `only ${tiffin.tiffin_available_quantity} tiffins are available`);
-              return;
-          }  } else {
-              cart.items.push({
-                tiffin_id: new mongoose.Types.ObjectId(tiffinId),
-                quantity,
-                price,
-                tiffin_name,
-                tiffin_available_quantity,
-                tiffin_image_url,
+            if (!cart) {
+              console.log("inside log tiffin_name", tiffin_name);
+              console.log("inside log tiffin_name", tiffin_image_url);
+
+              cart = new CartModel({
+                retailer_id: retailerId,
+                customer_id,
+                items: [
+                  {
+                    tiffin_id: tiffinId,
+                    tiffin_image_url,
+                    tiffin_name,
+                    quantity,
+                    tiffin_available_quantity,
+                    price,
+                  },
+                ],
+                total_amount: price * quantity,
               });
+            } else {
+              const itemIndex = cart.items.findIndex(
+                (item) =>
+                  JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
+              );
+
+              if (itemIndex > -1) {
+                cart.items[itemIndex].quantity += quantity;
+                if (
+                  cart.items[itemIndex].quantity >
+                  tiffin.tiffin_available_quantity
+                ) {
+                  sendSuccessResponse(
+                    res,
+                    200,
+                    true,
+                    `only ${tiffin.tiffin_available_quantity} tiffins are available`
+                  );
+                  return;
+                }
+              } else {
+                cart.items.push({
+                  tiffin_id: new mongoose.Types.ObjectId(tiffinId),
+                  quantity,
+                  price,
+                  tiffin_name,
+                  tiffin_available_quantity,
+                  tiffin_image_url,
+                });
+              }
+
+              cart.total_amount = cart.items.reduce(
+                (sum, item) => sum + item.quantity * item.price,
+                0
+              );
             }
 
-            cart.total_amount = cart.items.reduce(
-              (sum, item) => sum + item.quantity * item.price,
-              0
-            );
+            await cart.save();
+            sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
           }
-
-          await cart.save();
-          sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
         }
-      }}
+      }
     } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
 
   updateQuantity = async (req: Request, res: Response) => {
-    try{
+    try {
       const user = await getUserFromToken(req);
       const customer_id = user?._id;
       const tiffinId = req.params.tiffinid;
       const quantity = req.body.quantity;
-      if(!quantity) throw  "quantity please add quantity"
+      if (!quantity) throw "quantity please add quantity";
       const status = req.body.status;
-      let cart = await CartModel.findOne({customer_id:customer_id});
-      const tiffin = await TiffinItemModel.findById(tiffinId)
+      let cart = await CartModel.findOne({ customer_id: customer_id });
+      const tiffin = await TiffinItemModel.findById(tiffinId);
 
-      if(cart && tiffin ){
+      if (cart && tiffin) {
         const tiffin_available_quantity = tiffin.tiffin_available_quantity;
 
-        const price= tiffin?.tiffin_price;
-      const tiffin_name = tiffin?.tiffin_name;
-      const tiffin_image_url = tiffin?.tiffin_image_url;
+        const price = tiffin?.tiffin_price;
+        const tiffin_name = tiffin?.tiffin_name;
+        const tiffin_image_url = tiffin?.tiffin_image_url;
         const itemIndex = cart.items.findIndex(
-          (item) =>
-            JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
+          (item) => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
         );
-        
-        if (itemIndex >=0 ) {
-          
-          
+
+        if (itemIndex >= 0) {
           cart.items[itemIndex].quantity = quantity;
-          
-        
-          
-            if(cart.items[itemIndex].quantity==0) {
-              cart.items.splice(itemIndex, 1);
-            }
-          
+
+          if (cart.items[itemIndex].quantity == 0) {
+            cart.items.splice(itemIndex, 1);
+          }
+
           if (
-            cart.items[itemIndex].quantity >
-            tiffin.tiffin_available_quantity
-          ){
-            sendSuccessResponse(res, 200, true, `only ${tiffin.tiffin_available_quantity} tiffins are available`);
+            cart.items[itemIndex].quantity > tiffin.tiffin_available_quantity
+          ) {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              `only ${tiffin.tiffin_available_quantity} tiffins are available`
+            );
             return;
-        } 
+          }
         } else {
-           
           cart.items.push({
             tiffin_id: new mongoose.Types.ObjectId(tiffinId),
             quantity,
@@ -177,16 +186,14 @@ export class CartController {
           0
         );
         console.log(cart);
-        
+
         await cart.save();
         sendSuccessResponse(res, 200, true, "Tiffin added to cart", cart);
-
       }
-    }catch(error){
+    } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
-
     }
-  }
+  };
 
   public removeTiffinFromCart = async (req: Request, res: Response) => {
     try {
@@ -199,42 +206,53 @@ export class CartController {
       ).exec()) as TiffinItem;
       if (tiffin.isActive == false || !tiffin) {
         sendSuccessResponse(res, 200, true, "Tiffin item not found");
-      }else{
+      } else {
+        const retailerId = tiffin.retailer_id;
+        let cart = await CartModel.findOne({
+          retailer_id: retailerId,
+          customer_id: customer_id,
+        });
 
-      const retailerId = tiffin.retailer_id;
-      let cart = await CartModel.findOne({
-        retailer_id: retailerId,
-        customer_id: customer_id,
-      });
-
-      if (cart) {
-        const itemIndex = cart.items.findIndex(
-          (item) => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
-        );
-
-        if (itemIndex > -1) {
-          cart.items.splice(itemIndex, 1);
-          cart.total_amount = cart.items.reduce(
-            (sum, item) => sum + item.quantity * item.price,
-            0
+        if (cart) {
+          const itemIndex = cart.items.findIndex(
+            (item) => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
           );
 
-          await cart.save();
-          if (cart.items.length === 0) {
-            const remove = await CartModel.findByIdAndDelete(cart._id);
+          if (itemIndex > -1) {
+            cart.items.splice(itemIndex, 1);
+            cart.total_amount = cart.items.reduce(
+              (sum, item) => sum + item.quantity * item.price,
+              0
+            );
+
+            await cart.save();
+            if (cart.items.length === 0) {
+              const remove = await CartModel.findByIdAndDelete(cart._id);
+            }
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "Tiffin removed from cart",
+              cart
+            );
+          } else {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "Tiffin item not found in cart"
+            );
           }
-          sendSuccessResponse(res, 200, true, "Tiffin removed from cart", cart);
         } else {
-          sendSuccessResponse(res, 200, true, "Tiffin item not found in cart");
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Cart not found for this retailer and customer"
+          );
         }
-      } else {
-        sendSuccessResponse(
-          res,
-          200,
-          true,
-          "Cart not found for this retailer and customer"
-        );
-      }}
+      }
     } catch (error) {
       sendErrorResponse(res, 500, false, "Internal server error", error);
     }
