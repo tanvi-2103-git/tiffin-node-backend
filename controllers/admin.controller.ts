@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { RETAILER_ID } from "../utils/constants";
 import { sendErrorResponse, sendSuccessResponse } from "../utils/responsesUtils";
 import { getDefaultResultOrder } from "dns/promises";
+import { ObjectId } from "mongodb";
 
 export const Admin = async (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome Admin" });
@@ -58,6 +59,7 @@ export class AdminController {
         );
       } else {
         const status = req.query.status;
+        const organization_loc= user.role_specific_details.org_location;
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         let totalItems;
@@ -116,6 +118,7 @@ export class AdminController {
               "role_specific_details.approval": {
                 $elemMatch: {
                   organization_id: user?.role_specific_details.organization_id,
+                  org_loc:organization_loc
                 },
               },
             })
@@ -129,6 +132,7 @@ export class AdminController {
               "role_specific_details.approval": {
                 $elemMatch: {
                   organization_id: user?.role_specific_details.organization_id,
+                  org_loc:organization_loc
                 },
               },
             });
@@ -661,6 +665,67 @@ export class AdminController {
       );
     }
   };
+
+  public getRetailerRequestCount = async (req: Request, res: Response) => {
+    try{
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organization_id= user.role_specific_details.organization_id;
+        const organization_loc= user.role_specific_details.org_location;
+
+  const totalItems = await UserModel.aggregate([
+        {
+          $match: {
+            role_id: new ObjectId(RETAILER_ID),
+            "role_specific_details.approval": {
+            $elemMatch: {
+              // approval_status: "pending",
+              organization_id: organization_id,
+              org_loc:organization_loc
+            },
+          },
+            isActive: true
+          }
+        },{
+          $unwind: "$role_specific_details.approval"
+        },
+        {
+          $group: {
+            _id: "$role_specific_details.approval.approval_status",
+            count: { $sum: 1 }
+          }
+        },
+        
+        {
+          $project: {
+            _id: 0,
+            approval_status: "$_id",
+            count: 1
+          }
+        }
+      ]);
+      
+      if(totalItems)
+      sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
+      else throw "error in fetching count"
+   } }catch(error){
+      sendErrorResponse(res, 500, false, "error", error);
+
+    }
+  }
 
  
 }
