@@ -90,7 +90,7 @@ export class OrganizationController {
       } else {
         const skip = (page - 1) * limit;
 
-        const organizations = await OrganizationModel.find({ isActive: true }).sort({ updated_at: -1 })
+        const organizations = await OrganizationModel.find({ isActive: true }).sort({ org_updated_at: -1 })
           .skip(skip)
           .limit(limit);
 
