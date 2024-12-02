@@ -155,7 +155,6 @@ export class RetailerController {
         });
 
         const tiffinIds = tiffin.map((tiffin) => tiffin._id);
-        console.log("tiffinIds", tiffinIds);
 
         for (let field of searchFields) {
           if (user.length > 0) {
@@ -166,10 +165,11 @@ export class RetailerController {
 
           } else if (tiffin.length > 0) {
             orders = await OrderModel.find({
+              "cart.retailer_id": retailer?._id,
               [field]: { $in: tiffinIds },
             }).exec();
           } else {
-            orders = await OrderModel.find({ _id: query });
+            orders = await OrderModel.find({ "cart.retailer_id": retailer?._id,_id: query });
           }
           newdata = await this.addUserName(orders);
 
