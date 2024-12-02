@@ -102,7 +102,7 @@ export class ApprovalController {
           role_id: ADMIN_ID, //admin
           "role_specific_details.approval_status": "pending",
           isActive: true,
-        })
+        }).sort({ updated_at: -1 })
           .skip(skip)
           .limit(limit)
           .exec();
@@ -157,7 +157,7 @@ export class ApprovalController {
           role_id: ADMIN_ID, //admin
           "role_specific_details.approval_status": "approved",
           isActive: true,
-        })
+        }).sort({ updated_at: -1 })
           .skip(skip)
           .limit(limit)
           .exec();
@@ -210,7 +210,7 @@ export class ApprovalController {
           role_id: ADMIN_ID, //admin
           "role_specific_details.approval_status": "rejected",
           isActive: true,
-        })
+        }).sort({ updated_at: -1 })
           .skip(skip)
           .limit(limit)
           .exec();
@@ -256,7 +256,7 @@ export class ApprovalController {
             role_id: ADMIN_ID, //admin
             "role_specific_details.approval_status": status,
             isActive: true
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -288,7 +288,7 @@ export class ApprovalController {
             .status(400)
             .json({ message: "Page and limit must be positive integers" });
         } else {
-          admins = await UserModel.find({ role_id: ADMIN_ID, isActive: true })
+          admins = await UserModel.find({ role_id: ADMIN_ID, isActive: true }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();

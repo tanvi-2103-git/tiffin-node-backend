@@ -21,7 +21,7 @@ superAdminRoutes.get("/searchAdminApproval",validateToken,approval.searchAdminAp
 superAdminRoutes.get("/pendingAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_pending_admin_request'), approval.getAllPendingAdminApprovalRequests);
 superAdminRoutes.get("/approvedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_approved_admin_request'), approval.getAllApprovedAdmin);
 superAdminRoutes.get("/rejectedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_rejected_admin_request'), approval.getAllRejectedAdmin);
-superAdminRoutes.get("/getalladminrequest",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
+superAdminRoutes.get("/getalladminrequest",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
 superAdminRoutes.get("/getcount",validateToken,RoleBaseValidation('get_admin_request'), approval.getAdminRequestCount);
 
 //searchalladminrequest
