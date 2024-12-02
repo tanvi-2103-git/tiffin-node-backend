@@ -133,13 +133,12 @@ export class CartController {
       const tiffinId = req.params.tiffinid;
       const quantity = req.body.quantity;
       if (!quantity) throw "quantity please add quantity";
-      const status = req.body.status;
+      // const status = req.body.status;
       let cart = await CartModel.findOne({ customer_id: customer_id });
       const tiffin = await TiffinItemModel.findById(tiffinId);
 
       if (cart && tiffin) {
         const tiffin_available_quantity = tiffin.tiffin_available_quantity;
-
         const price = tiffin?.tiffin_price;
         const tiffin_name = tiffin?.tiffin_name;
         const tiffin_image_url = tiffin?.tiffin_image_url;
