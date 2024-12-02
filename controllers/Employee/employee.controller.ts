@@ -543,7 +543,7 @@ export class EmployeeController {
           const Tiffins = await TiffinItemModel.find({
             retailer_id: retailerId,
             isActive: true,
-          })
+          }).populate('retailer_id','username')
             .skip(skip)
             .limit(limit)
             .exec();
