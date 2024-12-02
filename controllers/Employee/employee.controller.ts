@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { TiffinItem, TiffinItemModel } from "../../model/tiffinItemModel";
-import { OrderModel } from "../../model/orderModel";
+import { Order, OrderModel } from "../../model/orderModel";
 import { RETAILER_ID } from "../../utils/constants";
 import {
   sendErrorResponse,
@@ -698,6 +698,74 @@ export class EmployeeController {
         "An error occurred while processing your request.",
         error
       );
+    }
+  };
+
+  public searchOrders = async (req: Request, res: Response): Promise<void> => {
+    try {
+      let customer = await getUserFromToken(req);
+      let newdata: any;
+      const user = await getUserFromToken(req);
+      //  console.log(user);
+      const { query } = req.query;
+      if (!query && !user) throw "Query parameter is required ";
+      else {
+        const searchFields = [
+          "cart.retailer_id",
+          "cart.customer_id",
+          "cart.items.tiffin_id",
+        ];
+        let orders: Order[] = [];
+        const user = await UserModel.find({
+          username: { $regex: query, $options: "i" },
+        });
+        const userIds = user.map((user) => user._id);
+        console.log("userIds", userIds);
+
+        const tiffin = await TiffinItemModel.find({
+          $or: [
+            { tiffin_name: { $regex: query, $options: "i" } },
+            { tiffin_type: { $regex: query, $options: "i" } },
+          ],
+        });
+
+        const tiffinIds = tiffin.map((tiffin) => tiffin._id);
+
+        for (let field of searchFields) {
+          if (user.length > 0) {
+            orders = await OrderModel.find({
+              "cart.customer_id": customer?._id,
+              [field]: { $in: userIds }
+            }).exec();
+
+          } else if (tiffin.length > 0) {
+            orders = await OrderModel.find({
+              "cart.customer_id": customer?._id,
+              [field]: { $in: tiffinIds },
+            }).exec();
+          } else {
+            orders = await OrderModel.find({ _id: query,"cart.customer_id": customer?._id });
+          }
+          newdata = await retailerController.addUserName(orders);
+
+          if (orders.length > 0) {
+            break;
+          }
+        }
+
+        if (orders.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No orders found matching the search criteria"
+          );
+        } else {
+          sendSuccessResponse(res, 200, true, "data", newdata);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
     }
   };
 
