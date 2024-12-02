@@ -341,8 +341,7 @@ export class EmployeeController {
               retailer_id: { $in: retailerIds },
               isActive: true,
               ...(type && { tiffin_type: type.toLowerCase() }),
-            })
-              .populate("retailer_id", "username")
+            }).populate("retailer_id", "username")
               .sort({ tiffin_rating: -1 })
               .skip(skip)
               .limit(limit)
