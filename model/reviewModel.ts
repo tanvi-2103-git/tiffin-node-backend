@@ -21,8 +21,10 @@ const ReviewSchema = new mongoose.Schema({
     required: true,
   },
   rating: { type: Number, required: true },
-  created_at: { type: Date },
-  updated_at: { type: Date },
+  // created_at: { type: Date },
+  // updated_at: { type: Date },
+},{
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const ReviewModel = mongoose.model<Review>("Review", ReviewSchema);

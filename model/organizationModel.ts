@@ -36,9 +36,11 @@ const OrganizationSchema = new mongoose.Schema({
     ],
     required: true,
   },
-  org_created_at: { type: Date, required: true, default: Date.now },
-  org_updated_at: { type: Date, required: true, default: Date.now },
+  // org_created_at: { type: Date, required: true, default: Date.now },
+  // org_updated_at: { type: Date, required: true, default: Date.now },
   isActive: { type: Boolean, required: true, default: true },
+}, {
+  timestamps: { createdAt: 'org_created_at', updatedAt: 'org_updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const OrganizationModel = mongoose.model<Organization>(

@@ -30,11 +30,13 @@ const TiffinItemSchema = new mongoose.Schema({
   tiffin_price: { type: Number, required: true },
   tiffin_rating: { type: Number, required: true, default: 0 },
   tiffin_isavailable: { type: Boolean, required: true },
-  tiffin_created_at: { type: Date, timestamps: true },
-  tiffin_updated_at: { type: Date, timestamps: true },
+  // tiffin_created_at: { type: Date, timestamps: true },
+  // tiffin_updated_at: { type: Date, timestamps: true },
   isActive: { type: Boolean, required: true, default: true },
   // tiffin_created_at:{ type: Date, required: true, default : Date.now },
   // tiffin_updated_at:{ type: Date, required: true, default : Date.now },
+},{
+  timestamps: { createdAt: 'tiffin_created_at', updatedAt: 'tiffin_updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const TiffinItemModel = mongoose.model<TiffinItem>(

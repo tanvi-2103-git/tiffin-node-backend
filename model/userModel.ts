@@ -41,9 +41,6 @@ const UserSchema = new mongoose.Schema({
     isActive:{ type: Boolean, required: true, default:true },
     refreshToken: {  type: String,required: false }
        
-       
-      
-    
     //     retailer: {
     //        gst_no:{ type: String,  required: function (user:User) {
     //         return user.role == "Retailer";
@@ -107,6 +104,8 @@ const UserSchema = new mongoose.Schema({
 
   //     }
   // }
+},{
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const UserModel = mongoose.model<User>("User", UserSchema);

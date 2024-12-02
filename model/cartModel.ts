@@ -51,8 +51,10 @@ export const CartSchema = new mongoose.Schema({
   ],
 
   total_amount: { type: Number, default: 0 },
-  created_at: { type: Date, default: Date.now },
+  // created_at: { type: Date, default: Date.now },
   isActive: { type: Boolean, required: true, default: true },
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const CartModel = mongoose.model<Cart>("Cart", CartSchema);

@@ -37,9 +37,11 @@ const OrderSchema = new mongoose.Schema({
     enum: ["pending", "delivered", "cancelled"],
     required: true,
   },
-  created_at: { type: Date, required: true ,default:Date.now},
-  updated_at: { type: Date, required: true ,default:Date.now},
+  // created_at: { type: Date, required: true ,default:Date.now},
+  // updated_at: { type: Date, required: true ,default:Date.now},
   isActive: { type: Boolean, required: true, default: true },
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } // set custom field names for createdAt and updatedAt
 });
 
 export const OrderModel = mongoose.model<Order>("Order", OrderSchema);
