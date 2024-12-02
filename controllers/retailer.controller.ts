@@ -112,7 +112,7 @@ export class RetailerController {
             totalPages = Math.ceil(totalItems / limit);
             newdata = await this.addUserName(orders);
           }
-          if (orders.length > 0)
+          if (orders.length >= 0)
             sendSuccessResponse(res, 200, true, "all orders", newdata, {
               currentPage: page,
               totalPages: totalPages,
