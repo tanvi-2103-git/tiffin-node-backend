@@ -43,6 +43,12 @@ export class OrderController {
             delivery_status,
           });
           await order.save();
+          
+            const cart_id = cartId;
+
+            const destroyCart = await CartModel.findByIdAndDelete(cart_id);
+            
+          
           sendSuccessResponse(res, 200, true, "Order placed", order);
         } else {
           sendSuccessResponse(
@@ -75,12 +81,12 @@ export class OrderController {
             payment_status: "paid",
             delivery_status: "delivered",
           });
-          if (updateOrder) {
-            const cartId = order.cart._id;
+          // if (updateOrder) {
+          //   const cartId = order.cart._id;
 
-            const destroyCart = await CartModel.findByIdAndDelete(cartId);
-            sendSuccessResponse(res, 200, true, "Payment done");
-          }
+          //   const destroyCart = await CartModel.findByIdAndDelete(cartId);
+          //   sendSuccessResponse(res, 200, true, "Payment done");
+          // }
         } else {
           //in case of upi it will change after adding razorpay or neccesary payment service
           const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
