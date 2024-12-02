@@ -55,7 +55,7 @@ export class EmployeeController {
               },
             },
             isActive: true,
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -133,7 +133,7 @@ export class EmployeeController {
               },
             },
             isActive: true,
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -729,7 +729,7 @@ export class EmployeeController {
             "cart.customer_id": user._id,
             delivery_status: "delivered",
           })
-            .sort({ created_at: -1 })
+          .sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -786,7 +786,7 @@ export class EmployeeController {
           const orders = await OrderModel.find({
             "cart.customer_id": user._id,
             delivery_status: "pending",
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -903,7 +903,7 @@ export class EmployeeController {
             orders = await OrderModel.find({
               "cart.customer_id": user._id,
               delivery_status: status,
-            })
+            }).sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -918,6 +918,7 @@ export class EmployeeController {
             newdata = await retailerController.addUserName(orders);
           } else {
             orders = await OrderModel.find({ "cart.customer_id": user._id })
+            .sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
