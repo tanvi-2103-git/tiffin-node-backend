@@ -41,7 +41,7 @@ export class TiffinItemController {
         const tiffinItems = await TiffinItemModel.find({
           retailer_id: retailerId,
           isActive: true,
-        })
+        }).sort({ tiffin_updated_at: -1 })
           .skip(skip)
           .limit(limit);
 
