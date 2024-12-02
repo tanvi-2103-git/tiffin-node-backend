@@ -225,6 +225,64 @@ export class EmployeeController {
     }
   };
 
+  public searchTiffinItem = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { query } = req.query;
+
+      if (!query) throw  "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
+        const searchFields = ["tiffin_name", "tiffin_type"];
+        const user = await getUserFromToken(req);
+        const customerId = user?._id;
+        const organizationId= user?.role_specific_details.organization_id;
+        const org_location = user?.role_specific_details.org_location;
+
+        const Retailers = await UserModel.find({
+          role_id: RETAILER_ID, // retailer role ID
+          "role_specific_details.approval": {
+            $elemMatch: {
+              organization_id: organizationId,
+              org_loc: org_location,
+            },
+          },
+          isActive: true,
+        })
+        const retailerIds = Retailers.map((retailer) => retailer._id);
+
+        let tiffins: TiffinItem[] = [];
+
+        for (let field of searchFields) {
+          tiffins = await TiffinItemModel.find({
+            retailer_id: { $in: retailerIds },
+            isActive: true,
+            [field]: { $regex: query, $options: "i" },
+            // [field]: query,
+          }).exec();
+
+          if (tiffins.length > 0) {
+            break;
+          }
+        }
+        if (tiffins.length === 0) {
+          sendSuccessResponse(res,200,true,"No tiffin found matching the search criteria",tiffins)
+        } else {
+          sendSuccessResponse(res,200,true,"data",tiffins)
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching request:",
+        error
+      );
+    }
+  };
+
   public getAllTiffinofOrg = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
@@ -284,7 +342,7 @@ export class EmployeeController {
               isActive: true,
               ...(type && { tiffin_type: type.toLowerCase() }),
             })
-              .populate("retailer_id", "username")
+              // .populate("retailer_id", "username")
               .sort({ tiffin_rating: -1 })
               .skip(skip)
               .limit(limit)
@@ -543,18 +601,22 @@ export class EmployeeController {
           const Tiffins = await TiffinItemModel.find({
             retailer_id: retailerId,
             isActive: true,
-          }).populate('retailer_id','username')
+          })
+          // .populate('retailer_id','username')
             .skip(skip)
             .limit(limit)
             .exec();
-
+          
+          const retailer= await UserModel.findById(retailerId).select('username');
+          const retailer_name = retailer?.username;
           const totalItems = await TiffinItemModel.countDocuments({
             retailer_id: retailerId,
+            isActive: true,
           });
 
           const totalPages = Math.ceil(totalItems / limit);
 
-          sendSuccessResponse(res, 200, true, "Tiffins", Tiffins, {
+          sendSuccessResponse(res, 200, true, "Tiffins", {retailer_name, Tiffins}, {
             currentPage: page,
             totalPages: totalPages,
             totalItems: totalItems,

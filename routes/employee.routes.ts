@@ -35,6 +35,7 @@ employeeRoutes.get("/cancelorder/:orderid",validateGetRequest({isPagination:fals
 employeeRoutes.get("/searchretailersoforg",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,employeeController.searchRetailersOfOrg);
 employeeRoutes.get("/getallretailerswithtiffin",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation("get_tiffin_of_organization"), employeeController.getAllRetailersWithTiffin);
 employeeRoutes.get("/getallorders",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,employeeController.getAllOrders);
+employeeRoutes.get('/searchTiffinItem',validateToken,RoleBaseValidation('get_tiffin_of_organization'), employeeController.searchTiffinItem);
 
 
 
