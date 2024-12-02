@@ -38,7 +38,8 @@ export class CartController {
           const tiffin_image_url = tiffin.tiffin_image_url;
           const price = tiffin.tiffin_price;
           const tiffin_available_quantity = tiffin.tiffin_available_quantity;
-         
+          const tiffin_description = tiffin.tiffin_description;
+
 
           let customerCart = await CartModel.findOne({ customer_id });
 
@@ -72,6 +73,7 @@ export class CartController {
                     quantity,
                     tiffin_available_quantity,
                     price,
+                    tiffin_description,
                   },
                 ],
                 total_amount: price * quantity,
@@ -104,6 +106,7 @@ export class CartController {
                   tiffin_name,
                   tiffin_available_quantity,
                   tiffin_image_url,
+                  tiffin_description,
                 });
               }
 
@@ -140,6 +143,8 @@ export class CartController {
         const price = tiffin?.tiffin_price;
         const tiffin_name = tiffin?.tiffin_name;
         const tiffin_image_url = tiffin?.tiffin_image_url;
+        const tiffin_description = tiffin?.tiffin_description;
+
         const itemIndex = cart.items.findIndex(
           (item) => JSON.stringify(item.tiffin_id) == JSON.stringify(tiffinId)
         );
@@ -170,6 +175,7 @@ export class CartController {
             price,
             tiffin_name,
             tiffin_image_url,
+            tiffin_description,
           });
         }
 
