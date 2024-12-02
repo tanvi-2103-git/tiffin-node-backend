@@ -89,6 +89,7 @@ export class AdminController {
                 },
               },
             })
+              .sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -128,7 +129,7 @@ export class AdminController {
                   org_loc: organization_loc,
                 },
               },
-            })
+            }).sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -204,7 +205,7 @@ export class AdminController {
                 organization_id: user?.role_specific_details.organization_id,
               },
             },
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -278,7 +279,7 @@ export class AdminController {
                 organization_id: user?.role_specific_details.organization_id,
               },
             },
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
@@ -354,7 +355,7 @@ export class AdminController {
                 organization_id: user?.role_specific_details.organization_id,
               },
             },
-          })
+          }).sort({ updated_at: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
