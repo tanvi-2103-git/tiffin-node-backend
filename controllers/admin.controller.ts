@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../model/userModel";
 import jwt from "jsonwebtoken";
 import { RETAILER_ID } from "../utils/constants";
-import { sendErrorResponse, sendSuccessResponse } from "../utils/responsesUtils";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/responsesUtils";
 import { getDefaultResultOrder } from "dns/promises";
 import { ObjectId } from "mongodb";
 
@@ -59,7 +62,7 @@ export class AdminController {
         );
       } else {
         const status = req.query.status;
-        const organization_loc= user.role_specific_details.org_location;
+        const organization_loc = user.role_specific_details.org_location;
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         let totalItems;
@@ -71,7 +74,8 @@ export class AdminController {
             400,
             false,
             "Page and limit must be positive integers"
-          );    } else {
+          );
+        } else {
           const skip = (page - 1) * limit;
           if (status) {
             const result = await UserModel.find({
@@ -81,6 +85,7 @@ export class AdminController {
                 $elemMatch: {
                   approval_status: status,
                   organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
                 },
               },
             })
@@ -95,21 +100,23 @@ export class AdminController {
                 $elemMatch: {
                   approval_status: status,
                   organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
                 },
               },
             });
             totalPages = Math.ceil(totalItems / limit);
 
-             sendSuccessResponse(
-            res,
-            200,
-            true,
-            `All retailer requests: ${status}`,
-            result,{
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              `All retailer requests: ${status}`,
+              result,
+              {
                 currentPage: page,
                 totalPages: totalPages,
                 totalItems: totalItems,
-              },
+              }
             );
           } else {
             const result = await UserModel.find({
@@ -118,7 +125,7 @@ export class AdminController {
               "role_specific_details.approval": {
                 $elemMatch: {
                   organization_id: user?.role_specific_details.organization_id,
-                  org_loc:organization_loc
+                  org_loc: organization_loc,
                 },
               },
             })
@@ -132,19 +139,24 @@ export class AdminController {
               "role_specific_details.approval": {
                 $elemMatch: {
                   organization_id: user?.role_specific_details.organization_id,
-                  org_loc:organization_loc
+                  org_loc: organization_loc,
                 },
               },
             });
             totalPages = Math.ceil(totalItems / limit);
 
-            sendSuccessResponse(res, 200, true, "All retailer requests", result,
-               {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "All retailer requests",
+              result,
+              {
                 currentPage: page,
                 totalPages: totalPages,
                 totalItems: totalItems,
-              },
-           );
+              }
+            );
           }
         }
       }
@@ -180,7 +192,8 @@ export class AdminController {
             400,
             false,
             "Page and limit must be positive integers"
-          ); } else {
+          );
+        } else {
           const skip = (page - 1) * limit;
           const result = await UserModel.find({
             role_id: RETAILER_ID,
@@ -207,17 +220,18 @@ export class AdminController {
           });
 
           const totalPages = Math.ceil(totalItems / limit);
-          
-        sendSuccessResponse(
-          res,
-          200,
-          true,
-          "All retailer approval requests",
-          result,{
+
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "All retailer approval requests",
+            result,
+            {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
-            },
+            }
           );
         }
       }
@@ -242,7 +256,6 @@ export class AdminController {
           false,
           "Unauthorized or invalid user details."
         );
-
       } else {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
@@ -253,7 +266,8 @@ export class AdminController {
             400,
             false,
             "Page and limit must be positive integers"
-          );    } else {
+          );
+        } else {
           const skip = (page - 1) * limit;
           const result = await UserModel.find({
             role_id: RETAILER_ID,
@@ -287,11 +301,12 @@ export class AdminController {
             200,
             true,
             "All the approved retailers",
-            result,{
+            result,
+            {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
-            },
+            }
           );
         }
       }
@@ -327,7 +342,8 @@ export class AdminController {
             400,
             false,
             "Page and limit must be positive integers"
-          );    } else {
+          );
+        } else {
           const skip = (page - 1) * limit;
           const result = await UserModel.find({
             role_id: RETAILER_ID, //retailer:roleid
@@ -356,12 +372,17 @@ export class AdminController {
 
           const totalPages = Math.ceil(totalItems / limit);
 
-          sendSuccessResponse(res, 200, true, "All rejected Retailers", result
-            ,{
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "All rejected Retailers",
+            result,
+            {
               currentPage: page,
               totalPages: totalPages,
               totalItems: totalItems,
-            },
+            }
           );
         }
       }
@@ -391,43 +412,48 @@ export class AdminController {
           "Unauthorized or invalid user details."
         );
       } else {
-      const { query, approval_status } = req.query;
-      
-      if (!query) throw "Query parameter is required and must be a string Or Unauthorized or invalid user details."
-       else {
-        const searchFields = ["username", "email", "contact_number", "address"];
+        const { query, approval_status } = req.query;
 
-        let retailers: User[] = [];
-        const organization_id=user.role_specific_details.organization_id;
-        for (let field of searchFields) {
-          retailers = await UserModel.find({
-            role_id: RETAILER_ID, //retailer id
-            "role_specific_details.approval.approval_status": approval_status,
-            "role_specific_details.approval.organization_id":organization_id,
-            //  [field] : query,
-            [field]: { $regex: query, $options: "i" },
-          }).exec();
+        if (!query)
+          throw "Query parameter is required and must be a string Or Unauthorized or invalid user details.";
+        else {
+          const searchFields = [
+            "username",
+            "email",
+            "contact_number",
+            "address",
+          ];
 
-          if (retailers.length > 0) {
-            break;
+          let retailers: User[] = [];
+          const organization_id = user.role_specific_details.organization_id;
+          for (let field of searchFields) {
+            retailers = await UserModel.find({
+              role_id: RETAILER_ID, //retailer id
+              "role_specific_details.approval.approval_status": approval_status,
+              "role_specific_details.approval.organization_id": organization_id,
+              //  [field] : query,
+              [field]: { $regex: query, $options: "i" },
+            }).exec();
+
+            if (retailers.length > 0) {
+              break;
+            }
+          }
+          if (retailers.length === 0) {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "No retailers found matching the search criteria",
+              retailers
+            );
+          } else {
+            sendSuccessResponse(res, 200, true, "data", retailers);
           }
         }
-        if (retailers.length === 0) {
-          sendSuccessResponse(res,200,true,"No retailers found matching the search criteria",retailers)
-        } else {
-          sendSuccessResponse(res,200,true,"data",retailers)
-        }
       }
-    }
     } catch (error) {
-      
-      sendErrorResponse(
-        res,
-        500,
-        false,
-        "Error searching retailer:",
-        error
-      );
+      sendErrorResponse(res, 500, false, "Error searching retailer:", error);
     }
   };
 
@@ -485,7 +511,6 @@ export class AdminController {
           }
         );
         sendSuccessResponse(res, 200, true, "approved", result);
-
       }
     } catch (error) {
       console.error("Error approving retailer:", error);
@@ -667,7 +692,7 @@ export class AdminController {
   };
 
   public getRetailerRequestCount = async (req: Request, res: Response) => {
-    try{
+    try {
       const user = await getUserFromToken(req);
 
       if (
@@ -683,49 +708,72 @@ export class AdminController {
           "Unauthorized or invalid user details."
         );
       } else {
-        const organization_id= user.role_specific_details.organization_id;
-        const organization_loc= user.role_specific_details.org_location;
+        const organization_id = user.role_specific_details.organization_id;
+        const organization_loc = user.role_specific_details.org_location;
 
-  const totalItems = await UserModel.aggregate([
-        {
-          $match: {
-            role_id: new ObjectId(RETAILER_ID),
-            "role_specific_details.approval": {
+        const pendingCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
             $elemMatch: {
-              // approval_status: "pending",
+              approval_status: "pending",
               organization_id: organization_id,
-              org_loc:organization_loc
+              org_loc: organization_loc,
             },
           },
-            isActive: true
-          }
-        },{
-          $unwind: "$role_specific_details.approval"
-        },
-        {
-          $group: {
-            _id: "$role_specific_details.approval.approval_status",
-            count: { $sum: 1 }
-          }
-        },
-        
-        {
-          $project: {
-            _id: 0,
-            approval_status: "$_id",
-            count: 1
-          }
-        }
-      ]);
-      
-      if(totalItems)
-      sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
-      else throw "error in fetching count"
-   } }catch(error){
+        });
+
+        const approvedCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "approved",
+              organization_id: organization_id,
+              org_loc: organization_loc,
+            },
+          },
+        });
+
+        const rejectedCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "rejected",
+              organization_id: organization_id,
+              org_loc: organization_loc,
+            },
+          },
+        });
+
+        const totalItems = [
+          {
+            approval_status: "pending",
+            count: pendingCount,
+          },
+          {
+            approval_status: "approved",
+            count: approvedCount,
+          },
+          {
+            approval_status: "rejected",
+            count: rejectedCount,
+          },
+        ];
+
+        if (totalItems)
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "count of approval request",
+            totalItems
+          );
+        else throw "error in fetching count";
+      }
+    } catch (error) {
       sendErrorResponse(res, 500, false, "error", error);
-
     }
-  }
-
- 
+  };
 }
