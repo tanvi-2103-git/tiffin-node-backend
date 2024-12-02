@@ -720,7 +720,6 @@ export class EmployeeController {
           username: { $regex: query, $options: "i" },
         });
         const userIds = user.map((user) => user._id);
-        console.log("userIds", userIds);
 
         const tiffin = await TiffinItemModel.find({
           $or: [
