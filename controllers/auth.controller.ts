@@ -178,28 +178,35 @@ export class AuthController {
     }
   };
 
+ 
   public refreshAccessToken = async (
     req: Request,
     res: Response
   ): Promise<void> => {
     try {
-      const incomingRefreshToken = req.body.refreshToken;
+      const { refreshToken } = req.body;
 
-      if (!incomingRefreshToken) throw "Refresh token is required"
+      if (!refreshToken) throw "Refresh token is required";
 
-      const decodedToken = jwt.verify(
-        incomingRefreshToken,
+      const { id, role } = jwt.verify(
+        refreshToken,
         process.env.REFRESH_SECRET_KEY!
       ) as { id: string; role: string };
 
-      const user = await UserModel.findById(decodedToken.id);
+      const user = await UserModel.findById(id)
+;
 
       if (!user) throw "Invalid refresh token";
-       else {
-        if (incomingRefreshToken !== user?.refreshToken)  throw "Invalid refresh token";
+      else {
+        const {
+          _id: userId,
+          role_id: userRole,
+          refreshToken: userRefreshToken,
+        } = user;
+        if (refreshToken !== userRefreshToken) throw "Invalid refresh token";
 
         const newAccessToken = jwt.sign(
-          { id: user?._id, role: user?.role_id },
+          { userId, userRole },
           process.env.SECRET_KEY!,
           {
             expiresIn: "2h",
@@ -207,9 +214,9 @@ export class AuthController {
         );
 
         const newRefreshToken = jwt.sign(
-          { id: user?._id, role: user?.role_id },
+          { userId, userRole },
           process.env.REFRESH_SECRET_KEY!,
-          { expiresIn: "7h" }
+          { expiresIn: "7d" }
         );
 
         user.refreshToken = newRefreshToken;
@@ -228,7 +235,8 @@ export class AuthController {
         res,
         400,
         false,
-        "Something went wrong while refreshing the access token",error
+        "Something went wrong while refreshing the access token",
+        error
       );
     }
   };
