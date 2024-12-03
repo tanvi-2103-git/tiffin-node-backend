@@ -64,22 +64,25 @@ export class OrderController {
 
   public confirmPayment = async (req: Request, res: Response) => {
     try {
-      const { orderid: orderId } = req.params;
-      console.log("orderId", orderId);
+      const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
-      console.log("order:  ", order);
-      if (order?.delivery_status == "cancelled") {
-        console.log("order 1:  ", order);
+      if (order?.delivery_status == "cancelled")
         sendSuccessResponse(res, 200, true, "order is already cancelled");
-      } else {
+      else {
         if (order) {
-          console.log("order 2:  ", order);
           if (order.payment_mode == "CoD") {
             const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
               payment_status: "paid",
               delivery_status: "delivered",
             });
-            console.log("updateorder:", updateOrder);
+            sendSuccessResponse(res, 200, true, "Payment done");
+
+            // if (updateOrder) {
+            //   const cartId = order.cart._id;
+
+            //   const destroyCart = await CartModel.findByIdAndDelete(cartId);
+            //   sendSuccessResponse(res, 200, true, "Payment done");
+            // }
           } else {
             //in case of upi it will change after adding razorpay or neccesary payment service
             const updateOrder = await OrderModel.findByIdAndUpdate(orderId, {
@@ -99,7 +102,7 @@ export class OrderController {
 
   public getOrderById = async (req: Request, res: Response) => {
     try {
-      const { orderid: orderId } = req.params;
+      const orderId = req.params.orderid;
       const order = await OrderModel.findById(orderId).exec();
       if (order) {
         sendSuccessResponse(res, 200, true, `order of id: ${orderId}`, order);
