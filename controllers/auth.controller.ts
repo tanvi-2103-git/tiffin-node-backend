@@ -32,46 +32,6 @@ export class AuthController {
   };
 
 
-  // public login = async (req: Request, res: Response) => {
-  //   try {
-  //     const { email, password } = req.body;
-  //     const newEmail = email.toLowerCase();
-  //     const user = await this.getUserByEmail(newEmail);
-  //     if (user) {
-  //       const matchPassword = await bcrypt.compare(password, user.password);
-  //       const { _id: userId, role_id: roleId } = user;
-  //       if (matchPassword) {
-  //         const token = jwt.sign({ userId, roleId }, process.env.SECRET_KEY!, {
-  //           expiresIn: "2h",
-  //         });
-
-  //         const refreshToken = jwt.sign(
-  //           { userId, roleId },
-  //           process.env.REFRESH_SECRET_KEY!,
-  //           {
-  //             expiresIn: "7h",
-  //           }
-  //         );
-
-  //         user.refreshToken = refreshToken;
-  //         await user.save();
-
-  //         sendSuccessToken(
-  //           res,
-  //           200,
-  //           true,
-  //           "Authentication successful!",
-  //           token,
-  //           refreshToken,
-  //           userId,
-  //           roleId
-  //         );
-  //       } else throw "Invalid username or password";
-  //     } else throw "User not found";
-  //   } catch (error) {
-  //     sendErrorResponse(res, 500, false, "User login failed", error);
-  //   }
-  // };
 
   public login = async (req: Request, res: Response) => {
     try {
@@ -358,6 +318,7 @@ export class AuthController {
       sendErrorResponse(res, 500, false, "Token not found", error);
     }
   };
+  
 
   getUserByToken = async (req: Request, res: Response) => {
     try {
@@ -381,15 +342,19 @@ export class AuthController {
     }
   };
 
+ 
+
   public uploadUserImage = async (req: Request, res: Response) => {
     try {
-      const user_id = req.params.userid;
-      const cloudinaryUrl = req.body.cloudinaryUrl;
+   
+      const { userid } = req.params;
+      const { cloudinaryUrl } = req.body;
+   
 
       if (!cloudinaryUrl) throw "Internal Server Error";
       else {
         const user = await UserModel.findByIdAndUpdate(
-          user_id,
+          userid,
           { user_image: cloudinaryUrl },
           { new: true, runValidators: true }
         );
@@ -403,9 +368,11 @@ export class AuthController {
     }
   };
 
+
   public updateLoc = async (req: Request, res: Response) => {
     try {
-      const org_location = req.query.org_location;
+      const { org_location } = req.query;
+
       const user = (await getUserFromToken(req)) as User;
       const updateloc = await UserModel.updateOne(
         {
@@ -422,7 +389,8 @@ export class AuthController {
 
   public updateProfile = async (req: Request, res: Response) => {
     try {
-      const id = req.params.id;
+      
+      const { id }  = req.params;
       const { ...user } = req.body;
       if (!id) throw "user id is not provided";
       else {
