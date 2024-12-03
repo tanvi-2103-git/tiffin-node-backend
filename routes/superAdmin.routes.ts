@@ -22,14 +22,15 @@ superAdminRoutes.get("/pendingAdminApproval",validateGetRequest({isPagination:tr
 superAdminRoutes.get("/approvedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_approved_admin_request'), approval.getAllApprovedAdmin);
 superAdminRoutes.get("/rejectedAdminApproval",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_rejected_admin_request'), approval.getAllRejectedAdmin);
 superAdminRoutes.get("/getalladminrequest",validateGetRequest({isPagination:true,isIdRequired:false}),validateToken,RoleBaseValidation('get_admin_request'), approval.getAllAdminRequest);
-superAdminRoutes.get("/getcount",validateToken,RoleBaseValidation('get_admin_request'), approval.getAdminRequestCount);
+// superAdminRoutes.get("/getcount",validateToken,RoleBaseValidation('get_admin_request'), approval.getAdminRequestCount);
 
 //searchalladminrequest
 superAdminRoutes.put("/rejectadmin/:admin_id",validateToken,RoleBaseValidation('reject_admin_request'), approval.rejectApprovalRequest);
 superAdminRoutes.put("/approveadmin/:admin_id",validateToken,RoleBaseValidation('approve_admin_request'), approval.approveAdminRequest);
-superAdminRoutes.get("/getweeklyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyRequest);
-superAdminRoutes.get("/getmonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getMonthlylyRequest);
+// superAdminRoutes.get("/getweeklyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyRequest);
+// superAdminRoutes.get("/getmonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getMonthlylyRequest);
 superAdminRoutes.get("/getweeklymonthlyrequests",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.getWeeklyMonthlyRequest);
+superAdminRoutes.get("/dashboard",validateGetRequest({isPagination:false,isIdRequired:false}),validateToken,RoleBaseValidation("get_admin_request"), approval.superadminDashboard);
 
 
 

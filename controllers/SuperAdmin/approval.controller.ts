@@ -339,7 +339,8 @@ export class ApprovalController {
       ]);
       
       if(totalItems)
-      sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
+        return totalItems
+      // sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
       else throw "error in fetching count"
     }catch(error){
       sendErrorResponse(res, 500, false, "error", error);
@@ -516,17 +517,26 @@ export class ApprovalController {
         });
       } else {
         const status = req.query.status;
+        // console.log(status);
+        
         const year = parseInt(req.query.year as string);
+        const month = parseInt(req.query.month as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
+        // const startOfMonth = moment().year(year).month(month - 1).startOf('month').toDate();
+        // const endOfMonth = moment().year(year).month(month - 1).endOf('month').toDate();
+        
+      
+        
         let requests;
         let data;
-        if (status && year) {
+        if (status ) {
           requests = await UserModel.aggregate([
             {
               $match: {
                 role_id: new ObjectId(ADMIN_ID),
                 "role_specific_details.approval_status": status,
+                isActive:true,
                 created_at: {
                   $gte: startOfYear,
                   $lt: endOfYear,
@@ -550,12 +560,13 @@ export class ApprovalController {
             },
           ]);
 
-          console.log(requests);
+          // console.log(requests);
         } else {
           requests = await UserModel.aggregate([
             {
               $match: {
                 role_id: new ObjectId(ADMIN_ID),
+                isActive:true,
                 created_at: {
                   $gte: startOfYear,
                   $lt: endOfYear,
@@ -578,7 +589,7 @@ export class ApprovalController {
               },
             },
           ]);
-          console.log(requests);
+          // console.log(requests);
         }
         if (requests) {
           data = requests.map((item) => {
@@ -600,11 +611,13 @@ export class ApprovalController {
               requestcount: item.count,
             };
           });
-          res.status(200).json({ statuscode: 200, data: data });
+          return data;
+          // res.status(200).json({ statuscode: 200, data: data });
         } else
-          res
-            .status(200)
-            .json({ statuscode: 200, message: "request not found" });
+        return "request not found";
+          // res
+          //   .status(200)
+          //   .json({ statuscode: 200, message: "request not found" });
       }
     } catch (error) {
       res
@@ -622,18 +635,22 @@ export class ApprovalController {
           message: "Unauthorized or invalid user details.",
         });
       } else {
+        
         const status = req.query.status;
+        console.log(status);
+        
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
         let requests;
         let data;
-        if (status && year) {
+        if (status ) {
           requests = await UserModel.aggregate([
             {
               $match: {
                 role_id: new ObjectId(ADMIN_ID),
                 "role_specific_details.approval_status": status,
+                isActive:true,
                 created_at: {
                   $gte: startOfYear,
                   $lte: endOfYear,
@@ -661,6 +678,7 @@ export class ApprovalController {
             {
               $match: {
                 role_id: new ObjectId(ADMIN_ID),
+                isActive:true,
                 created_at: {
                   $gte: startOfYear,
                   $lte: endOfYear,
@@ -693,11 +711,13 @@ export class ApprovalController {
             //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
             return { month: startOfmonth, requestcount: item.count };
           });
-          res.status(200).json({ statuscode: 200, data: data });
+          return data;
+          // res.status(200).json({ statuscode: 200, data: data });
         } else
-          res
-            .status(200)
-            .json({ statuscode: 200, message: "orders not found" });
+        return "request not found"
+          // res
+          //   .status(200)
+          //   .json({ statuscode: 200, message: "request not found" });
       }
     } catch (error) {
       res
@@ -797,4 +817,22 @@ export class ApprovalController {
       );
     }
   };
+
+  public superadminDashboard = async (req: Request, res: Response) => {
+    try{
+
+      const monthlyReq =await this.getMonthlylyRequest(req,res);
+      const weeklyReq =await this.getWeeklyRequest(req,res);
+      const reqCount =await this.getAdminRequestCount(req,res);
+     
+      const dashboard = {
+        monthly_request:monthlyReq,
+        weekly_request:weeklyReq,
+        request_count:reqCount
+      }
+      sendSuccessResponse(res,200,true,"Dashboard",dashboard)
+    }catch(error){
+
+    }
+  }
 }
