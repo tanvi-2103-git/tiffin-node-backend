@@ -32,6 +32,47 @@ export class AuthController {
   };
 
 
+  // public login = async (req: Request, res: Response) => {
+  //   try {
+  //     const { email, password } = req.body;
+  //     const newEmail = email.toLowerCase();
+  //     const user = await this.getUserByEmail(newEmail);
+  //     if (user) {
+  //       const matchPassword = await bcrypt.compare(password, user.password);
+  //       const { _id: userId, role_id: roleId } = user;
+  //       if (matchPassword) {
+  //         const token = jwt.sign({ userId, roleId }, process.env.SECRET_KEY!, {
+  //           expiresIn: "2h",
+  //         });
+
+  //         const refreshToken = jwt.sign(
+  //           { userId, roleId },
+  //           process.env.REFRESH_SECRET_KEY!,
+  //           {
+  //             expiresIn: "7h",
+  //           }
+  //         );
+
+  //         user.refreshToken = refreshToken;
+  //         await user.save();
+
+  //         sendSuccessToken(
+  //           res,
+  //           200,
+  //           true,
+  //           "Authentication successful!",
+  //           token,
+  //           refreshToken,
+  //           userId,
+  //           roleId
+  //         );
+  //       } else throw "Invalid username or password";
+  //     } else throw "User not found";
+  //   } catch (error) {
+  //     sendErrorResponse(res, 500, false, "User login failed", error);
+  //   }
+  // };
+
   public login = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
@@ -39,14 +80,14 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-        const { _id: userId, role_id: roleId } = user;
+        const { _id, role_id } = user;
         if (matchPassword) {
-          const token = jwt.sign({ userId, roleId }, process.env.SECRET_KEY!, {
+          const token = jwt.sign({ _id,role_id }, process.env.SECRET_KEY!, {
             expiresIn: "2h",
           });
 
           const refreshToken = jwt.sign(
-            { userId, roleId },
+            { _id , role_id },
             process.env.REFRESH_SECRET_KEY!,
             {
               expiresIn: "7h",
@@ -63,8 +104,8 @@ export class AuthController {
             "Authentication successful!",
             token,
             refreshToken,
-            userId,
-            roleId
+            _id,
+            role_id
           );
         } else throw "Invalid username or password";
       } else throw "User not found";
@@ -230,14 +271,11 @@ export class AuthController {
     }
   };
 
+
   public forgotPassword = async (req: Request, res: Response) => {
-    // todo:
-    // 1.get user based on posted email
-    // 2.generate a random reset token
-    // 3. send the token back to the user
     try {
-      const emailId = req.body.email;
-      const user = await this.getUserByEmail(emailId);
+     const { email } = req.body;
+      const user = await this.getUserByEmail(email);
       if (!user) throw "Invalid email ID provided";
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -252,11 +290,12 @@ export class AuthController {
         user.resetPasswordTokenExpires = resetTokenExpiry;
         await user.save();
 
+        const { EMAIL_USER,EMAIL_PASS} = process.env;
         const transporter = nodemailer.createTransport({
           service: "Gmail",
           auth: {
-            user: process.env.EMAIL_USER, // sender
-            pass: process.env.EMAIL_PASS,
+            user: EMAIL_USER, // sender
+            pass: EMAIL_PASS,
           },
         });
 
@@ -288,6 +327,7 @@ export class AuthController {
       sendErrorResponse(res, 500, false, "Error sending reset email", error);
     }
   };
+
 
   public resetPassword = async (req: Request, res: Response) => {
     try {
