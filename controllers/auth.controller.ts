@@ -18,6 +18,7 @@ import {
   sendSuccessToken,
 } from "../utils/responsesUtils";
 import { upload } from "../config/cloudinaryConfig";
+import { string } from "joi";
 export const userRoutes = express();
 userRoutes.use(cors());
 dotenv.config();
@@ -31,8 +32,6 @@ export class AuthController {
     return await UserModel.findOne({ email: email });
   };
 
-
-
   public login = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
@@ -40,14 +39,17 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
-        const { _id, role_id } = user;
         if (matchPassword) {
-          const token = jwt.sign({ _id,role_id }, process.env.SECRET_KEY!, {
-            expiresIn: "2h",
-          });
+          const token = jwt.sign(
+            { id: user._id, role: user.role_id },
+            process.env.SECRET_KEY!,
+            {
+              expiresIn: "2h",
+            }
+          );
 
           const refreshToken = jwt.sign(
-            { _id , role_id },
+            { id: user._id, role: user.role_id },
             process.env.REFRESH_SECRET_KEY!,
             {
               expiresIn: "7h",
@@ -56,7 +58,8 @@ export class AuthController {
 
           user.refreshToken = refreshToken;
           await user.save();
-
+          const _id = user._id;
+          const role_id = user.role_id;
           sendSuccessToken(
             res,
             200,
@@ -67,12 +70,23 @@ export class AuthController {
             _id,
             role_id
           );
+
+          // res.json({
+          //   statuscode: 200,
+          //   success: true,
+          //   message: "Authentication successful!",
+          //   token: token,
+          //   refreshToken : refreshToken,//sending access token and refresh token
+          //   _id: user._id,
+          //   role_id: user.role_id,
+          // });
         } else throw "Invalid username or password";
       } else throw "User not found";
     } catch (error) {
       sendErrorResponse(res, 500, false, "User login failed", error);
     }
   };
+
 
   public register = async (req: Request, res: Response) => {
     try {
@@ -93,7 +107,10 @@ export class AuthController {
       else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
-
+        // roleTemplate.map((field: RoleSpecificDetail) => {
+        //   const fieldName = field.name;
+        //   role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
+        // });
         for (const field of roleTemplate) {
           const fieldName = field.name;
 
@@ -134,6 +151,44 @@ export class AuthController {
     }
   };
 
+  // public logoutUser = async (
+  //   req: Request,
+  //   res: Response
+  // ): Promise<undefined> => {
+  //   try {
+  //     const token = req.headers.authorization?.split(" ")[1];
+
+  //     if (!token) {
+  //       return undefined;
+  //     }
+
+  //     const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+  //       id: string;
+  //       role: string;
+  //     };
+
+  //     const updatedUser = await UserModel.findByIdAndUpdate(
+  //       decoded.id,
+  //       { $set: { refreshToken: undefined } }, // Reset the refresh token on logout
+  //       { new: true }
+  //     );
+
+  //     if (!updatedUser) throw "User not found";
+  //     else {
+  //       sendSuccessResponse(res, 200, true, "User logged out successfully");
+  //     }
+  //   } catch (error) {
+  //     sendErrorResponse(
+  //       res,
+  //       500,
+  //       false,
+  //       "Server error while logging out",
+  //       error
+  //     );
+  //   }
+  // };
+
+
   public logoutUser = async (
     req: Request,
     res: Response
@@ -150,9 +205,10 @@ export class AuthController {
         role: string;
       };
 
+      console.log(decoded.id);
       const updatedUser = await UserModel.findByIdAndUpdate(
         decoded.id,
-        { $set: { refreshToken: undefined } }, // Reset the refresh token on logout
+        { $set: { refreshToken: "" } }, // Reset the refresh token on logout
         { new: true }
       );
 
@@ -170,6 +226,63 @@ export class AuthController {
       );
     }
   };
+
+  // public refreshAccessToken = async (
+  //   req: Request,
+  //   res: Response
+  // ): Promise<void> => {
+  //   try {
+  //     const incomingRefreshToken = req.body.refreshToken;
+
+  //     if (!incomingRefreshToken) throw "Refresh token is required";
+
+  //     const decodedToken = jwt.verify(
+  //       incomingRefreshToken,
+  //       process.env.REFRESH_SECRET_KEY!
+  //     ) as { id: string; role: string };
+
+  //     const user = await UserModel.findById(decodedToken.id);
+
+  //     if (!user) throw "Invalid refresh token";
+  //     else {
+  //       if (incomingRefreshToken !== user?.refreshToken)
+  //         throw "Invalid refresh token";
+
+  //       const newAccessToken = jwt.sign(
+  //         { id: user?._id, role: user?.role_id },
+  //         process.env.SECRET_KEY!,
+  //         {
+  //           expiresIn: "2h",
+  //         }
+  //       );
+
+  //       const newRefreshToken = jwt.sign(
+  //         { id: user?._id, role: user?.role_id },
+  //         process.env.REFRESH_SECRET_KEY!,
+  //         { expiresIn: "7h" }
+  //       );
+
+  //       user.refreshToken = newRefreshToken;
+  //       await user.save();
+  //       sendSuccessToken(
+  //         res,
+  //         200,
+  //         true,
+  //         "Access token refreshed successfully",
+  //         newAccessToken,
+  //         newRefreshToken
+  //       );
+  //     }
+  //   } catch (error) {
+  //     sendErrorResponse(
+  //       res,
+  //       400,
+  //       false,
+  //       "Something went wrong while refreshing the access token",
+  //       error
+  //     );
+  //   }
+  // };
 
   public refreshAccessToken = async (
     req: Request,
@@ -231,11 +344,14 @@ export class AuthController {
     }
   };
 
-
   public forgotPassword = async (req: Request, res: Response) => {
+    // todo:
+    // 1.get user based on posted email
+    // 2.generate a random reset token
+    // 3. send the token back to the user
     try {
-     const { email } = req.body;
-      const user = await this.getUserByEmail(email);
+      const emailId = req.body.email;
+      const user = await this.getUserByEmail(emailId);
       if (!user) throw "Invalid email ID provided";
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -250,12 +366,11 @@ export class AuthController {
         user.resetPasswordTokenExpires = resetTokenExpiry;
         await user.save();
 
-        const { EMAIL_USER,EMAIL_PASS} = process.env;
         const transporter = nodemailer.createTransport({
           service: "Gmail",
           auth: {
-            user: EMAIL_USER, // sender
-            pass: EMAIL_PASS,
+            user: process.env.EMAIL_USER, // sender
+            pass: process.env.EMAIL_PASS,
           },
         });
 
@@ -288,6 +403,57 @@ export class AuthController {
     }
   };
 
+  // public resetPassword = async (req: Request, res: Response) => {
+  //   try {
+  //     const { token } = req.query;
+  //     const { password } = req.body;
+
+  //     if (token) {
+  //       const hashedToken = crypto
+  //         .createHash("sha256")
+  //         .update(token as string)
+  //         .digest("hex");
+
+  //       const user = await UserModel.findOne({
+  //         resetPasswordToken: hashedToken,
+  //         resetPasswordTokenExpires: { $gte: moment().toDate() },
+  //       });
+
+  //       if (!user) throw "Invalid or expired token";
+  //       else {
+  //         user.password = await bcrypt.hash(password, 10);
+  //         user.resetPasswordToken = undefined;
+  //         user.resetPasswordTokenExpires = undefined;
+  //         await user.save();
+  //         sendSuccessResponse(res, 200, true, "Password reset successful");
+  //       }
+  //     } else throw "Token not found";
+  //   } catch (error) {
+  //     sendErrorResponse(res, 500, false, "Token not found", error);
+  //   }
+  // };
+
+  // getUserByToken = async (req: Request, res: Response) => {
+  //   try {
+  //     const token = req.headers.authorization?.split(" ")[1];
+
+  //     if (!token) throw `No token provided`;
+  //     else {
+  //       const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+  //         id: string;
+  //         role: string;
+  //       };
+  //       const user = (await UserModel.findOne({
+  //         _id: decoded.id,
+  //       }).exec()) as User;
+
+  //       if (!user) throw `User not found`;
+  //       sendSuccessResponse(res, 200, true, "user", user);
+  //     }
+  //   } catch (error) {
+  //     sendErrorResponse(res, 500, false, `Internal server error`, error);
+  //   }
+  // };
 
   public resetPassword = async (req: Request, res: Response) => {
     try {
@@ -318,43 +484,40 @@ export class AuthController {
       sendErrorResponse(res, 500, false, "Token not found", error);
     }
   };
-  
 
   getUserByToken = async (req: Request, res: Response) => {
     try {
       const token = req.headers.authorization?.split(" ")[1];
+      console.log(token);
 
-      if (!token) throw `No token provided`;
-      else {
+      if (!token) throw`No token provided`
+       else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
           role: string;
         };
+       // console.log(decoded.id);
         const user = (await UserModel.findOne({
           _id: decoded.id,
         }).exec()) as User;
-
-        if (!user) throw `User not found`;
+        console.log(user);
+        if (!user) throw `User not found`
         sendSuccessResponse(res, 200, true, "user", user);
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, `Internal server error`, error);
+      sendErrorResponse(res, 500, false, `Internal server error`,error);
     }
   };
-
  
-
   public uploadUserImage = async (req: Request, res: Response) => {
     try {
-   
-      const { userid } = req.params;
-      const { cloudinaryUrl } = req.body;
-   
+      const user_id = req.params.userid;
+      const cloudinaryUrl = req.body.cloudinaryUrl;
 
       if (!cloudinaryUrl) throw "Internal Server Error";
       else {
         const user = await UserModel.findByIdAndUpdate(
-          userid,
+          user_id,
           { user_image: cloudinaryUrl },
           { new: true, runValidators: true }
         );
@@ -368,11 +531,9 @@ export class AuthController {
     }
   };
 
-
   public updateLoc = async (req: Request, res: Response) => {
     try {
-      const { org_location } = req.query;
-
+      const org_location = req.query.org_location;
       const user = (await getUserFromToken(req)) as User;
       const updateloc = await UserModel.updateOne(
         {
@@ -389,8 +550,7 @@ export class AuthController {
 
   public updateProfile = async (req: Request, res: Response) => {
     try {
-      
-      const { id }  = req.params;
+      const id = req.params.id;
       const { ...user } = req.body;
       if (!id) throw "user id is not provided";
       else {
