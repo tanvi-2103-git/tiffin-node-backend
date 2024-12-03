@@ -81,6 +81,7 @@ export class OrderController {
             payment_status: "paid",
             delivery_status: "delivered",
           });
+          sendSuccessResponse(res, 200, true, "Payment done");
           // if (updateOrder) {
           //   const cartId = order.cart._id;
 
