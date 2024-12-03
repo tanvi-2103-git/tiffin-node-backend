@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import { OrganizationModel, Organization } from "../model/organizationModel";
 import { UserModel, User } from "../model/userModel";
-import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 import { Document } from "mongodb";
 import { getUserFromToken } from "./admin.controller";
@@ -16,8 +14,8 @@ import { TiffinItemModel } from "../model/tiffinItemModel";
 export class RetailerController {
   public addRequest = async (req: Request, res: Response) => {
     try {
-      const organization_id = req.params.organization_id;
-      const orgloc = req.query.org_location;
+      const { organization_id } = req.params;
+      const { org_location: orgloc } = req.query;
       const token = req.headers.authorization?.split(" ")[1];
       if (token) {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
@@ -62,7 +60,7 @@ export class RetailerController {
           "Unauthorized or invalid user details."
         );
       } else {
-        const status = req.query.status;
+        const { status } = req.query;
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
 
@@ -85,7 +83,7 @@ export class RetailerController {
               "cart.retailer_id": user._id,
               delivery_status: status,
             })
-            .sort({ updated_at: -1 })
+              .sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -100,7 +98,7 @@ export class RetailerController {
             newdata = await this.addUserName(orders);
           } else {
             orders = await OrderModel.find({ "cart.retailer_id": user._id })
-            .sort({ updated_at: -1 })
+              .sort({ updated_at: -1 })
               .skip(skip)
               .limit(limit)
               .exec();
@@ -118,7 +116,7 @@ export class RetailerController {
               totalPages: totalPages,
               totalItems: totalItems,
             });
-          else sendSuccessResponse(res, 200, true, "orders not found", newdata) ;
+          else sendSuccessResponse(res, 200, true, "orders not found", newdata);
         }
       }
     } catch (error) {
@@ -160,16 +158,18 @@ export class RetailerController {
           if (user.length > 0) {
             orders = await OrderModel.find({
               "cart.retailer_id": retailer?._id,
-              [field]: { $in: userIds }
+              [field]: { $in: userIds },
             }).exec();
-
           } else if (tiffin.length > 0) {
             orders = await OrderModel.find({
               "cart.retailer_id": retailer?._id,
               [field]: { $in: tiffinIds },
             }).exec();
           } else {
-            orders = await OrderModel.find({ "cart.retailer_id": retailer?._id,_id: query });
+            orders = await OrderModel.find({
+              "cart.retailer_id": retailer?._id,
+              _id: query,
+            });
           }
           newdata = await this.addUserName(orders);
 
@@ -198,18 +198,17 @@ export class RetailerController {
     const newdata = await Promise.all(
       orders.map(async (order) => {
         let updatedOrder;
-        const retailer_id = order.cart.retailer_id;
-        const customer_id = order.cart.customer_id;
-        const tiffinitems = order.cart.items;
+
+        const { retailer_id, customer_id, items: tiffinitems } = order.cart;
 
         const tiffindata = await Promise.all(
           tiffinitems.map(async (tiffinitem) => {
-            const tiffin_id = tiffinitem.tiffin_id;
+            const { tiffin_id } = tiffinitem;
 
             const tiffin = await TiffinItemModel.findById(tiffin_id).exec();
 
-            const tiffin_name = tiffin?.tiffin_name;
-            const tiffin_type = tiffin?.tiffin_type;
+            const { tiffin_name, tiffin_type } = tiffin ?? {};
+
             updatedOrder = (order as Document).toObject();
             const tiffinItem = (tiffinitem as Document).toObject();
             tiffinItem.tiffin_name = tiffin_name;
@@ -223,9 +222,13 @@ export class RetailerController {
         const retailer_name = retailer?.username;
 
         const customer = await UserModel.findById(customer_id).exec();
-        const customer_name = customer?.username;
-        const customer_contact = customer?.contact_number;
-        const customer_email = customer?.email;
+
+        const {
+          username: customer_name,
+          contact_number: customer_contact,
+          email: customer_email,
+        } = customer || {};
+
         updatedOrder = (order as Document).toObject();
 
         updatedOrder.cart.retailer_name = retailer_name;
@@ -237,12 +240,11 @@ export class RetailerController {
         return updatedOrder;
       })
     );
-    // console.log(newdata);
     return newdata;
   };
 
   public getOrderCount = async (req: Request, res: Response) => {
-    try{
+    try {
       const user = await getUserFromToken(req);
       if (user?.isActive == false || !user) {
         sendSuccessResponse(
@@ -253,38 +255,38 @@ export class RetailerController {
         );
       } else {
         const userId = user._id;
-  const totalItems = await OrderModel.aggregate([
-        {
-          $match: {
-            'cart.retailer_id':userId,
-            // role_id: new ObjectId(ADMIN_ID),
-            isActive: true
-          }
-        },
-        {
-          $group: {
-            _id: "$delivery_status",
-            count: { $sum: 1 }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            delivery_status: "$_id",
-            count: 1
-          }
-        }
-      ]);
-      
-      if(totalItems)
-      sendSuccessResponse(res, 200, true, "count of order", totalItems)
-      else throw "error in fetching count"
-}
-    }catch(error){
-      sendErrorResponse(res, 500, false, "error", error);
+        const totalItems = await OrderModel.aggregate([
+          {
+            $match: {
+              "cart.retailer_id": userId,
+              // role_id: new ObjectId(ADMIN_ID),
+              isActive: true,
+            },
+          },
+          {
+            $group: {
+              _id: "$delivery_status",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              delivery_status: "$_id",
+              count: 1,
+            },
+          },
+        ]);
 
+        if (totalItems)
+          sendSuccessResponse(res, 200, true, "count of order", totalItems);
+        else throw "error in fetching count";
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "error", error);
     }
-  }
+  };
+
   public getWeeklyOrders = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
@@ -375,7 +377,8 @@ export class RetailerController {
             };
           });
           sendSuccessResponse(res, 200, true, "weeklydata", data);
-        } else sendSuccessResponse(res, 200, true,"weeklydata not found", data) ;
+        } else
+          sendSuccessResponse(res, 200, true, "weeklydata not found", data);
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -388,20 +391,10 @@ export class RetailerController {
       if (user?.isActive == false || !user)
         throw "Unauthorized or invalid user details.";
       else {
-        const status = req.query.status;
+        const { status } = req.query;
         const year = parseInt(req.query.year as string);
         const startOfYear = moment().year(year).startOf("year").toDate();
         const endOfYear = moment().year(year).endOf("year").toDate();
-        console.log(
-          "year",
-          year,
-          "status",
-          status,
-          "startOfYear",
-          startOfYear,
-          "endOfYear",
-          endOfYear
-        );
 
         let orders;
         let data;
@@ -478,7 +471,8 @@ export class RetailerController {
           sendSuccessResponse(res, 200, true, "monthlydata", data);
 
           // res.status(200).json({ statuscode: 200, data: data });
-        } else sendSuccessResponse(res, 200, true, "monthlydata not found", data);
+        } else
+          sendSuccessResponse(res, 200, true, "monthlydata not found", data);
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error ${error}`);
@@ -565,7 +559,8 @@ export class RetailerController {
           });
 
           sendSuccessResponse(res, 200, true, `${filter}ly orders`, data);
-        } else  sendSuccessResponse(res, 200, true, `${filter}ly orders not found`);
+        } else
+          sendSuccessResponse(res, 200, true, `${filter}ly orders not found`);
       }
     } catch (error) {
       sendErrorResponse(res, 500, false, `internal server error`, error);
@@ -583,7 +578,8 @@ export class RetailerController {
           "Unauthorized or invalid user details."
         );
       } else {
-        const orderId = req.params.orderid;
+        const { orderid: orderId } = req.params;
+
         const order = await OrderModel.findOne({
           _id: orderId,
           "cart.retailer_id": user._id,
@@ -593,8 +589,7 @@ export class RetailerController {
             const order = await OrderModel.findByIdAndUpdate(orderId, {
               delivery_status: "cancelled",
             });
-            if (order)
-              sendSuccessResponse(res, 200, true, "order updated successful");
+            sendSuccessResponse(res, 200, true, "order cancelled successful");
           } else if (order.delivery_status == "delivered") {
             sendSuccessResponse(
               res,
