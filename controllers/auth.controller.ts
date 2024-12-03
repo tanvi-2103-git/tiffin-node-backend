@@ -31,6 +31,7 @@ export class AuthController {
     return await UserModel.findOne({ email: email });
   };
 
+
   public login = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
@@ -38,17 +39,14 @@ export class AuthController {
       const user = await this.getUserByEmail(newEmail);
       if (user) {
         const matchPassword = await bcrypt.compare(password, user.password);
+        const { _id: userId, role_id: roleId } = user;
         if (matchPassword) {
-          const token = jwt.sign(
-            { id: user._id, role: user.role_id },
-            process.env.SECRET_KEY!,
-            {
-              expiresIn: "2h",
-            }
-          );
+          const token = jwt.sign({ userId, roleId }, process.env.SECRET_KEY!, {
+            expiresIn: "2h",
+          });
 
           const refreshToken = jwt.sign(
-            { id: user._id, role: user.role_id },
+            { userId, roleId },
             process.env.REFRESH_SECRET_KEY!,
             {
               expiresIn: "7h",
@@ -57,8 +55,7 @@ export class AuthController {
 
           user.refreshToken = refreshToken;
           await user.save();
-          const _id = user._id ;
-          const role_id = user.role_id ;
+
           sendSuccessToken(
             res,
             200,
@@ -66,24 +63,13 @@ export class AuthController {
             "Authentication successful!",
             token,
             refreshToken,
-            _id,
-            role_id
+            userId,
+            roleId
           );
-
-          // res.json({
-          //   statuscode: 200,
-          //   success: true,
-          //   message: "Authentication successful!",
-          //   token: token,
-          //   refreshToken : refreshToken,//sending access token and refresh token
-          //   _id: user._id,
-          //   role_id: user.role_id,
-          // });
-        } else throw"Invalid username or password"
-      } else throw"User not found";
-      
+        } else throw "Invalid username or password";
+      } else throw "User not found";
     } catch (error) {
-      sendErrorResponse(res, 500, false, "User login failed",error);
+      sendErrorResponse(res, 500, false, "User login failed", error);
     }
   };
 
@@ -102,8 +88,8 @@ export class AuthController {
       const hash = await bcrypt.hash(password, 10);
 
       const roleDoc = await RoleModel.findById(role_id);
-      if (!roleDoc) throw"Invalid role ID provided"
-       else {
+      if (!roleDoc) throw "Invalid role ID provided";
+      else {
         let role_specific_details: RoleSpecificDetail = {};
         const roleTemplate = roleDoc.role_specific_details;
 
@@ -134,16 +120,16 @@ export class AuthController {
           }
         );
 
-        sendSuccessToken(
-          res,
-          201,
-          true,
-          "User registered successfully",
-          token
-        );
+        sendSuccessToken(res, 201, true, "User registered successfully", token);
       }
     } catch (error) {
-      sendErrorResponse(res, 400, false, `User registration failed ${error}`,error);
+      sendErrorResponse(
+        res,
+        400,
+        false,
+        `User registration failed ${error}`,
+        error
+      );
     }
   };
 
@@ -169,16 +155,21 @@ export class AuthController {
         { new: true }
       );
 
-      if (!updatedUser) throw"User not found"
-       else {
+      if (!updatedUser) throw "User not found";
+      else {
         sendSuccessResponse(res, 200, true, "User logged out successfully");
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Server error while logging out",error);
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Server error while logging out",
+        error
+      );
     }
   };
 
- 
   public refreshAccessToken = async (
     req: Request,
     res: Response
@@ -193,9 +184,7 @@ export class AuthController {
         process.env.REFRESH_SECRET_KEY!
       ) as { id: string; role: string };
 
-      const user = await UserModel.findById(id)
-;
-
+      const user = await UserModel.findById(id);
       if (!user) throw "Invalid refresh token";
       else {
         const {
@@ -249,7 +238,7 @@ export class AuthController {
     try {
       const emailId = req.body.email;
       const user = await this.getUserByEmail(emailId);
-      if (!user) throw"Invalid email ID provided"
+      if (!user) throw "Invalid email ID provided";
 
       const resetToken = crypto.randomBytes(32).toString("hex");
       const hashedToken = crypto
@@ -316,8 +305,8 @@ export class AuthController {
           resetPasswordTokenExpires: { $gte: moment().toDate() },
         });
 
-        if (!user) throw"Invalid or expired token"
-         else {
+        if (!user) throw "Invalid or expired token";
+        else {
           user.password = await bcrypt.hash(password, 10);
           user.resetPasswordToken = undefined;
           user.resetPasswordTokenExpires = undefined;
@@ -326,7 +315,7 @@ export class AuthController {
         }
       } else throw "Token not found";
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Token not found",error);
+      sendErrorResponse(res, 500, false, "Token not found", error);
     }
   };
 
@@ -334,8 +323,8 @@ export class AuthController {
     try {
       const token = req.headers.authorization?.split(" ")[1];
 
-      if (!token) throw`No token provided`
-       else {
+      if (!token) throw `No token provided`;
+      else {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
           id: string;
           role: string;
@@ -344,11 +333,11 @@ export class AuthController {
           _id: decoded.id,
         }).exec()) as User;
 
-        if (!user) throw `User not found`
+        if (!user) throw `User not found`;
         sendSuccessResponse(res, 200, true, "user", user);
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, `Internal server error`,error);
+      sendErrorResponse(res, 500, false, `Internal server error`, error);
     }
   };
 
@@ -357,8 +346,8 @@ export class AuthController {
       const user_id = req.params.userid;
       const cloudinaryUrl = req.body.cloudinaryUrl;
 
-      if (!cloudinaryUrl) throw "Internal Server Error"
-       else {
+      if (!cloudinaryUrl) throw "Internal Server Error";
+      else {
         const user = await UserModel.findByIdAndUpdate(
           user_id,
           { user_image: cloudinaryUrl },
@@ -367,10 +356,10 @@ export class AuthController {
 
         if (user) {
           sendSuccessResponse(res, 200, true, "image uploaded", user);
-        } else throw "user not found"
+        } else throw "user not found";
       }
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Internal server error",error);
+      sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
 
@@ -387,25 +376,21 @@ export class AuthController {
 
       sendSuccessResponse(res, 200, true, "updated loc", updateloc);
     } catch (error) {
-      sendErrorResponse(res, 500, false, "Internal server error",error);
-
+      sendErrorResponse(res, 500, false, "Internal server error", error);
     }
   };
 
   public updateProfile = async (req: Request, res: Response) => {
-    try{
+    try {
       const id = req.params.id;
-      const {...user}= req.body;
-      if (!id) throw "user id is not provided"
-      else{
-        const updateUser = await UserModel.updateOne({_id:id},user);
+      const { ...user } = req.body;
+      if (!id) throw "user id is not provided";
+      else {
+        const updateUser = await UserModel.updateOne({ _id: id }, user);
         sendSuccessResponse(res, 200, true, "profile updated", updateUser);
-
       }
-    }catch(error){
-      sendErrorResponse(res, 500, false, "Internal server error",error);
-
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Internal server error", error);
     }
-  }
+  };
 }
-  
