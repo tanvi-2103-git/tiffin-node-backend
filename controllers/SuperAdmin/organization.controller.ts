@@ -1,39 +1,137 @@
-
 import { Request, Response } from "express";
 import { Organization, OrganizationModel } from "../../model/organizationModel";
 import { User, UserModel } from "../../model/userModel";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../../utils/responsesUtils";
 
-// interface Params {
-//     id: string; // Assuming you are using "id" as the parameter name
-// }
-//ananya
 export class OrganizationController {
   public addOrganization = async (req: Request, res: Response) => {
     try {
       const organizationData: Organization = req.body;
       const newOrganization = await OrganizationModel.create(organizationData);
-      res.status(201).json({ statuscode: 201, data: newOrganization });
+      sendSuccessResponse(
+        res,
+        200,
+        false,
+        "Creating organization",
+        newOrganization
+      );
     } catch (error) {
-      res.status(500).json({ message: "Error creating organization", error });
+      sendErrorResponse(res, 500, false, "Error creating organization", error);
     }
   };
 
-  //get all organization
-  public getAllOrganizations = async (req: Request, res: Response) =>{
+  public searchOrganizations = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
-      const organizations = await OrganizationModel.find();
-      res.status(200).json({ statuscode: 200, data: organizations });
+      const { query } = req.query; // Accept a generic query parameter
+
+      if (!query)
+        throw "Query parameter is required and must be a string Or Unauthorized or invalid user details.";
+      else {
+        const searchFields = ["org_name", "org_location.loc"]; // Customize as needed
+
+        let organizations: Organization[] = [];
+
+        for (let field of searchFields) {
+          organizations = await OrganizationModel.find({
+            isActive: true,
+            [field]: { $regex: query, $options: "i" },
+            // [field]: query,
+          }).exec();
+
+          if (organizations.length > 0) {
+            break;
+          }
+        }
+
+        if (organizations.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No organizations found matching the search criteria",
+            organizations
+          );
+        } else {
+          sendSuccessResponse(res, 200, true, "data", organizations);
+        }
+      }
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organizations",
-          error,
-        });
+      console.error("Error searching organizations:", error);
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error searching organizations",
+        error,
+      });
     }
   };
 
+  public getAllOrganizations = async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status || "true";
+      const page = parseInt(req.query.page as string) || 1;
+      let limit;
+      if (status == "true") {
+        limit = parseInt(req.query.limit as string) || 10;
+      } else {
+        limit = await OrganizationModel.countDocuments({ isActive: true });
+      }
+
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+        //return;
+      } else {
+        const skip = (page - 1) * limit;
+
+        const organizations = await OrganizationModel.find({ isActive: true }).sort({ org_updated_at: -1 })
+          .skip(skip)
+          .limit(limit);
+
+        const totalItems = await OrganizationModel.countDocuments({
+          isActive: true,
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        sendSuccessResponse(
+          res,
+          200,
+          false,
+          "All organizations",
+          organizations,
+          {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          }
+        );
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Error fetching organizations", error);
+    }
+  };
+
+  public getallOrganizationName = async (req: Request, res: Response) => {
+    try {
+      const organizations = await OrganizationModel.find(
+        { isActive: true },
+        { org_name: 1, "org_location.loc": 1 }
+      );
+
+      if (!organizations)  sendSuccessResponse(res, 200, true, "Organization not found");
+
+      else {
+        sendSuccessResponse(res, 200, true, "organizations", organizations);
+      }
+    } catch (error) {}
+  };
   //getting a specific org
   //as of now not required, but banake rakha hai (;
   public getOrganizationById = async (
@@ -42,51 +140,41 @@ export class OrganizationController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const organization = await OrganizationModel.findById(id);
-      if (!organization) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Organization not found" });
+      const organization = await OrganizationModel.findOne({_id:id,isActive:true});//changed 
+      if (!organization)
+        sendSuccessResponse(res, 200, true, "Organization not found");
+      else {
+        sendSuccessResponse(res, 200, true, "organization", organization);
       }
-      res.status(200).json({ data: organization, statuscode: 200 });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching organization",
-          error,
-        });
+      sendErrorResponse(res, 500, false, "Error fetching organization", error);
     }
   };
 
   //delete org (By id)
-  public deleteOrganization = async(
+  public deleteOrganization = async (
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const deletedOrg = await OrganizationModel.findByIdAndDelete(id);
-      if (!deletedOrg) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Organization not found" });
-      }
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization deleted successfully",
-        });
+      const deletedOrg = await OrganizationModel.findByIdAndUpdate(
+        { _id: id },
+        {
+          isActive: false,
+        }
+      );
+      const deleteEmployees = await UserModel.updateMany(
+        {
+          "role_specific_details.organization_id": id,
+        },
+        { $set: { isActive: false } }
+      );
+      if (!deletedOrg) sendSuccessResponse(res, 200, true, "Organization not found");
+
+      sendSuccessResponse(res, 200, true, "Organization deleted successfully");
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error deleting organization",
-          error,
-        });
+      sendErrorResponse(res, 500, false, "Error deleting organization");
     }
   };
 
@@ -95,42 +183,38 @@ export class OrganizationController {
     req: Request<{ id: string }>,
     res: Response
   ): Promise<void> => {
-    // const { _id, ...organization } = req.body;
-    const _id = req.params.id;
-    const {...organization } = req.body;
     try {
-      // Update the organization
-      const result = await OrganizationModel.updateOne({ _id }, organization);
+      const _id = req.params.id;
 
-      // Check if the update was successful
-      if (result.modifiedCount === 0) {
-        res
-          .status(404)
-          .json({
-            statuscode: 404,
-            message: "Organization not found or no changes made",
-          });
-      }
+      const { ...organization } = req.body;
+      const org = await OrganizationModel.findOne({_id:_id,isActive:true});
+      if (org) {
+        // Update the organization
+        const result = await OrganizationModel.updateOne({ _id }, organization);
 
-      res
-        .status(200)
-        .json({
-          statuscode: 200,
-          message: "Organization updated successfully",
-        });
+        // Check if the update was successful
+        if (result.modifiedCount === 0)
+          sendSuccessResponse(
+            res,
+            200,
+            true, "Organization not found or no changes made");
+else
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "Organization updated successfully"
+        );
+      } else sendSuccessResponse(
+        res,
+        200,
+        true, "Organization not found ",org)
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error updating organization",
-          error,
-        });
+      sendErrorResponse(res, 500, false, "Error updating organization",error);
     }
   };
 
   // to do -> create an api which get all the retailers which are approved by one organization
-
   public getOrgsOfRetailer = async (
     req: Request<{ id: string }>,
     res: Response
@@ -147,5 +231,29 @@ export class OrganizationController {
       ]);
     } catch (error) {}
   };
-}
 
+  public uploadOrganizationImage = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const org_id = req.params.orgid;
+      const cloudinaryUrl = req.body.cloudinaryUrl;
+
+      if (!cloudinaryUrl) sendSuccessResponse(res, 200, true, "Cloudinary url not found");
+      else {
+        const org = await OrganizationModel.findByIdAndUpdate(
+          org_id,
+          { org_image_url: cloudinaryUrl },
+          { new: true, runValidators: true }
+        );
+
+        if (org) {
+          sendSuccessResponse(res, 200, true, "image uploaded", org);
+        } else sendSuccessResponse(res, 200, true, "org not found",org);
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Error uploading org image");
+    }
+  };
+}

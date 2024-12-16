@@ -1,200 +1,1012 @@
 import { Request, Response } from "express";
-import { UserModel } from "../../model/userModel";
+import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
-import { TiffinItemModel } from "../../model/tiffinItemModel";
-
+import { TiffinItem, TiffinItemModel } from "../../model/tiffinItemModel";
+import { Order, OrderModel } from "../../model/orderModel";
+import { RETAILER_ID } from "../../utils/constants";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../../utils/responsesUtils";
+import { RetailerController } from "../retailer.controller";
+const retailerController = new RetailerController();
 
 export class EmployeeController {
+  public getAllTrendyRetailers = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
 
-   
-    public getAllTrendyRetailers = async  (req: Request, res: Response)=> {
-        try {
-            const user = await getUserFromToken(req);
-            console.log(user, "user");
-    
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
-                res.status(401).json({
-                    statuscode: 401,
-                    message: "Unauthorized or invalid user details.",
-                });
-            } else {
-                const organizationId = user.role_specific_details.organization_id;
-                
-                const TrendyRetailers = await UserModel.find({
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
-                    "role_specific_details.approval": {
-                        $elemMatch: {
-                            organization_id: organizationId,
-                            istrendy: true
-                        }
-                    }
-                }).exec();
-    
-                console.log(`Organization ID: ${organizationId}`);
-                res.status(200).json({ statuscode: 200, data: TrendyRetailers });
+      if (
+        user?.isActive == false ||
+        !user ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+
+          const TrendyRetailers = await UserModel.find({
+            role_id: RETAILER_ID, // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+                org_loc: org_location,
+                istrendy: true,
+              },
+            },
+            isActive: true,
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+                istrendy: true,
+              },
+            },
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(
+            res,
+            200,
+            false,
+            "TrendyRetailers",
+            TrendyRetailers,
+            {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
             }
-        } catch (error) {
-            console.error("Error fetching trendy retailers:", error);
-            res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
+          );
         }
-    };
-    
-    public getAllRetailersofOrg = async  (req: Request, res: Response) =>{
-        try {
-            const user = await getUserFromToken(req);
-            console.log(user, "user");
-    
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
-                res.status(401).json({
-                    statuscode: 401,
-                    message: "Unauthorized or invalid user details.",
-                });
-            } else {
-                const organizationId = user.role_specific_details.organization_id;
-                
-                const Retailers = await UserModel.find({
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
-                    "role_specific_details.approval": {
-                        $elemMatch: {
-                            organization_id: organizationId
-                        }
-                    }
-                }).exec();
-    
-                console.log(`Organization ID: ${organizationId}`);
-                res.status(200).json({ statuscode: 200, data: Retailers });
-            }
-        } catch (error) {
-            console.error("Error fetching trendy retailers:", error);
-            res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Internal server error", error);
+    }
+  };
+
+  public getAllRetailersofOrg = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        !user ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
+        let page = parseInt(req.query.page as string) || 1;
+        let limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+
+          const Retailers = await UserModel.find({
+            role_id: RETAILER_ID, // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+                org_loc: org_location,
+              },
+            },
+            isActive: true,
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: RETAILER_ID, // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+              },
+            },
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(res, 200, true, "Retailers", Retailers, {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          });
         }
-    };
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Internal server error", error);
+    }
+  };
 
+  public searchRetailersOfOrg = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const user = await getUserFromToken(req);
+      const { query, approval_status } = req.query;
 
-   
-    public getAllTiffinofOrg = async  (req: Request, res: Response) =>{
-        try {
-            const user = await getUserFromToken(req);
-            console.log(user, "user");
-    
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
-                res.status(401).json({
-                    statuscode: 401,
-                    message: "Unauthorized or invalid user details.",
-                });
-            } else {
-                const organizationId = user.role_specific_details.organization_id;
-    
-                const Retailers = await UserModel.find({
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
-                    "role_specific_details.approval": {
-                        $elemMatch: {
-                            organization_id: organizationId
-                        }
-                    }
-                }).exec();
-    
-                if (Retailers.length === 0) {
-                    res.status(404).json({ statuscode: 404, message: "No retailers found for the given organization." });
-                } else {
-                    const retailerIds = Retailers.map(retailer => retailer._id);
-    
-                    const Tiffins = await TiffinItemModel.find({
-                        retailer_id: { $in: retailerIds }
-                    }).exec();
-    
-                    console.log(`Organization ID: ${organizationId}`);
-                    console.log(`Found Tiffin items: ${Tiffins.length}`);
-    
-                    res.status(200).json({ statuscode: 200, data: Tiffins });
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching tiffin items:", error);
-            res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
+      if (!query || !user || !user.role_specific_details.organization_id) {
+        sendErrorResponse(
+          res,
+          400,
+          false,
+          "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
+        const searchFields = ["username", "email", "contact_number", "address"];
+
+        let retailers: User[] = [];
+        for (let field of searchFields) {
+          retailers = await UserModel.find({
+            //role_id:RETAILER_ID, //retailer id//retailer id matching is not working
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+                org_loc: org_location,
+                approval_status: approval_status || { $exists: true },
+              },
+            },
+            isActive: true,
+            // [field]: query,
+            [field]: { $regex: query, $options: "i" },
+          }).exec();
+
+          if (retailers.length > 0) {
+            break;
+          }
         }
-    };
-    
-
-    
-    public getAllTiffinsByRetailer = async  (req: Request, res: Response) =>{
-        try {
-            const retailerId = req.params.retailerid;
-            const user = await getUserFromToken(req);
-            console.log(user, "user");
-    
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
-                res.status(401).json({
-                    statuscode: 401,
-                    message: "Unauthorized or invalid user details.",
-                });
-            } else {
-                const organizationId = user.role_specific_details.organization_id;
-    
-                
-    
-                    const Tiffins = await TiffinItemModel.find({
-                        retailer_id: retailerId
-                    }).exec();
-    
-                    
-    
-                    res.status(200).json({ statuscode: 200, data: Tiffins });
-                
-            }
-        } catch (error) {
-            console.error("Error fetching tiffin items:", error);
-            res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
+        if (retailers.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No retailers found matching the search criteria",
+            retailers
+          );
+        } else {
+          sendSuccessResponse(res, 200, true, "retailers", retailers);
         }
-    };
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request:",
+        error
+      );
+    }
+  };
 
+  public searchTiffinItem = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { query } = req.query;
 
+      if (!query) throw  "Query parameter is required and must be a string Or Unauthorized or invalid user details."
+       else {
+        const searchFields = ["tiffin_name", "tiffin_type"];
+        const user = await getUserFromToken(req);
+        const customerId = user?._id;
+        const organizationId= user?.role_specific_details.organization_id;
+        const org_location = user?.role_specific_details.org_location;
 
-    public getTiffinofOrgById = async  (req: Request, res: Response)=> {
-        try {
-            const tifinId = req.params.tifinid
-            const user = await getUserFromToken(req);
-            console.log(user, "user");
-    
-            if (!user || !user.role_specific_details || !user.role_specific_details.organization_id) {
-                res.status(401).json({
-                    statuscode: 401,
-                    message: "Unauthorized or invalid user details.",
-                });
-            } else {
-                const organizationId = user.role_specific_details.organization_id;
-    
-                const Retailers = await UserModel.find({
+        const Retailers = await UserModel.find({
+          role_id: RETAILER_ID, // retailer role ID
+          "role_specific_details.approval": {
+            $elemMatch: {
+              organization_id: organizationId,
+              org_loc: org_location,
+            },
+          },
+          isActive: true,
+        })
+        const retailerIds = Retailers.map((retailer) => retailer._id);
 
-                    role_id: "6723475f74b32cfe39e5d0a2", // retailer role ID
-                    "role_specific_details.approval": {
-                        $elemMatch: {
-                            organization_id: organizationId
-                        }
-                    }
-                }).exec();
-    
-                if (Retailers.length === 0) {
-                    res.status(404).json({ statuscode: 404, message: "No retailers found for the given organization." });
-                } else {
-                    const retailerIds = Retailers.map(retailer => retailer._id);
-    
-                    const Tiffin = await TiffinItemModel.find({
-                        id:tifinId,
-                        retailer_id: { $in: retailerIds }
-                    }).exec();
-    
-                    console.log(`Organization ID: ${organizationId}`);
-                  
-    
-                    res.status(200).json({ statuscode: 200, data: Tiffin });
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching tiffin items:", error);
-            res.status(500).json({ statuscode: 500, message: "An error occurred while processing your request." });
+        let tiffins: TiffinItem[] = [];
+
+        for (let field of searchFields) {
+          tiffins = await TiffinItemModel.find({
+            retailer_id: { $in: retailerIds },
+            isActive: true,
+            [field]: { $regex: query, $options: "i" },
+            // [field]: query,
+          }).exec();
+
+          if (tiffins.length > 0) {
+            break;
+          }
         }
-    };
-    
+        if (tiffins.length === 0) {
+          sendSuccessResponse(res,200,true,"No tiffin found matching the search criteria",tiffins)
+        } else {
+          sendSuccessResponse(res,200,true,"data",tiffins)
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching request:",
+        error
+      );
+    }
+  };
 
+  public getAllTiffinofOrg = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      const type = req.query.type as string;
+      if (
+        user?.isActive == false ||
+        !user ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const Retailers = await UserModel.find({
+            role_id: RETAILER_ID, // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                organization_id: organizationId,
+                org_loc: org_location,
+              },
+            },
+            isActive: true,
+          }).exec();
+
+          if (Retailers.length === 0) {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "No retailers found for the given organization.",
+              Retailers
+            );
+          } else {
+            const retailerIds = Retailers.map((retailer) => retailer._id);
+
+            const skip = (page - 1) * limit;
+
+            const Tiffins = await TiffinItemModel.find({
+              retailer_id: { $in: retailerIds },
+              isActive: true,
+              ...(type && { tiffin_type: type.toLowerCase() }),
+            }).populate("retailer_id", "username")
+              .sort({ tiffin_rating: -1 })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            const totalTiffins = await TiffinItemModel.countDocuments({
+              retailer_id: { $in: retailerIds },
+              isActive: true,
+              ...(type && { tiffin_type: type.toLowerCase() }),
+            });
+
+            const totalPages = Math.ceil(totalTiffins / limit);
+
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "All tiffins of organization.",
+              Tiffins,
+              {
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalTiffins,
+              }
+            );
+          }
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Internal server error", error);
+    }
+  };
+
+  // public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
+  //   try {
+  //     const user = await getUserFromToken(req); // Assuming getUserFromToken retrieves the user from token
+
+  //     // Step 1: Check for valid user & organization
+  //     if (
+  //       !user ||
+  //       user.isActive === false ||
+  //       !user.role_specific_details ||
+  //       !user.role_specific_details.organization_id
+  //     ) {
+  //        sendSuccessResponse(res, 401, false, "Unauthorized or invalid user details.");
+  //        return;
+  //     }
+
+  //     const organizationId = user.role_specific_details.organization_id;
+  //     const page = parseInt(req.query.page as string) || 1;
+  //     const limit = parseInt(req.query.limit as string) || 10;
+
+  //     if (page < 1 || limit < 1) {
+  //        res.status(400).json({
+  //         statuscode: 400,
+  //         message: "Page and limit must be positive integers.",
+  //       });
+  //       return;
+  //     }
+
+  //     // Step 2: Fetch retailers linked to the organization
+  //     const retailers = await UserModel.find({
+  //       role_id: RETAILER_ID, // Assuming you have a constant or string for retailer role
+  //       "role_specific_details.approval": {
+  //         $elemMatch: {
+  //           organization_id: organizationId,
+
+  //         },
+
+  //       },isActive:true
+  //     }).exec();
+
+  //     if (retailers.length === 0) {
+  //        sendSuccessResponse(res, 200, true, "No retailers found for the given organization.",retailers);
+  //        return;
+  //     }
+
+  //     const retailerIds = retailers.map((retailer) => retailer._id); // Extract retailer IDs
+
+  //     // Step 3: Fetch tiffins with retailer details populated
+  //     const skip = (page - 1) * limit;
+
+  //     const tiffins = (await TiffinItemModel.find({
+  //       retailer_id: { $in: retailerIds },
+  //       isActive:true
+  //     }).populate("retailer_id", "username")         // Populate retailer's name from the User model
+
+  //       .skip(skip)
+  //       .limit(limit)
+  //       .exec()) as TiffinItem[];
+
+  //     const totalTiffins = await TiffinItemModel.countDocuments({
+  //       retailer_id: { $in: retailerIds },
+  //     });
+
+  //     const totalPages = Math.ceil(totalTiffins / limit);
+
+  //     const groupedTiffins = tiffins.reduce((group: { retailerName: string; tiffins: TiffinItem[] }[], tiffin: TiffinItem) => {
+
+  //       const retailerName = (tiffin.retailer_id as unknown as User).username;
+  //       // Find the existing group for this retailer
+  //       let retailerGroup = group.find((g) => g.retailerName === retailerName);
+
+  //       if (!retailerGroup) {
+  //         // If not found, create a new group
+  //         retailerGroup = { retailerName, tiffins: [] };
+  //         group.push(retailerGroup);
+  //       }
+
+  //       // Add the current tiffin to the group's tiffins array
+  //       retailerGroup.tiffins.push(tiffin);
+
+  //       return group;
+  //     }, []);
+
+  //     // Step 5: Send the grouped tiffins response with pagination
+  //     sendSuccessResponse(
+  //       res,
+  //       200,
+  //       true,
+  //       "Tiffins grouped by retailer.",
+  //       groupedTiffins,
+  //       {
+  //         currentPage: page,
+  //         totalPages: totalPages,
+  //         totalItems: totalTiffins,
+  //       }
+  //     );
+  //     return;
+  //   } catch (error) {
+  //     sendErrorResponse(res, 500, false, "Internal server error", error);
+  //   }
+  // };
+  public getAllRetailersWithTiffin = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (
+        !user ||
+        user.isActive === false ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+        return;
+      }
+
+      const organizationId = user.role_specific_details.organization_id;
+      const org_location = user.role_specific_details.org_location;
+
+      const retailers = await UserModel.find({
+        role_id: RETAILER_ID,
+        "role_specific_details.approval": {
+          $elemMatch: {
+            organization_id: organizationId,
+            org_loc: org_location,
+          },
+        },
+      }).exec();
+
+      if (retailers.length === 0) {
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "No retailers found for the given organization."
+        );
+        return;
+      }
+
+      const retailerIds = retailers.map((retailer) => retailer._id);
+
+      const tiffins = (await TiffinItemModel.find({
+        retailer_id: { $in: retailerIds },
+        isActive: true,
+      })
+        .populate("retailer_id", "username")
+        .exec()) as TiffinItem[];
+
+      const totalTiffins = await TiffinItemModel.countDocuments({
+        retailer_id: { $in: retailerIds },
+        isActive: true,
+      });
+
+      const groupedTiffins = tiffins.reduce(
+        (
+          group: { retailerName: string; tiffins: TiffinItem[] }[],
+          tiffin: TiffinItem
+        ) => {
+          const retailerName = (tiffin.retailer_id as unknown as User).username;
+
+          let retailerGroup = group.find(
+            (g) => g.retailerName === retailerName
+          );
+
+          if (!retailerGroup) {
+            retailerGroup = { retailerName, tiffins: [] };
+            group.push(retailerGroup);
+          }
+
+          retailerGroup.tiffins.push(tiffin);
+
+          return group;
+        },
+        []
+      );
+
+      sendSuccessResponse(
+        res,
+        200,
+        true,
+        "Tiffins grouped by retailer.",
+        groupedTiffins
+      );
+      return;
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Internal server error", error);
+    }
+  };
+
+  public getAllTiffinsByRetailer = async (req: Request, res: Response) => {
+    try {
+      const retailerId = req.params.retailerid;
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        !user ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const Tiffins = await TiffinItemModel.find({
+            retailer_id: retailerId,
+            isActive: true,
+          })
+          // .populate('retailer_id','username')
+            .skip(skip)
+            .limit(limit)
+            .exec();
+          
+          const retailer= await UserModel.findById(retailerId).select('username');
+          const retailer_name = retailer?.username;
+          const totalItems = await TiffinItemModel.countDocuments({
+            retailer_id: retailerId,
+            isActive: true,
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(res, 200, true, "Tiffins", {retailer_name, Tiffins}, {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          });
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
+
+  public getTiffinofOrgById = async (req: Request, res: Response) => {
+    try {
+      const tifinId = req.params.tifinid;
+      console.log(tifinId);
+
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        !user ||
+        !user.role_specific_details ||
+        !user.role_specific_details.organization_id
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organizationId = user.role_specific_details.organization_id;
+        const org_location = user.role_specific_details.org_location;
+
+        console.log("organizationId", organizationId);
+
+        const Retailers = await UserModel.find({
+          role_id: RETAILER_ID, // retailer role ID
+          "role_specific_details.approval": {
+            $elemMatch: {
+              organization_id: organizationId,
+              org_loc: org_location,
+            },
+          },
+          // isActive:true
+        }).exec();
+
+        if (Retailers.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No retailers found for the given organization."
+          );
+        } else {
+          const retailerIds = Retailers.map((retailer) => retailer._id);
+          console.log(retailerIds);
+
+          const Tiffin = await TiffinItemModel.find({
+            _id: tifinId,
+            retailer_id: { $in: retailerIds },
+            isActive: true,
+          }).exec();
+
+          sendSuccessResponse(res, 200, true, "Tiffin", Tiffin);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
+
+  public searchOrders = async (req: Request, res: Response): Promise<void> => {
+    try {
+      let customer = await getUserFromToken(req);
+      let newdata: any;
+      const user = await getUserFromToken(req);
+      //  console.log(user);
+      const { query } = req.query;
+      if (!query && !user) throw "Query parameter is required ";
+      else {
+        const searchFields = [
+          "cart.retailer_id",
+          "cart.customer_id",
+          "cart.items.tiffin_id",
+        ];
+        let orders: Order[] = [];
+        const user = await UserModel.find({
+          username: { $regex: query, $options: "i" },
+        });
+        const userIds = user.map((user) => user._id);
+
+        const tiffin = await TiffinItemModel.find({
+          $or: [
+            { tiffin_name: { $regex: query, $options: "i" } },
+            { tiffin_type: { $regex: query, $options: "i" } },
+          ],
+        });
+
+        const tiffinIds = tiffin.map((tiffin) => tiffin._id);
+
+        for (let field of searchFields) {
+          if (user.length > 0) {
+            orders = await OrderModel.find({
+              "cart.customer_id": customer?._id,
+              [field]: { $in: userIds }
+            }).exec();
+
+          } else if (tiffin.length > 0) {
+            orders = await OrderModel.find({
+              "cart.customer_id": customer?._id,
+              [field]: { $in: tiffinIds },
+            }).exec();
+          } else {
+            orders = await OrderModel.find({ _id: query,"cart.customer_id": customer?._id });
+          }
+          newdata = await retailerController.addUserName(orders);
+
+          if (orders.length > 0) {
+            break;
+          }
+        }
+
+        if (orders.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No orders found matching the search criteria"
+          );
+        } else {
+          sendSuccessResponse(res, 200, true, "data", newdata);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
+    }
+  };
+
+  public getDeliveredOrders = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+
+          const orders = await OrderModel.find({
+            "cart.customer_id": user._id,
+            delivery_status: "delivered",
+          })
+          .sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalOrders = await OrderModel.countDocuments({
+            "cart.customer_id": user._id,
+            delivery_status: "delivered",
+          });
+          const totalPages = Math.ceil(totalOrders / limit);
+
+          if (orders.length > 0)
+            sendSuccessResponse(res, 200, true, "orders", orders, {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalOrders,
+            });
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
+
+  public getPendingOrders = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          const orders = await OrderModel.find({
+            "cart.customer_id": user._id,
+            delivery_status: "pending",
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalOrders = await OrderModel.countDocuments({
+            "cart.customer_id": user._id,
+            delivery_status: "pending",
+          });
+          const totalPages = Math.ceil(totalOrders / limit);
+
+          if (orders.length > 0)
+            sendSuccessResponse(res, 200, true, "orders", orders, {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalOrders,
+            });
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
+
+  public cancelOrder = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const orderId = req.params.orderid;
+        const order = await OrderModel.findOne({
+          _id: orderId,
+          "cart.customer_id": user._id,
+        });
+        if (order) {
+          if (order.delivery_status == "pending") {
+            const order = await OrderModel.findByIdAndUpdate(orderId, {
+              delivery_status: "cancelled",
+            });
+            if (order)
+              sendSuccessResponse(res, 200, true, "order updated successful");
+          } else if (order.delivery_status == "delivered") {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already delivered cannot be modified"
+            );
+          } else {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "order is already cancelled cannot be modified"
+            );
+          }
+        } else {
+          sendSuccessResponse(res, 200, true, "order not found");
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while processing your request.",
+        error
+      );
+    }
+  };
+
+  public getAllOrders = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const status = req.query.status;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          let orders;
+          let totalItems;
+          let totalPages;
+          let newdata;
+
+          if (status) {
+            orders = await OrderModel.find({
+              "cart.customer_id": user._id,
+              delivery_status: status,
+            }).sort({ updated_at: -1 })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await OrderModel.countDocuments({
+              "cart.customer_id": user._id,
+              delivery_status: status,
+            });
+
+            totalPages = Math.ceil(totalItems / limit);
+
+            newdata = await retailerController.addUserName(orders);
+          } else {
+            orders = await OrderModel.find({ "cart.customer_id": user._id })
+            .sort({ updated_at: -1 })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await OrderModel.countDocuments({
+              "cart.customer_id": user._id,
+            });
+
+            totalPages = Math.ceil(totalItems / limit);
+            newdata = await retailerController.addUserName(orders);
+          }
+          if (orders.length >= 0)
+            sendSuccessResponse(res, 200, true, "all orders", newdata, {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
+            });
+          else sendSuccessResponse(res, 200, true, "orders not found", orders);
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `internal server error ${error}`);
+    }
+  };
 }

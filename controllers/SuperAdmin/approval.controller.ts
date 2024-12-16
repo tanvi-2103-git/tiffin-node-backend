@@ -2,259 +2,799 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../../model/userModel";
 import { getUserFromToken } from "../admin.controller";
 import { OrganizationModel } from "../../model/organizationModel";
+import { ADMIN_ID } from "../../utils/constants";
+import mongoose from "mongoose";
+import moment from "moment";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../../utils/responsesUtils";
+import { ObjectId } from "mongodb";
 
 export class ApprovalController {
-  public addApprovalRequest = async function (req: Request, res: Response) {
-    // ideally speaking we dont need to add a separate function for adding the request as, when a admin registers, their aproval status is by default pending.
-  };
-
-  public getAllPendingAdminApprovalRequests = async  (
+  public searchAdminApproval = async (
     req: Request,
     res: Response
-  )=> {
+  ): Promise<void> => {
     try {
-      const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
-        "role_specific_details.approval_status": "pending",
-      }).exec();
-      
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
-      console.log(newdata);
-      
+      const { query, approval_status } = req.query; // Accept a generic query parameter
 
-      res.status(200).json({ statuscode: 200, data: newdata });
+      if (!query && !approval_status)
+        throw "Query parameter is required and must be a string Or Unauthorized or invalid user details.";
+      else {
+        const searchFields = ["username", "contact_number", "email", "address"];
+
+        let users: User[] = [];
+
+        for (let field of searchFields) {
+          users = await UserModel.find({
+            role_id: ADMIN_ID,
+            isActive: true,
+            "role_specific_details.approval_status": approval_status,
+            [field]: { $regex: query, $options: "i" }, // Using regex for case-insensitive search
+            // [field]: query,
+          }).exec();
+
+          if (users.length > 0) {
+            break;
+          }
+        }
+
+        if (users.length === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "No admin found matching the search criteria",
+            users
+          );
+        } else {
+          const result = await Promise.all(
+            users.map(async (user) => {
+              const org_id = user.role_specific_details.organization_id;
+              const org_name = await OrganizationModel.findById(org_id).exec();
+
+              return {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                contact_number: user.contact_number,
+                address: user.address,
+                role_id: user.role_id,
+                role_specific_details: {
+                  organization_id: user.role_specific_details.organization_id,
+                  organization_name: org_name?.org_name,
+                  approval_status: user.role_specific_details.approval_status,
+                },
+              };
+            })
+          );
+          sendSuccessResponse(res, 200, true, "data", result);
+        }
+      }
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error searching admin approval :",
+        error
+      );
     }
   };
 
-  public getAllApprovedAdmin = async  (req: Request, res: Response) =>{
-    try {
-      const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
-        "role_specific_details.approval_status": "approved",
-      }).exec();
-
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
-      res.status(200).json({ statuscode: 200, data: newdata });
-    } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
-    }
-  };
-
-  public getAllRejectedAdmin = async  (req: Request, res: Response)=> {
-    try {
-      const approvalRequests = await UserModel.find({
-        role_id: "672775e4f2a1e38ef52c63c6", //admin
-        "role_specific_details.approval_status": "rejected",
-      }).exec();
-      const newdata = await Promise.all( approvalRequests.map(async (admin) =>  {
-        const org_id = admin.role_specific_details.organization_id
-        
-        const org_name = await OrganizationModel.findById(org_id).exec();
-        // console.log(org_name);
-        
-        const newadmin ={
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-          contact_number: admin.contact_number,
-          address: admin.address,
-          role_id: admin.role_id,
-          role_specific_details: {
-            organization_id: admin.role_specific_details.organization_id,
-            organization_name:org_name?.org_name,
-            approval_status: admin.role_specific_details.approval_status
-          }
-        };
-        // console.log(newadmin);
-        
-        return newadmin;
-      }))
-      
-      res.status(200).json({ statuscode: 200, data: newdata });
-    } catch (error) {
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "Error fetching Approval Requests",
-          error,
-        });
-    }
-  };
-
-  public getApprovalRequestById = async  (
+  public getAllPendingAdminApprovalRequests = async (
     req: Request,
     res: Response
-  ): Promise<void> =>{
+  ) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+      } else {
+        const skip = (page - 1) * limit;
+
+        const approvalRequests = await UserModel.find({
+          role_id: ADMIN_ID, //admin
+          "role_specific_details.approval_status": "pending",
+          isActive: true,
+        }).sort({ updated_at: -1 })
+          .skip(skip)
+          .limit(limit)
+          .exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: ADMIN_ID,
+          "role_specific_details.approval_status": "pending",
+          isActive: true,
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const newdata = await this.addOrganizationName(approvalRequests);
+
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "All pending admin approval",
+          newdata,
+          {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          }
+        );
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error fetching Approval Requests",
+        error
+      );
+    }
+  };
+
+  public getAllApprovedAdmin = async (req: Request, res: Response) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+      } else {
+        const skip = (page - 1) * limit;
+
+        const approvalRequests = await UserModel.find({
+          role_id: ADMIN_ID, //admin
+          "role_specific_details.approval_status": "approved",
+          isActive: true,
+        }).sort({ updated_at: -1 })
+          .skip(skip)
+          .limit(limit)
+          .exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: "672775e4f2a1e38ef52c63c6",
+          "role_specific_details.approval_status": "approved",
+          isActive: true,
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const newdata = await this.addOrganizationName(approvalRequests);
+
+        sendSuccessResponse(
+          res,
+          200,
+          true,
+          "All Approved admin approval",
+          newdata,
+          {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          }
+        );
+      }
+    } catch (error) {
+      res.status(500).json({
+        statuscode: 500,
+        message: "Error fetching Approval Requests",
+        error,
+      });
+    }
+  };
+
+  public getAllRejectedAdmin = async (req: Request, res: Response) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const skip = (page - 1) * limit;
+
+      if (page < 1 || limit < 1) {
+        res
+          .status(400)
+          .json({ message: "Page and limit must be positive integers" });
+      } else {
+        const approvalRequests = await UserModel.find({
+          role_id: ADMIN_ID, //admin
+          "role_specific_details.approval_status": "rejected",
+          isActive: true,
+        }).sort({ updated_at: -1 })
+          .skip(skip)
+          .limit(limit)
+          .exec();
+
+        const totalItems = await UserModel.countDocuments({
+          role_id: ADMIN_ID,
+          "role_specific_details.approval_status": "rejected",
+          isActive: true,
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const newdata = await this.addOrganizationName(approvalRequests);
+
+        sendSuccessResponse(res, 200, true, "All rejected admin", newdata, {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        });
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Error fetching Approval requests");
+    }
+  };
+
+  // combined API
+  public getAllAdminRequest = async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status;
+      let admins;
+      if (status) {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        const skip = (page - 1) * limit;
+
+        if (page < 1 || limit < 1) {
+          res
+            .status(400)
+            .json({ message: "Page and limit must be positive integers" });
+        } else {
+          const approvalRequests = await UserModel.find({
+            role_id: ADMIN_ID, //admin
+            "role_specific_details.approval_status": status,
+            isActive: true
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: ADMIN_ID,
+            "role_specific_details.approval_status": status,
+            isActive: true,
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          const newdata = await this.addOrganizationName(approvalRequests);
+
+          sendSuccessResponse(res, 200, true, "", newdata, {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          });
+        }
+      } else {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        const skip = (page - 1) * limit;
+
+        if (page < 1 || limit < 1) {
+          res
+            .status(400)
+            .json({ message: "Page and limit must be positive integers" });
+        } else {
+          admins = await UserModel.find({ role_id: ADMIN_ID, isActive: true }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            isActive: true,
+            role_id: ADMIN_ID,
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          const newdata = await this.addOrganizationName(admins); //to display org name in res
+
+          sendSuccessResponse(res, 200, true, "", newdata, {
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+          });
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "error", error);
+    }
+  };
+   
+  public getAdminRequestCount = async (req: Request, res: Response) => {
+    try{
+  const totalItems = await UserModel.aggregate([
+        {
+          $match: {
+            role_id: new ObjectId(ADMIN_ID),
+            isActive: true
+          }
+        },
+        {
+          $group: {
+            _id: "$role_specific_details.approval_status",
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            approval_status: "$_id",
+            count: 1
+          }
+        }
+      ]);
+      
+      if(totalItems)
+      sendSuccessResponse(res, 200, true, "count of approval request", totalItems)
+      else throw "error in fetching count"
+    }catch(error){
+      sendErrorResponse(res, 500, false, "error", error);
+
+    }
+  }
+
+  public getApprovalRequestById = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     const { id } = req.params;
     try {
-      const approvalRequest = await UserModel.findById(id);
-      if (!approvalRequest) {
-        res
-          .status(404)
-          .json({ statuscode: 404, message: "Approval Request not found" });
-      }
+      const approvalRequest = await UserModel.findOne({_id:id,isActive:true});
+      if (!approvalRequest)
+        sendSuccessResponse(res,200,true,"Approval Request not found",approvalRequest) ;
+      else sendSuccessResponse(res,200,true,"Approval Request",approvalRequest)
     } catch (error) {
-      res
-        .status(500)
-        .json({ statuscode: 500, message: "Error Approval Request", error });
+      sendErrorResponse(res, 500, false, "Error Approval Request", error);
     }
   };
 
-  public approveAdminRequest = async  (
+  public approveAdminRequest = async (
     req: Request,
     res: Response
-  ): Promise<void> =>{
+  ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
-      if (!user) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
-      } else {
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
         const admin_id = req.params.admin_id;
-        console.log("admin_id", admin_id);
         const result = await UserModel.updateOne(
-          { _id: admin_id },
+          { _id: admin_id, isActive: true },
           { $set: { "role_specific_details.approval_status": "approved" } }
         );
-        console.log(result);
 
-        if (result.modifiedCount === 0) {
-          res
-            .status(404)
-            .json({
-              statuscode: 404,
-              message: "Approval request not found or already updated.",
-            });
-        } else {
-          res
-            .status(200)
-            .json({
-              statuscode: 200,
-              message: "Approval request aprrove successfully.",
-              data: result,
-            });
+        const admin = await UserModel.findById(admin_id);
+
+        const orgId = admin?.role_specific_details.organization_id;
+        const orgLoc = admin?.role_specific_details.org_location;
+
+        const organization = await OrganizationModel.findById(orgId);
+
+        if (organization) {
+          const itemIndex = organization.org_location.findIndex(
+            (orgLocation) => orgLocation.loc == orgLoc
+          );
+
+          if (itemIndex > -1) {
+            organization.org_location[itemIndex].admin_id =
+              new mongoose.Types.ObjectId(admin_id);
+            await organization.save();
+          } else
+          sendSuccessResponse(
+            res,
+            200,
+            true, "Location of admin has no match on respective organization");
+
+          if (result.modifiedCount === 0)
+            sendSuccessResponse(
+              res,
+              200,
+              true, "Approval request not found or already updated."
+            );
+          else {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "Approval request aprrove successfully.",
+              result
+            );
+          }
         }
       }
     } catch (error) {
-      console.error("Error rejecting approval request:", error);
-      res
-        .status(500)
-        .json({
-          statuscode: 500,
-          message: "An error occurred while rejecting the request.",
-          error,
-        });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "An error occurred while rejecting the request.",
+        error
+      );
     }
   };
 
-  public rejectApprovalRequest = async  (
+  public rejectApprovalRequest = async (
     req: Request,
     res: Response
-  ): Promise<void>=> {
+  ): Promise<void> => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
-      if (!user) {
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
+        const admin_id = req.params.admin_id;
+        const { rejection_reason } = req.body;
+
+        const result = await UserModel.updateOne(
+          { _id: admin_id, isActive: true },
+          {
+            $set: {
+              "role_specific_details.approval_status": "rejected",
+              "role_specific_details.rejection_reason": rejection_reason,
+            },
+          }
+        );
+
+        if (result.modifiedCount === 0)
+          sendSuccessResponse(
+            res,
+            200,
+            true, "Approval request not found or already updated."
+          );
+        else {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Approval request rejected successfully.",
+            result
+          );
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request",
+        error
+      );
+    }
+  };
+
+  //to display admin name instead of admin id
+  public addOrganizationName = async (admins: User[]) => {
+    const newdata = await Promise.all(
+      admins.map(async (admin) => {
+        const org_id = admin.role_specific_details.organization_id;
+
+        const org_name = await OrganizationModel.findById(org_id).exec();
+
+        const newadmin = {
+          _id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          contact_number: admin.contact_number,
+          address: admin.address,
+          role_id: admin.role_id,
+          role_specific_details: {
+            organization_id: admin.role_specific_details.organization_id,
+            organization_name: org_name?.org_name,
+            approval_status: admin.role_specific_details.approval_status,
+          },
+        };
+
+        return newadmin;
+      })
+    );
+    return newdata;
+  };
+
+  public getWeeklyRequest = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
         res.status(401).json({
           statuscode: 401,
           message: "Unauthorized or invalid user details.",
         });
       } else {
-        const admin_id = req.params.admin_id;
-        console.log("admin_id", admin_id);
-        const result = await UserModel.updateOne(
-          { _id: admin_id },
-          { $set: { "role_specific_details.approval_status": "rejected" } }
-        );
-        console.log(result);
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let requests;
+        let data;
+        if (status && year) {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: new ObjectId(ADMIN_ID),
+                "role_specific_details.approval_status": status,
+                created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
 
-        if (result.modifiedCount === 0) {
-          res
-            .status(404)
-            .json({
-              message: "Approval request not found or already updated.",
-            });
+          console.log(requests);
         } else {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: new ObjectId(ADMIN_ID),
+                created_at: {
+                  $gte: startOfYear,
+                  $lt: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  week: { $week: "$created_at" }, // Group by week number
+                  year: { $year: "$created_at" },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.week": 1,
+              },
+            },
+          ]);
+          console.log(requests);
+        }
+        if (requests) {
+          data = requests.map((item) => {
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+
+            const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
+
+            return {
+              startOfWeek: startOfWeek,
+              endOfWeek: endOfWeek,
+              requestcount: item.count,
+            };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
           res
             .status(200)
-            .json({
-              message: "Approval request rejected successfully.",
-              data: result,
-            });
+            .json({ statuscode: 200, message: "request not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
+  };
+
+  public getMonthlylyRequest = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user) {
+        res.status(401).json({
+          statuscode: 401,
+          message: "Unauthorized or invalid user details.",
+        });
+      } else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        let requests;
+        let data;
+        if (status && year) {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: new ObjectId(ADMIN_ID),
+                "role_specific_details.approval_status": status,
+                created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$created_at" },
+                  month: { $month: "$created_at" },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1,
+              },
+            },
+          ]);
+        } else {
+          requests = await UserModel.aggregate([
+            {
+              $match: {
+                role_id: new ObjectId(ADMIN_ID),
+                created_at: {
+                  $gte: startOfYear,
+                  $lte: endOfYear,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$created_at" },
+                  month: { $month: "$created_at" },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            {
+              $sort: {
+                "_id.year": 1,
+                "_id.month": 1,
+              },
+            },
+          ]);
+        }
+        if (requests) {
+          data = requests.map((item) => {
+            const startOfmonth = moment()
+              .month(item._id.month - 1)
+              .format("YYYY-MM");
+
+            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+            return { month: startOfmonth, requestcount: item.count };
+          });
+          res.status(200).json({ statuscode: 200, data: data });
+        } else
+          res
+            .status(200)
+            .json({ statuscode: 200, message: "orders not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ statuscode: 500, message: `internal server error ${error}` });
+    }
+  };
+
+  public getWeeklyMonthlyRequest = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+      if (user?.isActive == false || !user)
+        throw "Unauthorized or invalid user details.";
+      else {
+        const status = req.query.status;
+        const year = parseInt(req.query.year as string);
+        const filter = req.query.filter as string;
+        if (!filter) throw "Add Monthly or Weekly filter";
+        const startOfYear = moment().year(year).startOf("year").toDate();
+        const endOfYear = moment().year(year).endOf("year").toDate();
+        const requests = await UserModel.aggregate([
+          {
+            $match: {
+              role_id: new ObjectId(ADMIN_ID),
+              created_at: {
+                $gte: startOfYear,
+                $lte: endOfYear,
+              },
+              ...(status && {
+                "role_specific_details.approval_status": status,
+              }),
+            },
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$created_at" },
+                ...(filter.toLowerCase() === "month" && {
+                  month: { $month: "$created_at" },
+                }),
+                ...(filter.toLowerCase() === "week" && {
+                  week: { $week: "$created_at" },
+                }),
+              },
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $sort: {
+              "_id.year": 1,
+              ...(filter.toLowerCase() === "week" && { "_id.week": 1 }),
+              ...(filter.toLowerCase() === "month" && { "_id.month": 1 }),
+            },
+          },
+        ]);
+        if (requests) {
+          const data = requests.map((item) => {
+            const startOfmonth = moment()
+              .month(item._id.month - 1)
+              .format("YYYY-MM");
+            const startOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .startOf("isoWeek")
+              .format("MMM Do YY");
+            const endOfWeek = moment()
+              .year(item._id.year)
+              .isoWeek(item._id.week + 1)
+              .endOf("isoWeek")
+              .format("MMM Do YY");
+
+            //  const endOfWeek = startOfWeek.clone().endOf('isoWeek');
+
+            if (filter.toLowerCase() === "week") {
+              return {
+                startOfWeek: startOfWeek,
+                endOfWeek: endOfWeek,
+                requestcount: item.count,
+              };
+            } else {
+              return { month: startOfmonth, requestcount: item.count };
+            }
+          });
+
+          sendSuccessResponse(res, 200, true, `${filter}ly request`, data);
+        } else {
+          sendSuccessResponse(res, 200, true, "request not found");
         }
       }
     } catch (error) {
-      console.error("Error rejecting approval request:", error);
-      res
-        .status(500)
-        .json({
-          message: "An error occurred while rejecting the request.",
-          error,
-        });
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request",
+        error
+      );
     }
   };
 }

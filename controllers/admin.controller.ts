@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { User, UserModel } from "../model/userModel";
 import jwt from "jsonwebtoken";
+import { RETAILER_ID } from "../utils/constants";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/responsesUtils";
+import { getDefaultResultOrder } from "dns/promises";
 import { ObjectId } from "mongodb";
 
 export const Admin = async (req: Request, res: Response) => {
@@ -15,7 +21,7 @@ export const getUserFromToken = async (
 
     if (!token) {
       console.error("No token provided");
-      return undefined; 
+      return undefined;
     }
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
@@ -26,146 +32,456 @@ export const getUserFromToken = async (
 
     if (!user) {
       console.error("User not found");
-      return undefined; 
+      return undefined;
     }
 
-    return user; 
+    return user;
   } catch (error) {
     console.error("Invalid token", error);
-    return undefined; 
+    return undefined;
   }
 };
 
+// search
 export class AdminController {
-  
-  public pendingApprovalRetailer = async (req: Request, res: Response) => {
+  public getallRetailerRequest = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log("org", user?.role_specific_details.organization_id);
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
-        const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
-          "role_specific_details.approval": {
-            $elemMatch: {
-              approval_status: "pending",
-              organization_id: user?.role_specific_details.organization_id,
-            },
-          },
-        }).exec();
-        console.log(result);
+        const status = req.query.status;
+        const organization_loc = user.role_specific_details.org_location;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        let totalItems;
+        let totalPages;
 
-        res.status(200).json({ statuscode: 200, data: result });
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          if (status) {
+            const result = await UserModel.find({
+              role_id: RETAILER_ID, //retailer:roleid
+              isActive: true,
+              "role_specific_details.approval": {
+                $elemMatch: {
+                  approval_status: status,
+                  organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
+                },
+              },
+            })
+              .sort({ updated_at: -1 })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await UserModel.countDocuments({
+              role_id: RETAILER_ID, //retailer:roleid
+              isActive: true,
+              "role_specific_details.approval": {
+                $elemMatch: {
+                  approval_status: status,
+                  organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
+                },
+              },
+            });
+            totalPages = Math.ceil(totalItems / limit);
+
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              `All retailer requests: ${status}`,
+              result,
+              {
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalItems,
+              }
+            );
+          } else {
+            const result = await UserModel.find({
+              role_id: RETAILER_ID, //retailer:roleid
+              isActive: true,
+              "role_specific_details.approval": {
+                $elemMatch: {
+                  organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
+                },
+              },
+            }).sort({ updated_at: -1 })
+              .skip(skip)
+              .limit(limit)
+              .exec();
+
+            totalItems = await UserModel.countDocuments({
+              role_id: RETAILER_ID, //retailer:roleid
+              isActive: true,
+              "role_specific_details.approval": {
+                $elemMatch: {
+                  organization_id: user?.role_specific_details.organization_id,
+                  org_loc: organization_loc,
+                },
+              },
+            });
+            totalPages = Math.ceil(totalItems / limit);
+
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "All retailer requests",
+              result,
+              {
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalItems,
+              }
+            );
+          }
+        }
       }
     } catch (error) {
-      console.error("Error fetching pending approval retailers:", error);
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `Internal server error ${error}`);
     }
   };
 
+  //pagination -done
+  public pendingApprovalRetailer = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          const result = await UserModel.find({
+            role_id: RETAILER_ID,
+            isActive: true,
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "pending",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: RETAILER_ID, // retailer role ID
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "pending",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "All retailer approval requests",
+            result,
+            {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
+            }
+          );
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `Internal server error ${error}`);
+    }
+  };
+
+  //pagination
   public getApprovedRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
-        const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
-          "role_specific_details.approval": {
-            $elemMatch: {
-              approval_status: "approved",
-              organization_id: user?.role_specific_details.organization_id,
-            },
-          },
-        }).exec();
-        console.log(result);
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-        res.status(200).json({ statuscode: 200, data: result });
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          const result = await UserModel.find({
+            role_id: RETAILER_ID,
+            isActive: true,
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "approved",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: RETAILER_ID, // retailer role ID
+            isActive: true,
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "approved",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "All the approved retailers",
+            result,
+            {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
+            }
+          );
+        }
       }
     } catch (error) {
-      console.error("Error fetching pending approval retailers:", error);
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `Internal server error ${error}`);
     }
   };
 
+  //pagination -done
   public getRejectedRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
-        const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer:roleid
-          "role_specific_details.approval": {
-            $elemMatch: {
-              approval_status: "rejected",
-              organization_id: user?.role_specific_details.organization_id,
-            },
-          },
-        }).exec();
-        console.log(result);
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-        res.status(200).json({ statuscode: 200, data: result });
+        if (page < 1 || limit < 1) {
+          sendSuccessResponse(
+            res,
+            400,
+            false,
+            "Page and limit must be positive integers"
+          );
+        } else {
+          const skip = (page - 1) * limit;
+          const result = await UserModel.find({
+            role_id: RETAILER_ID, //retailer:roleid
+            isActive: true,
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "rejected",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          }).sort({ updated_at: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+          const totalItems = await UserModel.countDocuments({
+            role_id: RETAILER_ID, // retailer role ID
+            isActive: true,
+            "role_specific_details.approval": {
+              $elemMatch: {
+                approval_status: "rejected",
+                organization_id: user?.role_specific_details.organization_id,
+              },
+            },
+          });
+
+          const totalPages = Math.ceil(totalItems / limit);
+
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "All rejected Retailers",
+            result,
+            {
+              currentPage: page,
+              totalPages: totalPages,
+              totalItems: totalItems,
+            }
+          );
+        }
       }
     } catch (error) {
-      console.error("Error fetching rejected approval retailers:", error);
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error ${error}` });
+      sendErrorResponse(res, 500, false, `Internal server error ${error}`);
+    }
+  };
+
+  //check search
+  public searchRetailers = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const user = await getUserFromToken(req);
+
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const { query, approval_status } = req.query;
+
+        if (!query)
+          throw "Query parameter is required and must be a string Or Unauthorized or invalid user details.";
+        else {
+          const searchFields = [
+            "username",
+            "email",
+            "contact_number",
+            "address",
+          ];
+
+          let retailers: User[] = [];
+          const organization_id = user.role_specific_details.organization_id;
+          for (let field of searchFields) {
+            retailers = await UserModel.find({
+              role_id: RETAILER_ID, //retailer id
+              "role_specific_details.approval.approval_status": approval_status,
+              "role_specific_details.approval.organization_id": organization_id,
+              //  [field] : query,
+              [field]: { $regex: query, $options: "i" },
+            }).exec();
+
+            if (retailers.length > 0) {
+              break;
+            }
+          }
+          if (retailers.length === 0) {
+            sendSuccessResponse(
+              res,
+              200,
+              true,
+              "No retailers found matching the search criteria",
+              retailers
+            );
+          } else {
+            sendSuccessResponse(res, 200, true, "data", retailers);
+          }
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Error searching retailer:", error);
     }
   };
 
   public approveRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
         const retailer_id = req.params.retailer_id;
-        console.log("retailer_id", retailer_id);
 
         const organization_id = user?.role_specific_details.organization_id;
-        console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID, //retailer
+          isActive: true,
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -174,18 +490,17 @@ export class AdminController {
             },
           },
         }).exec();
-        console.log("retailer", retailer);
-        // res.json(retailer)
         if (!retailer) {
-          res.status(404).json({
-            statuscode: 404,
-            message:
-              "Retailer not found or no pending approval for this organization.",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            false,
+            "Retailer not found or no pending approval for this organization."
+          );
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
               "role_specific_details.approval.$[elem].approval_status":
@@ -196,9 +511,7 @@ export class AdminController {
             arrayFilters: [{ "elem.organization_id": organization_id }],
           }
         );
-        console.log(result);
-
-        res.status(200).json({ statuscode: 403, data: result });
+        sendSuccessResponse(res, 200, true, "approved", result);
       }
     } catch (error) {
       console.error("Error approving retailer:", error);
@@ -211,26 +524,29 @@ export class AdminController {
   public rejectRetailer = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
         const retailer_id = req.params.retailer_id;
-        console.log("retailer_id", retailer_id);
+        const { rejection_reason } = req.body;
 
         const organization_id = user?.role_specific_details.organization_id;
-        console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID,
+          //retailer
+          isActive: true,
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -239,65 +555,61 @@ export class AdminController {
             },
           },
         }).exec();
-        console.log("retailer", retailer);
-        // res.json(retailer)
         if (!retailer) {
-          res.status(404).json({
-            statuscode: 404,
-            message:
-              "Retailer not found or no pending approval for this organization.",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            false,
+            "Retailer not found or no pending approval for this organization."
+          );
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
               "role_specific_details.approval.$[elem].approval_status":
                 "rejected",
+              "role_specific_details.approval.$[elem].rejection_reason":
+                rejection_reason,
             },
           },
           {
             arrayFilters: [{ "elem.organization_id": organization_id }],
           }
         );
-        console.log(result);
 
-        res.status(200).json({ statuscode: 403, data: result });
+        sendSuccessResponse(res, 200, true, "rejected", result);
       }
     } catch (error) {
-      console.error("Error approving retailer:", error);
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error: ${error}` });
+      sendErrorResponse(res, 500, true, `Internal server error: ${error}`);
     }
   };
-
 
   public makeRetailerTrendy = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req);
-      console.log(user, "user");
 
       if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
         !user ||
-        !user.role_specific_details ||
-        user.role_specific_details.approval_status != "approved"
+        !user.role_specific_details
       ) {
-        res.status(401).json({
-          statuscode: 401,
-          message: "Unauthorized or invalid user details.",
-        });
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
       } else {
         const retailer_id = req.params.retailer_id;
-        console.log("retailer_id", retailer_id);
 
         const organization_id = user?.role_specific_details.organization_id;
-        console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
-
+          role_id: RETAILER_ID, //retailer
+          isActive: true,
           "role_specific_details.approval": {
             $elemMatch: {
               // approval_status: "pending",
@@ -305,111 +617,164 @@ export class AdminController {
             },
           },
         }).exec();
-        console.log("retailer", retailer);
         // res.json(retailer)
         if (!retailer) {
-          res.status(404).json({
-            statuscode: 404,
-            message:
-              "Retailer not found or no pending approval for this organization.",
-          });
+          sendSuccessResponse(
+            res,
+            200,
+            false,
+            "Retailer not found for this organization."
+          );
         }
 
         const result = await UserModel.updateOne(
-          { _id: retailer_id },
+          { _id: retailer_id, isActive: true },
           {
             $set: {
-              "role_specific_details.approval.$[elem].istrendy":
-                true,
+              "role_specific_details.approval.$[elem].istrendy": true,
             },
           },
           {
             arrayFilters: [{ "elem.organization_id": organization_id }],
           }
         );
-        console.log(result);
 
-        res.status(200).json({ statuscode: 403, data: result });
+        sendSuccessResponse(res, 200, true, "trendy results", result);
       }
     } catch (error) {
-      console.error("Error approving retailer:", error);
-      res
-        .status(500)
-        .json({ statuscode: 500, message: `Internal server error: ${error}` });
+      sendErrorResponse(res, 500, false, "Error approving retailer:", error);
     }
   };
 
-  // public rejectRetailer = async (req: Request, res: Response) => {
-  //   try {
-  //     const user = await getUserFromToken(req);
+  public ReApply = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = await getUserFromToken(req);
 
-  //     if (
-  //       !user ||
-  //       !user.role_specific_details ||
-  //       !user.role_specific_details.subadmin
-  //     ) {
-  //       res
-  //         .status(401)
-  //         .json({
-  //           statuscode: 401,
-  //           message: "Unauthorized or invalid user details.",
-  //         });
-  //     }
+      if (user?.isActive == false || !user) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const admin_id = req.params.admin_id;
+        const result = await UserModel.updateOne(
+          { _id: admin_id, isActive: true },
+          { $set: { "role_specific_details.approval_status": "pending" } }
+        );
 
-  //     const retailer_id = req.params.retailer_id;
-  //     console.log("retailer_id", retailer_id);
+        if (result.modifiedCount === 0) {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Approval request not found or already updated."
+          );
+        } else {
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "Approval request rejected successfully.",
+            result
+          );
+        }
+      }
+    } catch (error) {
+      sendErrorResponse(
+        res,
+        500,
+        false,
+        "Error rejecting approval request:",
+        error
+      );
+    }
+  };
 
-  //     const organization_id =
-  //     user?.role_specific_details.approval.organization_id;
-  //     console.log("organization_id", organization_id);
-  //     // const retailer = await UserModel.findOne({
-  //     //   _id: retailer_id,
-  //     //   role: "Retailer",
+  public getRetailerRequestCount = async (req: Request, res: Response) => {
+    try {
+      const user = await getUserFromToken(req);
 
-  //     //   "role_specific_details.approval": {
-  //     //     $elemMatch: {
-  //     //       // approval_status: "pending",
-  //     //       organization_id: organization_id,
-  //     //     },
-  //     //   },
-  //     // }).exec();
-  //     // console.log("retailer", retailer);
-  //     // res.json(retailer)
-  //     // if (!retailer) {
-  //     //   res
-  //     //     .status(404)
-  //     //     .json({ statuscode: 404, message: "Retailer not found " });
-  //     // }
+      if (
+        user?.isActive == false ||
+        user?.role_specific_details.approval_status != "approved" ||
+        !user ||
+        !user.role_specific_details
+      ) {
+        sendSuccessResponse(
+          res,
+          401,
+          false,
+          "Unauthorized or invalid user details."
+        );
+      } else {
+        const organization_id = user.role_specific_details.organization_id;
+        const organization_loc = user.role_specific_details.org_location;
 
-  //     const result = await UserModel.updateOne(
-  //       { _id: retailer_id },
-  //       {
-  //         $set: {
-  //           "role_specific_details.retailer.approval.$[elem].approval_status":
-  //             "rejected",
-  //         },
-  //       },
-  //       {
-  //         arrayFilters: [{ "elem.organization_id": organization_id }],
-  //       }
-  //     );
-  //     console.log(result);
+        const pendingCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "pending",
+              organization_id: organization_id,
+              org_loc: organization_loc,
+            },
+          },
+        });
 
-  //     // if (result.modifiedCount === 0) {
-  //     //    res
-  //     //     .status(400)
-  //     //     .json({ message: "Failed to update approval status." });
-  //     // }
+        const approvedCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "approved",
+              organization_id: organization_id,
+              org_loc: organization_loc,
+            },
+          },
+        });
 
-  //     res.status(200).json({ statuscode: 200, result });
-  //   } catch (error) {
-  //     console.error("Error approving retailer:", error);
-  //     res
-  //       .status(500)
-  //       .json({ statuscode: 500, message: `Internal server error: ${error}` });
-  //   }
-  // };
+        const rejectedCount = await UserModel.countDocuments({
+          role_id: RETAILER_ID, //retailer:roleid
+          isActive: true,
+          "role_specific_details.approval": {
+            $elemMatch: {
+              approval_status: "rejected",
+              organization_id: organization_id,
+              org_loc: organization_loc,
+            },
+          },
+        });
 
- 
-  //ADD TO RETAILER
+        const totalItems = [
+          {
+            approval_status: "pending",
+            count: pendingCount,
+          },
+          {
+            approval_status: "approved",
+            count: approvedCount,
+          },
+          {
+            approval_status: "rejected",
+            count: rejectedCount,
+          },
+        ];
+
+        if (totalItems)
+          sendSuccessResponse(
+            res,
+            200,
+            true,
+            "count of approval request",
+            totalItems
+          );
+        else throw "error in fetching count";
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "error", error);
+    }
+  };
 }

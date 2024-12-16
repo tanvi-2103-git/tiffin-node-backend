@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import { RoleModel } from "../../model/roleModel";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../../utils/responsesUtils";
 
 export class RoleController {
   public addRole = async (req: Request, res: Response) => {
@@ -10,20 +14,12 @@ export class RoleController {
         !role_name ||
         !Array.isArray(role_permission) ||
         !role_specific_details
-      ) {
-        res
-          .status(400)
-          .json({ statuscode: 400, error: "Invalid role data provided" });
-      }
+      ) throw "Invalid role data provided"
+      
 
       for (const detail of role_specific_details) {
-        if (!detail.name || !detail.type) {
-          res.status(400).json({
-            statuscode: 400,
-            error:
-              "Each role-specific detail must include 'name' and 'type' fields",
-          });
-        }
+        if (!detail.name || !detail.type) throw "Each role-specific detail must include 'name' and 'type' fields"
+         
       }
 
       const role = new RoleModel({
@@ -33,47 +29,63 @@ export class RoleController {
       });
 
       const savedRole = await role.save();
-
-      res.status(201).json({
-        statuscode: 201,
-        message: "Role added successfully",
-        role: savedRole,
-      });
+      sendSuccessResponse(res, 201, true, "Role added successfully", savedRole);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ statuscode: 500, error: "Failed to add role" });
+      sendErrorResponse(res, 500, false, "Failed to add role", error);
     }
   };
 
   public deleteRole = async (req: Request, res: Response) => {
     try {
-      const  roleId = req.params.role_id;
-  
+      const roleId = req.params.role_id;
+
       if (!roleId) {
-        return res
-          .status(400)
-          .json({ statuscode: 400, error: "Role ID is required" });
+        return sendSuccessResponse(res, 200, true, "Role ID is required");
       }
-  
-      const deletedRole = await RoleModel.findByIdAndDelete(roleId);
-  
+
+      const deletedRole = await RoleModel.findByIdAndUpdate(
+        { _id: roleId },
+        { isActive: false }
+      );
+
       if (!deletedRole) {
-        return res
-          .status(404)
-          .json({ statuscode: 404, error: "Role not found" });
+        return sendSuccessResponse(res, 200, true, "Role not found");
       }
-  
-      res.status(200).json({
-        statuscode: 200,
-        message: "Role deleted successfully",
-        role: deletedRole,
-      });
+
+      sendSuccessResponse(
+        res,
+        200,
+        true,
+        "Role deleted successfully",
+        deletedRole
+      );
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ statuscode: 500, error: "Failed to delete role" });
+      sendErrorResponse(res, 500, false, "Failed to add role", error);
     }
   };
 
- 
-  
+  public getAllRoles = async (req: Request, res: Response) => {
+    try {
+      const roles = await RoleModel.find({ isActive: true });
+      sendSuccessResponse(res, 200, true, "All roles", roles);
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Failed to add role", error);
+    }
+  };
+
+  public getAllPermissions = async (req: Request, res: Response) => {
+    try {
+      const roles = await RoleModel.find({ isActive: true });
+      var allPermission: string[] = [];
+      const permissions = roles.map((role) => {
+        role.role_permission.map((permission) => {
+          allPermission.push(permission);
+        });
+      });
+      const uniquePermission = [...new Set(allPermission)];
+      sendSuccessResponse(res, 200, true, "All permissions", uniquePermission);
+    } catch (error) {
+      sendErrorResponse(res, 500, false, "Failed to add role", error);
+    }
+  };
 }
