@@ -19,7 +19,7 @@ const OrderSchema = new mongoose.Schema({
     delivery_status: { type: String, enum: ['pending','commpleted', 'rejected'],required: true},
     org_created_at: { type: Date, required: true },
     org_updated_at: { type: Date, required: true },
-    isActive: { type: Boolean, required: true },
+    isActive: { type: Boolean, required: true ,default:true},
     
 })
 

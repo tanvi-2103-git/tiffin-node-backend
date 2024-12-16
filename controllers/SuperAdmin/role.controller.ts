@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { RoleModel } from "../../model/roleModel";
+import { permission } from "process";
 
 export class RoleController {
   public addRole = async (req: Request, res: Response) => {
@@ -55,7 +56,7 @@ export class RoleController {
           .json({ statuscode: 400, error: "Role ID is required" });
       }
   
-      const deletedRole = await RoleModel.findByIdAndDelete(roleId);
+      const deletedRole = await RoleModel.findByIdAndUpdate({_id:roleId},{isActive:false});
   
       if (!deletedRole) {
         return res
@@ -70,10 +71,46 @@ export class RoleController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ statuscode: 500, error: "Failed to delete role" });
+      res.status(500).json({ statuscode: 500, error: `Failed to delete roles ${error} ` });
     }
   };
 
- 
+  public getAllRoles = async (req: Request, res: Response) => {
+    try{
+     
+      const roles = await RoleModel.find({isActive:true});
+      res.status(200).json({
+        statuscode: 200,
+       
+        data: roles,
+      });
+    }catch(error){
+      res.status(500).json({ statuscode: 500, error: `Failed to fetch roles ${error} ` });
+
+    }
+  }
+
+  public getAllPermissions = async (req: Request, res: Response) => {
+    try{
+     
+      const roles = await RoleModel.find({isActive:true});
+      var allPermission:string[] =[]
+      const permissions = roles.map(role=>{
+         role.role_permission.map(permission=>{allPermission.push(permission)})
+      })
+      const uniquePermission = [...new Set(allPermission)]
+      res.status(200).json({
+        statuscode: 200,
+       
+        data: uniquePermission,
+      });
+    }catch(error){
+      res.status(500).json({ statuscode: 500, error: `Failed to fetch permissions ${error} ` });
+
+    }
+  }
+
+
+
   
 }

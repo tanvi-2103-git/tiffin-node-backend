@@ -8,6 +8,7 @@ export interface Approval{
 
 export interface User extends Document {
 
+    user_image: string;
     username: string;
     password: string;
     email: string;
@@ -19,12 +20,15 @@ export interface User extends Document {
     resetPasswordToken: string| undefined;
     resetPasswordTokenExpires: Date | undefined;
     role_specific_details:any;
- 
+    isActive:Boolean;
+    reasonOfRejection:string;
+    refreshToken:string;
 }
 
 
 
 const UserSchema = new mongoose.Schema({
+    user_image: {type: String},
     username: { type: String, required: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -35,7 +39,13 @@ const UserSchema = new mongoose.Schema({
     role_id: { type: String,  required: true },
     resetPasswordToken: { type: String },
     resetPasswordTokenExpires: { type: Date},
-    role_specific_details:{}
+    role_specific_details:{},
+    isActive:{ type: Boolean, required: true, default:true },
+    refreshToken: {  type: String,required: false }
+       
+       
+      
+    
     //     retailer: {
     //        gst_no:{ type: String,  required: function (user:User) {
     //         return user.role == "Retailer";
