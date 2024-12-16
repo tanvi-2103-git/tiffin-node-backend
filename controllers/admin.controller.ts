@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { User, UserModel } from "../model/userModel";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import { RETAILER_ID } from "../utils/constants";
 
 export const Admin = async (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome Admin" });
@@ -54,7 +55,7 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
+          role_id: RETAILER_ID,
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "pending",
@@ -88,7 +89,7 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2",
+          role_id: RETAILER_ID,
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "approved",
@@ -123,7 +124,7 @@ export class AdminController {
         });
       } else {
         const result = await UserModel.find({
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer:roleid
+          role_id: RETAILER_ID, //retailer:roleid
           "role_specific_details.approval": {
             $elemMatch: {
               approval_status: "rejected",
@@ -165,7 +166,7 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID, //retailer
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -230,7 +231,7 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID, //retailer
 
           "role_specific_details.approval": {
             $elemMatch: {
@@ -296,7 +297,7 @@ export class AdminController {
         console.log("organization_id", organization_id);
         const retailer = await UserModel.findOne({
           _id: retailer_id,
-          role_id: "6723475f74b32cfe39e5d0a2", //retailer
+          role_id: RETAILER_ID, //retailer
 
           "role_specific_details.approval": {
             $elemMatch: {
